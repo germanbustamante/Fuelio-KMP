@@ -27,18 +27,20 @@ kotlin {
     
     sourceSets {
         androidMain.dependencies {
-            implementation(compose.preview)
+            implementation(libs.ui.tooling.preview)
             implementation(libs.androidx.activity.compose)
         }
         commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
-            implementation(compose.preview)
+            implementation(libs.runtime)
+            implementation(libs.foundation)
+            implementation(libs.material3)
+            implementation(libs.ui)
+            implementation(libs.components.resources)
+            implementation(libs.ui.tooling.preview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(libs.kotlinx.datetime)
+
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -71,9 +73,17 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    // Added for Compose Multiplatform Android configuration
+    buildFeatures {
+        compose = true
+    }
+    composeOptions {
+        // Ensure the Compose compiler extension version is correctly set.
+        // It should match the Kotlin version for org.jetbrains.kotlin.plugin.compose
+        kotlinCompilerExtensionVersion = libs.versions.kotlin.get() 
+    }
 }
 
 dependencies {
     debugImplementation(compose.uiTooling)
 }
-
