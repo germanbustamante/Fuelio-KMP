@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.germandebustamante.fuelio.core.ui.theme.FuelioTheme
 import com.germandebustamante.fuelio.core.util.formatAsEuros
 import com.germandebustamante.fuelio.core.util.formatAsKilometers
-import com.germandebustamante.fuelio.data.gasstation.repository.fakeGasStations
+import com.germandebustamante.fuelio.core.fake.fakeGasStations
 import com.germandebustamante.fuelio.feature.list.state.GasStationItemVO
 import fuelio.composeapp.generated.resources.Res
 import fuelio.composeapp.generated.resources.closed
