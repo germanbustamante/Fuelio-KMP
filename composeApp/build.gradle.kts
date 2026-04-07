@@ -29,7 +29,7 @@ kotlin {
             implementation(libs.ui.tooling.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.kotlinx.coroutines.android)
-            implementation(libs.ktor.client.okhttp)
+            implementation(libs.koin.android)
         }
         commonMain.dependencies {
             implementation(libs.runtime)
@@ -44,9 +44,16 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(projects.core.domain)
             implementation(projects.data)
+            implementation(project.dependencies.platform(libs.koin.bom))
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+        }
+        iosMain.dependencies {
+            implementation(libs.koin.core)
         }
     }
 }

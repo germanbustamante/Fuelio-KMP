@@ -1,8 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-</dict>
+    <dict>
+        <key>CADisableMinimumFrameDurationOnPhone</key>
+        <true/>
+
+        <key>NSAppTransportSecurity</key>
+        <dict>
+            <key>NSExceptionDomains</key>
+            <dict>
+                <!-- sedeaplicaciones.minetur.gob.es negotiates TLSv1.2 with AES256-GCM-SHA384
+                     (RSA key exchange, no ECDHE/DHE). Forward secrecy cannot be required
+                     until the server adds ECDHE cipher suites. HTTP loads are not permitted. -->
+                <key>sedeaplicaciones.minetur.gob.es</key>
+                <dict>
+                    <key>NSExceptionMinimumTLSVersion</key>
+                    <string>TLSv1.2</string>
+                    <key>NSExceptionRequiresForwardSecrecy</key>
+                    <false/>
+                    <key>NSIncludesSubdomains</key>
+                    <true/>
+                </dict>
+            </dict>
+        </dict>
+
+    </dict>
 </plist>
