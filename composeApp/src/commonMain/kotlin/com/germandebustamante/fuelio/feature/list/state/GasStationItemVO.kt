@@ -6,7 +6,7 @@ data class GasStationItemVO(
     val station: GasStationBO,
     val fuelFilter: FuelFilter = FuelFilter.Gasoline95,
 ) {
-    fun isOpen(): Boolean = true //TODO implement this
+    fun isOpen(): Boolean = false //TODO implement this
     val distanceInKilometers : Double = 1.0 //TODO implement this
 
     fun getCurrentFuelPrice(): Double? = when(fuelFilter) {

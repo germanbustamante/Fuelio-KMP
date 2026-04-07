@@ -9,14 +9,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.germandebustamante.fuelio.feature.common.dialog.error.ErrorDialog
 import com.germandebustamante.fuelio.feature.list.state.GasStationsUIState
 import com.germandebustamante.fuelio.feature.list.state.GasStationsViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun GasStationsScreen(
-    viewModel: GasStationsViewModel = viewModel(factory = GasStationsViewModel.Factory),
+    viewModel: GasStationsViewModel = koinViewModel<GasStationsViewModel>(),
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -29,7 +29,7 @@ private fun GasStationsScreen(state: GasStationsUIState, modifier: Modifier = Mo
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         when (state) {
             is GasStationsUIState.Error -> ErrorDialog(
-                description = state.exception.message.toString(), onDismissRequest = {},
+                description = state.error.message.toString(), onDismissRequest = {},
             )
 
             GasStationsUIState.Loading -> CircularProgressIndicator()
