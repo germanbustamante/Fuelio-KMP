@@ -4,5 +4,5 @@ import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationBO
 import kotlinx.coroutines.flow.Flow
 
 interface GasStationRepository {
-    fun getGasStationsByLocation(): Flow<Result<List<GasStationBO>>>
+    fun getGasStationsByLocation(provinceId: String): Flow<Result<List<GasStationBO>>>
 }
