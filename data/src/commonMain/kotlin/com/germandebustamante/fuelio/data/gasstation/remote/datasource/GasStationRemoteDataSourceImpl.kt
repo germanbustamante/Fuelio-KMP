@@ -12,8 +12,8 @@ class GasStationRemoteDataSourceImpl(
     private val baseUrl: String,
 ) : GasStationRemoteDataSource {
 
-    override suspend fun getGasStationsByLocation(): List<GasStationDTO> =
-        safeApiCall { fetchData<GasStationResponseDTO>("/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/FiltroProvincia/41").stations }
+    override suspend fun getGasStationsByLocation(provinceId: String): List<GasStationDTO> =
+        safeApiCall { fetchData<GasStationResponseDTO>("/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/FiltroProvincia/$provinceId").stations }
 
     private suspend inline fun <reified T> fetchData(endpoint: String): T =
         httpClient.get("$baseUrl/$endpoint").body()
