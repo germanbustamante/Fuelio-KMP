@@ -5,5 +5,6 @@ import com.germandebustamante.fuelio.core.domain.gasstation.repository.GasStatio
 import kotlinx.coroutines.flow.Flow
 
 class GetGasStationsByLocationUseCase(private val gasStationRepository: GasStationRepository) {
-    operator fun invoke(): Flow<Result<List<GasStationBO>>> =  gasStationRepository.getGasStationsByLocation()
+    operator fun invoke(provinceId: String): Flow<Result<List<GasStationBO>>> =
+        gasStationRepository.getGasStationsByLocation(provinceId)
 }

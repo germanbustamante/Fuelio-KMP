@@ -1,17 +1,59 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.germandebustamante.fuelio.feature.list.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.tooling.preview.AndroidUiModes
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.germandebustamante.fuelio.core.domain.province.model.ProvinceBO
+import com.germandebustamante.fuelio.core.ui.theme.FuelioTheme
+import com.germandebustamante.fuelio.designsystem.button.FuelioIconButton
+import com.germandebustamante.fuelio.designsystem.button.config.icon.IconButtonConfig
+import com.germandebustamante.fuelio.designsystem.button.config.icon.IconButtonSize
 import com.germandebustamante.fuelio.feature.common.dialog.error.ErrorDialog
 import com.germandebustamante.fuelio.feature.list.state.GasStationsUIState
 import com.germandebustamante.fuelio.feature.list.state.GasStationsViewModel
+import com.germandebustamante.fuelio.feature.list.state.fakeGasStationsUIState
+import com.germandebustamante.fuelio.feature.list.state.fakeGasStationsUIStateError
+import com.germandebustamante.fuelio.feature.list.state.fakeGasStationsUIStateLoading
+import com.germandebustamante.fuelio.feature.list.state.fakeGasStationsUIStateShowModalSheet
+import fuelio.composeapp.generated.resources.Res
+import fuelio.composeapp.generated.resources.app_name
+import fuelio.composeapp.generated.resources.close_ic
+import fuelio.composeapp.generated.resources.gas_station_ic
+import fuelio.composeapp.generated.resources.select_province
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -21,29 +63,228 @@ fun GasStationsScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    GasStationsScreen(state = state, modifier = modifier)
+    GasStationsScreen(
+        state = state,
+        onFilterProvinceToggle = viewModel::onFilterProvinceToggle,
+        onProvinceSelected = viewModel::onProvinceSelected,
+        onDismissError = viewModel::onDismissError,
+        modifier = modifier,
+    )
 }
 
 @Composable
-private fun GasStationsScreen(state: GasStationsUIState, modifier: Modifier = Modifier) {
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        when (state) {
-            is GasStationsUIState.Error -> ErrorDialog(
-                description = state.error.message.toString(), onDismissRequest = {},
+private fun GasStationsScreen(
+    state: GasStationsUIState,
+    onDismissError: () -> Unit,
+    onFilterProvinceToggle: (Boolean) -> Unit,
+    onProvinceSelected: (ProvinceBO) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier.background(MaterialTheme.colorScheme.background)) {
+        if (state.hasGasStationsLoaded()) {
+            GasStationsContent(
+                state = state,
+                onFilterProvinceToggle = onFilterProvinceToggle,
+                onProvinceSelected = onProvinceSelected,
+                modifier = Modifier.fillMaxSize(),
             )
+        }
 
-            GasStationsUIState.Loading -> CircularProgressIndicator()
+        if (state.isLoading) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        }
 
-            is GasStationsUIState.Success -> GasStationsContent(state)
+        state.error?.let { error ->
+            ErrorDialog(
+                description = error.message.toString(),
+                onDismissRequest = onDismissError,
+            )
         }
     }
 }
 
 @Composable
-private fun GasStationsContent(state: GasStationsUIState.Success, modifier: Modifier = Modifier) {
-    LazyColumn(modifier = modifier) {
-        items(state.gasStations, key = { it.station.id }) {
-            GasStationItem(it)
+private fun GasStationsContent(
+    state: GasStationsUIState,
+    onFilterProvinceToggle: (Boolean) -> Unit,
+    onProvinceSelected: (ProvinceBO) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface)
+                .statusBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                painter = painterResource(Res.drawable.gas_station_ic),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.small)
+                    .background(MaterialTheme.colorScheme.secondaryContainer)
+                    .border(1.dp, MaterialTheme.colorScheme.secondary, MaterialTheme.shapes.small)
+                    .padding(8.dp),
+            )
+
+            Text(
+                text = stringResource(Res.string.app_name),
+                style = MaterialTheme.typography.titleLarge,
+            )
+
+            Spacer(Modifier.weight(1f))
+
+            state.selectedProvince?.let {
+                ProvinceFilterButton(province = it, onClick = { onFilterProvinceToggle(true) })
+            }
         }
+
+        HorizontalDivider()
+
+        LazyColumn(
+            modifier = Modifier
+                .weight(1f)
+                .navigationBarsPadding(),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            items(state.gasStations, key = { it.station.id }) {
+                GasStationItem(it)
+            }
+        }
+
+        ProvinceBottomSheetDialog(
+            provinces = state.provinces,
+            onProvinceSelected = onProvinceSelected,
+            onDismissRequest = { onFilterProvinceToggle(false) },
+            showBottomSheet = state.showFilterProvince,
+        )
+    }
+}
+
+@Composable
+private fun ProvinceBottomSheetDialog(
+    provinces: List<ProvinceBO>,
+    onProvinceSelected: (ProvinceBO) -> Unit,
+    onDismissRequest: () -> Unit,
+    showBottomSheet: Boolean = false,
+    modifier: Modifier = Modifier,
+) {
+    val bottomSheetState = rememberModalBottomSheetState()
+
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = onDismissRequest,
+            sheetState = bottomSheetState,
+            modifier = modifier,
+        ) {
+            LazyColumn(
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
+            ) {
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.select_province),
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.weight(1f),
+                        )
+
+                        FuelioIconButton(
+                            drawableRes = Res.drawable.close_ic,
+                            config = IconButtonConfig(size = IconButtonSize.SMALL),
+                            onClick = onDismissRequest,
+                        )
+                    }
+                }
+
+                items(provinces, key = { it.id }) { province ->
+                    ProvinceItem(
+                        name = province.name,
+                        onClick = {
+                            onProvinceSelected(province)
+                            onDismissRequest()
+                        },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProvinceItem(name: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = name,
+            style = MaterialTheme.typography.bodyLarge,
+        )
+    }
+}
+
+@Preview("LightMode", showBackground = true)
+@Preview(name = "DarkMode", showBackground = true, uiMode = AndroidUiModes.UI_MODE_NIGHT_YES)
+@Composable
+private fun GasStationsScreenPreview() {
+    FuelioTheme {
+        GasStationsScreen(
+            state = fakeGasStationsUIState,
+            onFilterProvinceToggle = {},
+            onProvinceSelected = {},
+            onDismissError = {}
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun GasStationWithProvincesModalOpenedPreview() {
+    FuelioTheme {
+        GasStationsScreen(
+            state = fakeGasStationsUIStateShowModalSheet,
+            onFilterProvinceToggle = {},
+            onProvinceSelected = {},
+            onDismissError = {}
+        )
+    }
+}
+
+@Preview("Loading", showBackground = true)
+@Composable
+private fun GasStationsScreenLoadingPreview() {
+    FuelioTheme {
+        GasStationsScreen(
+            state = fakeGasStationsUIStateLoading,
+            onFilterProvinceToggle = {},
+            onProvinceSelected = {},
+            onDismissError = {}
+        )
+    }
+}
+
+@Preview("Error", showBackground = true)
+@Composable
+private fun GasStationsScreenErrorPreview() {
+    FuelioTheme {
+        GasStationsScreen(
+            state = fakeGasStationsUIStateError,
+            onFilterProvinceToggle = {},
+            onProvinceSelected = {},
+            onDismissError = {}
+        )
     }
 }
