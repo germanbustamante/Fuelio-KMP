@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.mokkery)
 }
 
 kotlin {
@@ -13,7 +14,7 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
-    
+
     listOf(
         iosArm64(),
         iosSimulatorArm64()
@@ -23,7 +24,7 @@ kotlin {
             isStatic = true
         }
     }
-    
+
     sourceSets {
         androidMain.dependencies {
             implementation(libs.ui.tooling.preview)
@@ -51,6 +52,8 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.turbine)
         }
         iosMain.dependencies {
             implementation(libs.koin.core)
@@ -61,6 +64,12 @@ kotlin {
 android {
     namespace = "com.germandebustamante.fuelio"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
+
+    testOptions {
+        unitTests.all {
+            it.useJUnitPlatform()
+        }
+    }
 
     defaultConfig {
         applicationId = "com.germandebustamante.fuelio"
@@ -90,7 +99,7 @@ android {
     composeOptions {
         // Ensure the Compose compiler extension version is correctly set.
         // It should match the Kotlin version for org.jetbrains.kotlin.plugin.compose
-        kotlinCompilerExtensionVersion = libs.versions.kotlin.get() 
+        kotlinCompilerExtensionVersion = libs.versions.kotlin.get()
     }
 }
 
