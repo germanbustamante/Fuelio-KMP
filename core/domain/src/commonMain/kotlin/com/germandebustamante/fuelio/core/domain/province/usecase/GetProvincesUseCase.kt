@@ -4,6 +4,6 @@ import com.germandebustamante.fuelio.core.domain.province.model.ProvinceBO
 import com.germandebustamante.fuelio.core.domain.province.repository.ProvinceRepository
 import kotlinx.coroutines.flow.Flow
 
-class GetProvincesUseCase(private val provinceRepository: ProvinceRepository) {
-    operator fun invoke(): Flow<Result<List<ProvinceBO>>> = provinceRepository.getProvinces()
+open class GetProvincesUseCase(private val provinceRepository: ProvinceRepository) {
+    open operator fun invoke(): Flow<Result<List<ProvinceBO>>> = provinceRepository.getProvinces()
 }
