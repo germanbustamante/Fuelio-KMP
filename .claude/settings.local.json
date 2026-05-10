@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:sedeaplicaciones.minetur.gob.es)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:www.jetbrains.com)",
+      "WebFetch(domain:proandroiddev.com)",
+      "WebFetch(domain:betterprogramming.pub)",
+      "WebFetch(domain:discuss.kotlinlang.org)",
+      "Bash(./gradlew :composeApp:tasks --group=build)",
+      "Bash(./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64)",
+      "Bash(xcodebuild -project /Users/germandebustamanteconde/AndroidStudioProjects/Fuelio/iosApp/iosApp.xcodeproj -scheme iosApp -destination 'platform=iOS Simulator,name=iPhone 16' -configuration Debug build)",
+      "Bash(xcodebuild -project /Users/germandebustamanteconde/AndroidStudioProjects/Fuelio/iosApp/iosApp.xcodeproj -scheme iosApp -destination 'platform=iOS Simulator,name=iPhone 17' -configuration Debug build)",
+      "WebFetch(domain:insert-koin.io)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(gh api:*)",
+      "Bash(python3:*)",
+      "Bash(./gradlew :composeApp:assembleDebug)",
+      "Bash(./gradlew :composeApp:assembleDebug --info)",
+      "Read(//private/tmp/**)",
+      "Bash(jar -tf /Users/germandebustamanteconde/.gradle/caches/modules-2/files-2.1/io.insert-koin/koin-compiler-gradle-plugin/0.4.1/86ff57f7d132bf2b9fd57472541bae96a6925cbb/koin-compiler-gradle-plugin-0.4.1.jar)",
+      "Bash(unzip -l /Users/germandebustamanteconde/.gradle/caches/modules-2/files-2.1/io.insert-koin/koin-compiler-gradle-plugin/0.4.1/86ff57f7d132bf2b9fd57472541bae96a6925cbb/koin-compiler-gradle-plugin-0.4.1-sources.jar)",
+      "Bash(jar:*)",
+      "Bash(./gradlew :composeApp:compileCommonMainKotlinMetadata)",
+      "Bash(curl -s \"https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/FiltroProvincia/41\" -H \"Accept: application/json\")",
+      "Bash(curl -s -w \"\\\\n\" \"https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/FiltroProvincia/41\" -H \"Accept: application/json\" --silent)",
+      "Bash(curl -s \"https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/FiltroProvincia/41\" --compressed)",
+      "WebFetch(domain:ktor.io)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(nmap --script ssl-enum-ciphers -p 443 sedeaplicaciones.minetur.gob.es)",
+      "Bash(openssl s_client -connect sedeaplicaciones.minetur.gob.es:443 -tls1_2)"
+    ]
+  }
+}
