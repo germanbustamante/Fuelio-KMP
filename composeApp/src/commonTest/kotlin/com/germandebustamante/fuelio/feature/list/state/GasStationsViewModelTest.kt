@@ -6,8 +6,12 @@ import com.germandebustamante.fuelio.core.domain.gasstation.testing.GasStationBO
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationsByLocationUseCase
 import com.germandebustamante.fuelio.core.domain.province.testing.ProvinceBOMother
 import com.germandebustamante.fuelio.core.domain.province.usecase.GetProvincesUseCase
+import com.germandebustamante.fuelio.core.domain.province.usecase.ResolveProvinceByLocationUseCase
+import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
+import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionState
 import dev.mokkery.answering.returns
 import dev.mokkery.every
+import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import dev.mokkery.verify
@@ -37,6 +41,14 @@ class GasStationsViewModelTest {
     private val getProvincesUseCase: GetProvincesUseCase = mock {
         every { invoke() } returns flowOf(Result.success(ProvinceBOMother.provinceBOList()))
     }
+
+    private val locationPermissionController: LocationPermissionController = mock {
+        everySuspend { requestPermission() } returns LocationPermissionState.Granted
+        everySuspend { checkCurrentStatus() } returns LocationPermissionState.Granted
+        everySuspend { getCurrentLocation() } returns null
+    }
+
+    private val resolveProvinceByLocationUseCase = ResolveProvinceByLocationUseCase()
 
     private lateinit var sut: GasStationsViewModel
 
@@ -145,6 +157,51 @@ class GasStationsViewModelTest {
             }
         }
 
+    @Test
+    fun `init - GIVEN location matches a province WHEN ViewModel initialized THEN matching province is selected`() =
+        runTest {
+            val targetProvince = ProvinceBOMother.provinceBOList()[1]
+            everySuspend { locationPermissionController.getCurrentLocation() } returns
+                LocationPermissionController.Location(targetProvince.name)
+
+            createSut()
+            advanceUntilIdle()
+
+            sut.state.test {
+                assertEquals(targetProvince, awaitItem().selectedProvince)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `init - GIVEN location does not match any province WHEN ViewModel initialized THEN first province is selected`() =
+        runTest {
+            everySuspend { locationPermissionController.getCurrentLocation() } returns
+                LocationPermissionController.Location("Tokio")
+
+            createSut()
+            advanceUntilIdle()
+
+            sut.state.test {
+                assertEquals(ProvinceBOMother.provinceBOList().first(), awaitItem().selectedProvince)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `init - GIVEN location is null WHEN ViewModel initialized THEN first province is selected`() =
+        runTest {
+            everySuspend { locationPermissionController.getCurrentLocation() } returns null
+
+            createSut()
+            advanceUntilIdle()
+
+            sut.state.test {
+                assertEquals(ProvinceBOMother.provinceBOList().first(), awaitItem().selectedProvince)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
     //endregion
 
     //region onProvinceSelected
@@ -237,7 +294,9 @@ class GasStationsViewModelTest {
     private fun createSut() {
         sut = GasStationsViewModel(
             getGasStationByLocationUseCase = getGasStationsByLocationUseCase,
-            getProvincesUseCase = getProvincesUseCase
+            getProvincesUseCase = getProvincesUseCase,
+            locationPermissionController = locationPermissionController,
+            resolveProvinceByLocationUseCase = resolveProvinceByLocationUseCase,
         )
     }
 }
