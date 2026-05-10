@@ -5,6 +5,10 @@
         <key>CADisableMinimumFrameDurationOnPhone</key>
         <true/>
 
+        <!-- Location permission -->
+        <key>NSLocationWhenInUseUsageDescription</key>
+        <string>Fuelio uses your location to find nearby fuel stations and log refuels automatically.</string>
+
         <key>NSAppTransportSecurity</key>
         <dict>
             <key>NSExceptionDomains</key>

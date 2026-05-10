@@ -6,6 +6,8 @@ import com.germandebustamante.fuelio.core.domain.error.toDomainError
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationsByLocationUseCase
 import com.germandebustamante.fuelio.core.domain.province.model.ProvinceBO
 import com.germandebustamante.fuelio.core.domain.province.usecase.GetProvincesUseCase
+import com.germandebustamante.fuelio.core.domain.province.usecase.ResolveProvinceByLocationUseCase
+import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,6 +21,8 @@ import kotlinx.coroutines.launch
 class GasStationsViewModel(
     private val getGasStationByLocationUseCase: GetGasStationsByLocationUseCase,
     private val getProvincesUseCase: GetProvincesUseCase,
+    private val locationPermissionController: LocationPermissionController,
+    private val resolveProvinceByLocationUseCase: ResolveProvinceByLocationUseCase,
 ) : ViewModel() {
 
     private val _selectedProvince: MutableStateFlow<ProvinceBO?> = MutableStateFlow(null)
@@ -28,7 +32,9 @@ class GasStationsViewModel(
 
     init {
         viewModelScope.launch {
-            fetchProvinces()
+            locationPermissionController.requestPermission()
+            val locationName = locationPermissionController.getCurrentLocation()?.province
+            fetchProvinces(locationName)
             fetchProvinceGasStations()
         }
     }
@@ -45,12 +51,12 @@ class GasStationsViewModel(
         _selectedProvince.update { province }
     }
 
-    private suspend fun fetchProvinces() {
+    private suspend fun fetchProvinces(locationName: String?) {
         getProvincesUseCase().collect { result ->
             result.fold(
                 onSuccess = { provinces ->
                     _state.update { it.copy(provinces = provinces) }
-                    _selectedProvince.update { provinces.firstOrNull() }
+                    _selectedProvince.update { resolveProvinceByLocationUseCase(provinces, locationName) }
                 },
                 onFailure = this@GasStationsViewModel::notifyError
             )
@@ -83,4 +89,5 @@ class GasStationsViewModel(
     private fun notifyError(error: Throwable) {
         _state.update { it.copy(error = error.toDomainError(), isLoading = false) }
     }
+
 }

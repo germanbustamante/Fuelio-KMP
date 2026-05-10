@@ -41,6 +41,7 @@ import com.germandebustamante.fuelio.designsystem.button.FuelioIconButton
 import com.germandebustamante.fuelio.designsystem.button.config.icon.IconButtonConfig
 import com.germandebustamante.fuelio.designsystem.button.config.icon.IconButtonSize
 import com.germandebustamante.fuelio.feature.common.dialog.error.ErrorDialog
+import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import com.germandebustamante.fuelio.feature.list.state.GasStationsUIState
 import com.germandebustamante.fuelio.feature.list.state.GasStationsViewModel
 import com.germandebustamante.fuelio.feature.list.state.fakeGasStationsUIState
@@ -55,10 +56,12 @@ import fuelio.composeapp.generated.resources.select_province
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Composable
 fun GasStationsScreen(
-    viewModel: GasStationsViewModel = koinViewModel<GasStationsViewModel>(),
+    locationPermissionController: LocationPermissionController,
+    viewModel: GasStationsViewModel = koinViewModel { parametersOf(locationPermissionController) },
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
