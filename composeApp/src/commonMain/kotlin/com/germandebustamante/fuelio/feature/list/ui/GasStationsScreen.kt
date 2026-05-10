@@ -22,6 +22,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -41,17 +42,23 @@ import com.germandebustamante.fuelio.designsystem.button.FuelioIconButton
 import com.germandebustamante.fuelio.designsystem.button.config.icon.IconButtonConfig
 import com.germandebustamante.fuelio.designsystem.button.config.icon.IconButtonSize
 import com.germandebustamante.fuelio.feature.common.dialog.error.ErrorDialog
+import com.germandebustamante.fuelio.feature.common.dialog.permission.LocationPermissionDialog
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
+import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionState
 import com.germandebustamante.fuelio.feature.list.state.GasStationsUIState
 import com.germandebustamante.fuelio.feature.list.state.GasStationsViewModel
 import com.germandebustamante.fuelio.feature.list.state.fakeGasStationsUIState
 import com.germandebustamante.fuelio.feature.list.state.fakeGasStationsUIStateError
 import com.germandebustamante.fuelio.feature.list.state.fakeGasStationsUIStateLoading
+import com.germandebustamante.fuelio.feature.list.state.fakeGasStationsUIStatePermissionDenied
+import com.germandebustamante.fuelio.feature.list.state.fakeGasStationsUIStatePermissionDeniedAlways
 import com.germandebustamante.fuelio.feature.list.state.fakeGasStationsUIStateShowModalSheet
 import fuelio.composeapp.generated.resources.Res
 import fuelio.composeapp.generated.resources.app_name
 import fuelio.composeapp.generated.resources.close_ic
+import fuelio.composeapp.generated.resources.detect_location
 import fuelio.composeapp.generated.resources.gas_station_ic
+import fuelio.composeapp.generated.resources.my_location_ic
 import fuelio.composeapp.generated.resources.select_province
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -71,6 +78,10 @@ fun GasStationsScreen(
         onFilterProvinceToggle = viewModel::onFilterProvinceToggle,
         onProvinceSelected = viewModel::onProvinceSelected,
         onDismissError = viewModel::onDismissError,
+        onDetectLocationTapped = viewModel::onDetectLocationTapped,
+        onPermissionRationaleAccepted = viewModel::onPermissionRationaleAccepted,
+        onOpenAppSettings = viewModel::onOpenAppSettings,
+        onPermissionDialogDismissed = viewModel::onPermissionDialogDismissed,
         modifier = modifier,
     )
 }
@@ -81,6 +92,10 @@ private fun GasStationsScreen(
     onDismissError: () -> Unit,
     onFilterProvinceToggle: (Boolean) -> Unit,
     onProvinceSelected: (ProvinceBO) -> Unit,
+    onDetectLocationTapped: () -> Unit,
+    onPermissionRationaleAccepted: () -> Unit,
+    onOpenAppSettings: () -> Unit,
+    onPermissionDialogDismissed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.background(MaterialTheme.colorScheme.background)) {
@@ -89,6 +104,7 @@ private fun GasStationsScreen(
                 state = state,
                 onFilterProvinceToggle = onFilterProvinceToggle,
                 onProvinceSelected = onProvinceSelected,
+                onDetectLocationTapped = onDetectLocationTapped,
                 modifier = Modifier.fillMaxSize(),
             )
         }
@@ -103,6 +119,17 @@ private fun GasStationsScreen(
                 onDismissRequest = onDismissError,
             )
         }
+
+        state.locationPermissionState?.let { permissionState ->
+            LocationPermissionDialog(
+                permissionState = permissionState,
+                onPrimaryAction = when (permissionState) {
+                    LocationPermissionState.DeniedAlways -> onOpenAppSettings
+                    else -> onPermissionRationaleAccepted
+                },
+                onDismiss = onPermissionDialogDismissed,
+            )
+        }
     }
 }
 
@@ -111,6 +138,7 @@ private fun GasStationsContent(
     state: GasStationsUIState,
     onFilterProvinceToggle: (Boolean) -> Unit,
     onProvinceSelected: (ProvinceBO) -> Unit,
+    onDetectLocationTapped: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
@@ -140,6 +168,14 @@ private fun GasStationsContent(
             )
 
             Spacer(Modifier.weight(1f))
+
+            IconButton(onClick = onDetectLocationTapped) {
+                Icon(
+                    painter = painterResource(Res.drawable.my_location_ic),
+                    contentDescription = stringResource(Res.string.detect_location),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
 
             state.selectedProvince?.let {
                 ProvinceFilterButton(province = it, onClick = { onFilterProvinceToggle(true) })
@@ -248,7 +284,11 @@ private fun GasStationsScreenPreview() {
             state = fakeGasStationsUIState,
             onFilterProvinceToggle = {},
             onProvinceSelected = {},
-            onDismissError = {}
+            onDismissError = {},
+            onDetectLocationTapped = {},
+            onPermissionRationaleAccepted = {},
+            onOpenAppSettings = {},
+            onPermissionDialogDismissed = {},
         )
     }
 }
@@ -261,7 +301,11 @@ private fun GasStationWithProvincesModalOpenedPreview() {
             state = fakeGasStationsUIStateShowModalSheet,
             onFilterProvinceToggle = {},
             onProvinceSelected = {},
-            onDismissError = {}
+            onDismissError = {},
+            onDetectLocationTapped = {},
+            onPermissionRationaleAccepted = {},
+            onOpenAppSettings = {},
+            onPermissionDialogDismissed = {},
         )
     }
 }
@@ -274,7 +318,11 @@ private fun GasStationsScreenLoadingPreview() {
             state = fakeGasStationsUIStateLoading,
             onFilterProvinceToggle = {},
             onProvinceSelected = {},
-            onDismissError = {}
+            onDismissError = {},
+            onDetectLocationTapped = {},
+            onPermissionRationaleAccepted = {},
+            onOpenAppSettings = {},
+            onPermissionDialogDismissed = {},
         )
     }
 }
@@ -287,7 +335,45 @@ private fun GasStationsScreenErrorPreview() {
             state = fakeGasStationsUIStateError,
             onFilterProvinceToggle = {},
             onProvinceSelected = {},
-            onDismissError = {}
+            onDismissError = {},
+            onDetectLocationTapped = {},
+            onPermissionRationaleAccepted = {},
+            onOpenAppSettings = {},
+            onPermissionDialogDismissed = {},
+        )
+    }
+}
+
+@Preview("Permission Denied", showBackground = true)
+@Composable
+private fun GasStationsScreenPermissionDeniedPreview() {
+    FuelioTheme {
+        GasStationsScreen(
+            state = fakeGasStationsUIStatePermissionDenied,
+            onFilterProvinceToggle = {},
+            onProvinceSelected = {},
+            onDismissError = {},
+            onDetectLocationTapped = {},
+            onPermissionRationaleAccepted = {},
+            onOpenAppSettings = {},
+            onPermissionDialogDismissed = {},
+        )
+    }
+}
+
+@Preview("Permission Denied Always", showBackground = true)
+@Composable
+private fun GasStationsScreenPermissionDeniedAlwaysPreview() {
+    FuelioTheme {
+        GasStationsScreen(
+            state = fakeGasStationsUIStatePermissionDeniedAlways,
+            onFilterProvinceToggle = {},
+            onProvinceSelected = {},
+            onDismissError = {},
+            onDetectLocationTapped = {},
+            onPermissionRationaleAccepted = {},
+            onOpenAppSettings = {},
+            onPermissionDialogDismissed = {},
         )
     }
 }

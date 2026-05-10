@@ -8,6 +8,7 @@ import com.germandebustamante.fuelio.core.domain.province.model.ProvinceBO
 import com.germandebustamante.fuelio.core.domain.province.usecase.GetProvincesUseCase
 import com.germandebustamante.fuelio.core.domain.province.usecase.ResolveProvinceByLocationUseCase
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
+import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,10 +33,24 @@ class GasStationsViewModel(
 
     init {
         viewModelScope.launch {
-            locationPermissionController.requestPermission()
-            val locationName = locationPermissionController.getCurrentLocation()?.province
-            fetchProvinces(locationName)
+            fetchProvinces()
             fetchProvinceGasStations()
+        }
+    }
+
+    fun onDetectLocationTapped() {
+        viewModelScope.launch {
+            when (val permissionResult = locationPermissionController.requestPermission()) {
+                LocationPermissionState.Granted -> {
+                    val locationName = locationPermissionController.getCurrentLocation()?.province
+                    _selectedProvince.update { resolveProvinceByLocationUseCase(_state.value.provinces, locationName) }
+                }
+                LocationPermissionState.Denied,
+                LocationPermissionState.DeniedAlways -> {
+                    _state.update { it.copy(locationPermissionState = permissionResult) }
+                }
+                LocationPermissionState.NotDetermined -> Unit
+            }
         }
     }
 
@@ -51,12 +66,12 @@ class GasStationsViewModel(
         _selectedProvince.update { province }
     }
 
-    private suspend fun fetchProvinces(locationName: String?) {
+    private suspend fun fetchProvinces() {
         getProvincesUseCase().collect { result ->
             result.fold(
                 onSuccess = { provinces ->
                     _state.update { it.copy(provinces = provinces) }
-                    _selectedProvince.update { resolveProvinceByLocationUseCase(provinces, locationName) }
+                    _selectedProvince.update { resolveProvinceByLocationUseCase(provinces, null) }
                 },
                 onFailure = this@GasStationsViewModel::notifyError
             )
@@ -84,6 +99,32 @@ class GasStationsViewModel(
                     onFailure = this@GasStationsViewModel::notifyError
                 )
             }
+    }
+
+    fun onPermissionRationaleAccepted() {
+        viewModelScope.launch {
+            _state.update { it.copy(locationPermissionState = null) }
+            val permissionResult = locationPermissionController.requestPermission()
+            when (permissionResult) {
+                LocationPermissionState.Granted -> {
+                    val locationName = locationPermissionController.getCurrentLocation()?.province
+                    _selectedProvince.update { resolveProvinceByLocationUseCase(_state.value.provinces, locationName) }
+                }
+                LocationPermissionState.DeniedAlways -> {
+                    _state.update { it.copy(locationPermissionState = LocationPermissionState.DeniedAlways) }
+                }
+                else -> Unit
+            }
+        }
+    }
+
+    fun onPermissionDialogDismissed() {
+        _state.update { it.copy(locationPermissionState = null) }
+    }
+
+    fun onOpenAppSettings() {
+        locationPermissionController.openAppSettings()
+        _state.update { it.copy(locationPermissionState = null) }
     }
 
     private fun notifyError(error: Throwable) {

@@ -5,4 +5,11 @@
     <string name="closed">Cerrado</string>
     <string name="accept">Aceptar</string>
     <string name="select_province">Seleccionar Provincia</string>
+    <string name="location_permission_title">Permiso de ubicación</string>
+    <string name="location_permission_denied_description">Fuelio usa tu ubicación para mostrarte las gasolineras más cercanas.</string>
+    <string name="location_permission_denied_always_description">El permiso de ubicación fue denegado permanentemente. Puedes activarlo desde los ajustes de la app.</string>
+    <string name="location_permission_allow">Permitir</string>
+    <string name="location_permission_open_settings">Abrir ajustes</string>
+    <string name="location_permission_dismiss">Ahora no</string>
+    <string name="detect_location">Detectar mi ubicación</string>
 </resources>

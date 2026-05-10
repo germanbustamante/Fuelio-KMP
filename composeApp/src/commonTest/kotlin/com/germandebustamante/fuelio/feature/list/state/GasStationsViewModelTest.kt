@@ -15,6 +15,7 @@ import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
 import dev.mokkery.mock
 import dev.mokkery.verify
+import dev.mokkery.verifySuspend
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -46,6 +47,7 @@ class GasStationsViewModelTest {
         everySuspend { requestPermission() } returns LocationPermissionState.Granted
         everySuspend { checkCurrentStatus() } returns LocationPermissionState.Granted
         everySuspend { getCurrentLocation() } returns null
+        every { openAppSettings() } returns Unit
     }
 
     private val resolveProvinceByLocationUseCase = ResolveProvinceByLocationUseCase()
@@ -158,13 +160,31 @@ class GasStationsViewModelTest {
         }
 
     @Test
-    fun `init - GIVEN location matches a province WHEN ViewModel initialized THEN matching province is selected`() =
+    fun `init - WHEN ViewModel initialized THEN locationPermissionState is null`() =
+        runTest {
+            createSut()
+            advanceUntilIdle()
+
+            sut.state.test {
+                assertNull(awaitItem().locationPermissionState)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    //endregion
+
+    //region onDetectLocationTapped
+
+    @Test
+    fun `onDetectLocationTapped - GIVEN location matches a province WHEN tapped THEN matching province is selected`() =
         runTest {
             val targetProvince = ProvinceBOMother.provinceBOList()[1]
             everySuspend { locationPermissionController.getCurrentLocation() } returns
                 LocationPermissionController.Location(targetProvince.name)
-
             createSut()
+            advanceUntilIdle()
+
+            sut.onDetectLocationTapped()
             advanceUntilIdle()
 
             sut.state.test {
@@ -174,12 +194,14 @@ class GasStationsViewModelTest {
         }
 
     @Test
-    fun `init - GIVEN location does not match any province WHEN ViewModel initialized THEN first province is selected`() =
+    fun `onDetectLocationTapped - GIVEN location does not match any province WHEN tapped THEN first province is selected`() =
         runTest {
             everySuspend { locationPermissionController.getCurrentLocation() } returns
                 LocationPermissionController.Location("Tokio")
-
             createSut()
+            advanceUntilIdle()
+
+            sut.onDetectLocationTapped()
             advanceUntilIdle()
 
             sut.state.test {
@@ -189,15 +211,49 @@ class GasStationsViewModelTest {
         }
 
     @Test
-    fun `init - GIVEN location is null WHEN ViewModel initialized THEN first province is selected`() =
+    fun `onDetectLocationTapped - GIVEN location is null WHEN tapped THEN first province is selected`() =
         runTest {
             everySuspend { locationPermissionController.getCurrentLocation() } returns null
-
             createSut()
+            advanceUntilIdle()
+
+            sut.onDetectLocationTapped()
             advanceUntilIdle()
 
             sut.state.test {
                 assertEquals(ProvinceBOMother.provinceBOList().first(), awaitItem().selectedProvince)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `onDetectLocationTapped - GIVEN permission denied WHEN tapped THEN locationPermissionState is Denied`() =
+        runTest {
+            everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.Denied
+            createSut()
+            advanceUntilIdle()
+
+            sut.onDetectLocationTapped()
+            advanceUntilIdle()
+
+            sut.state.test {
+                assertEquals(LocationPermissionState.Denied, awaitItem().locationPermissionState)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `onDetectLocationTapped - GIVEN permission denied always WHEN tapped THEN locationPermissionState is DeniedAlways`() =
+        runTest {
+            everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.DeniedAlways
+            createSut()
+            advanceUntilIdle()
+
+            sut.onDetectLocationTapped()
+            advanceUntilIdle()
+
+            sut.state.test {
+                assertEquals(LocationPermissionState.DeniedAlways, awaitItem().locationPermissionState)
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -252,6 +308,113 @@ class GasStationsViewModelTest {
 
             sut.state.test {
                 assertNull(awaitItem().error)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    //endregion
+
+    //region onPermissionRationaleAccepted
+
+    @Test
+    fun `onPermissionRationaleAccepted - WHEN re-request granted THEN locationPermissionState is null`() =
+        runTest {
+            everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.Denied
+            createSut()
+            advanceUntilIdle()
+            sut.onDetectLocationTapped()
+            advanceUntilIdle()
+
+            everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.Granted
+            sut.onPermissionRationaleAccepted()
+            advanceUntilIdle()
+
+            sut.state.test {
+                assertNull(awaitItem().locationPermissionState)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `onPermissionRationaleAccepted - WHEN re-request granted THEN province resolved from location`() =
+        runTest {
+            val targetProvince = ProvinceBOMother.provinceBOList()[1]
+            everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.Denied
+            createSut()
+            advanceUntilIdle()
+            sut.onDetectLocationTapped()
+            advanceUntilIdle()
+
+            everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.Granted
+            everySuspend { locationPermissionController.getCurrentLocation() } returns
+                LocationPermissionController.Location(targetProvince.name)
+            sut.onPermissionRationaleAccepted()
+            advanceUntilIdle()
+
+            sut.state.test {
+                assertEquals(targetProvince, awaitItem().selectedProvince)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `onPermissionRationaleAccepted - WHEN re-request denied always THEN locationPermissionState is DeniedAlways`() =
+        runTest {
+            everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.Denied
+            createSut()
+            advanceUntilIdle()
+            sut.onDetectLocationTapped()
+            advanceUntilIdle()
+
+            everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.DeniedAlways
+            sut.onPermissionRationaleAccepted()
+            advanceUntilIdle()
+
+            sut.state.test {
+                assertEquals(LocationPermissionState.DeniedAlways, awaitItem().locationPermissionState)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    //endregion
+
+    //region onPermissionDialogDismissed
+
+    @Test
+    fun `onPermissionDialogDismissed - GIVEN permission denied state WHEN dismissed THEN locationPermissionState is null`() =
+        runTest {
+            everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.Denied
+            createSut()
+            advanceUntilIdle()
+            sut.onDetectLocationTapped()
+            advanceUntilIdle()
+
+            sut.onPermissionDialogDismissed()
+
+            sut.state.test {
+                assertNull(awaitItem().locationPermissionState)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    //endregion
+
+    //region onOpenAppSettings
+
+    @Test
+    fun `onOpenAppSettings - WHEN called THEN openAppSettings is invoked and locationPermissionState is null`() =
+        runTest {
+            everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.DeniedAlways
+            createSut()
+            advanceUntilIdle()
+            sut.onDetectLocationTapped()
+            advanceUntilIdle()
+
+            sut.onOpenAppSettings()
+
+            verify { locationPermissionController.openAppSettings() }
+            sut.state.test {
+                assertNull(awaitItem().locationPermissionState)
                 cancelAndIgnoreRemainingEvents()
             }
         }

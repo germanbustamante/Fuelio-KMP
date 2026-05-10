@@ -3,6 +3,7 @@ package com.germandebustamante.fuelio.feature.list.state
 import com.germandebustamante.fuelio.core.domain.error.DomainError
 import com.germandebustamante.fuelio.core.domain.province.model.ProvinceBO
 import com.germandebustamante.fuelio.core.fake.fakeGasStations
+import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionState
 
 val fakeProvince = ProvinceBO("1", "Sevilla")
 val fakeProvinces = listOf(
@@ -29,4 +30,12 @@ val fakeGasStationsUIStateLoading = fakeGasStationsUIState.copy(
 
 val fakeGasStationsUIStateShowModalSheet = fakeGasStationsUIState.copy(
     showFilterProvince = true,
+)
+
+val fakeGasStationsUIStatePermissionDenied = fakeGasStationsUIState.copy(
+    locationPermissionState = LocationPermissionState.Denied,
+)
+
+val fakeGasStationsUIStatePermissionDeniedAlways = fakeGasStationsUIState.copy(
+    locationPermissionState = LocationPermissionState.DeniedAlways,
 )
