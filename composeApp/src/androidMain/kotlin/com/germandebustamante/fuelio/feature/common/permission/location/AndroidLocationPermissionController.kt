@@ -78,8 +78,7 @@ class AndroidLocationPermissionController(
 
     @SuppressLint("MissingPermission")
     private suspend fun getLastLocation(): Location? = suspendCancellableCoroutine { continuation ->
-        fusedLocationProvider.lastLocation
-            .addOnSuccessListener { continuation.resume(it) }
+        fusedLocationProvider.lastLocation.addOnSuccessListener { continuation.resume(it) }
             .addOnFailureListener { continuation.resume(null) }
     }
 
@@ -88,12 +87,19 @@ class AndroidLocationPermissionController(
             val geocoder = Geocoder(activity, Locale.getDefault())
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 geocoder.getFromLocation(location.latitude, location.longitude, CITY_MAX_RESULTS) { addresses ->
-                    continuation.resume(addresses.firstProvince()?.let { LocationPermissionController.Location(it) })
+                    continuation.resume(
+                        addresses.firstProvince()
+                            ?.let { LocationPermissionController.Location(it, location.latitude, location.longitude) })
                 }
             } else {
                 @Suppress("DEPRECATION")
-                val province = geocoder.getFromLocation(location.latitude, location.longitude, CITY_MAX_RESULTS)?.firstProvince()
-                continuation.resume(province?.let { LocationPermissionController.Location(it) })
+                val province =
+                    geocoder.getFromLocation(location.latitude, location.longitude, CITY_MAX_RESULTS)?.firstProvince()
+                continuation.resume(province?.let {
+                    LocationPermissionController.Location(
+                        it, location.latitude, location.longitude
+                    )
+                })
             }
         }
 
@@ -101,8 +107,7 @@ class AndroidLocationPermissionController(
         ContextCompat.checkSelfPermission(activity, LOCATION_PERMISSION) == PackageManager.PERMISSION_GRANTED
 
     private fun getAlreadyAskedFlag() =
-        activity.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getBoolean(KEY_ALREADY_ASKED, false)
+        activity.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getBoolean(KEY_ALREADY_ASKED, false)
 
     private fun setAlreadyAskedFlag() {
         activity.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit { putBoolean(KEY_ALREADY_ASKED, true) }
