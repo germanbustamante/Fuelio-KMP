@@ -9,5 +9,7 @@ interface LocationPermissionController {
 
     data class Location(
         val province: String,
+        val latitude: Double,
+        val longitude: Double,
     )
 }

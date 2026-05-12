@@ -68,7 +68,9 @@ class IosLocationPermissionController : LocationPermissionController {
     private suspend fun reverseGeocode(location: CLLocation): LocationPermissionController.Location? = suspendCancellableCoroutine { continuation ->
         CLGeocoder().reverseGeocodeLocation(location) { placemarks, _ ->
             val province = (placemarks?.firstOrNull() as? CLPlacemark)?.administrativeArea
-            continuation.resume(province?.let { LocationPermissionController.Location(it) })
+            continuation.resume(province?.let {
+                LocationPermissionController.Location(it, location.coordinate.useContents { latitude }, location.coordinate.useContents { longitude })
+            })
         }
     }
 

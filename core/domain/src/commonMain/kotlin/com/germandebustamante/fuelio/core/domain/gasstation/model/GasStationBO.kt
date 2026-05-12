@@ -1,5 +1,7 @@
 package com.germandebustamante.fuelio.core.domain.gasstation.model
 
+import kotlinx.datetime.LocalDateTime
+
 data class GasStationBO(
     val id: String,
     val name: String,
@@ -10,11 +12,27 @@ data class GasStationBO(
     val zipCode: String,
     val latitude: Double,
     val longitude: Double,
-    val schedule: String,
+    val schedule: List<ScheduleSegmentBO>,
     val gasolinePrice95: Double?,
     val gasolinePrice98: Double?,
     val dieselPrice: Double?,
     val dieselPremiumPrice: Double?,
 ) {
     fun getFullDirection() = "$address, $zipCode $municipality"
+
+    fun isOpen(now: LocalDateTime): Boolean {
+        val today = now.dayOfWeek
+        val currentTime = now.time
+        return schedule.any { segment ->
+            val inDayRange = if (segment.startDay.ordinal <= segment.endDay.ordinal) {
+                today.ordinal in segment.startDay.ordinal..segment.endDay.ordinal
+            } else {
+                today.ordinal >= segment.startDay.ordinal || today.ordinal <= segment.endDay.ordinal
+            }
+            if (!inDayRange) return@any false
+            val start = segment.startTime ?: return@any true
+            val end = segment.endTime ?: return@any true
+            if (start <= end) currentTime in start..end else currentTime >= start || currentTime <= end
+        }
+    }
 }

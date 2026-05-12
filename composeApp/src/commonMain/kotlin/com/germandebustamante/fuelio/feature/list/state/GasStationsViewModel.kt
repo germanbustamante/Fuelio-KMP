@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.germandebustamante.fuelio.core.domain.error.toDomainError
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationsByLocationUseCase
+import com.germandebustamante.fuelio.core.domain.location.distanceBetween
 import com.germandebustamante.fuelio.core.domain.province.model.ProvinceBO
 import com.germandebustamante.fuelio.core.domain.province.usecase.GetProvincesUseCase
 import com.germandebustamante.fuelio.core.domain.province.usecase.ResolveProvinceByLocationUseCase
@@ -18,6 +19,11 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
+
+private val SPAIN_TIMEZONE = TimeZone.of("Europe/Madrid")
 
 class GasStationsViewModel(
     private val getGasStationByLocationUseCase: GetGasStationsByLocationUseCase,
@@ -27,6 +33,7 @@ class GasStationsViewModel(
 ) : ViewModel() {
 
     private val _selectedProvince: MutableStateFlow<ProvinceBO?> = MutableStateFlow(null)
+    private val _userLocation: MutableStateFlow<LocationPermissionController.Location?> = MutableStateFlow(null)
 
     private val _state = MutableStateFlow(GasStationsUIState())
     val state: StateFlow<GasStationsUIState> = _state.asStateFlow()
@@ -42,8 +49,9 @@ class GasStationsViewModel(
         viewModelScope.launch {
             when (val permissionResult = locationPermissionController.requestPermission()) {
                 LocationPermissionState.Granted -> {
-                    val locationName = locationPermissionController.getCurrentLocation()?.province
-                    _selectedProvince.update { resolveProvinceByLocationUseCase(_state.value.provinces, locationName) }
+                    val location = locationPermissionController.getCurrentLocation()
+                    _userLocation.update { location }
+                    _selectedProvince.update { resolveProvinceByLocationUseCase(_state.value.provinces, location?.province) }
                 }
                 LocationPermissionState.Denied,
                 LocationPermissionState.DeniedAlways -> {
@@ -89,9 +97,20 @@ class GasStationsViewModel(
             .collect { result ->
                 result.fold(
                     onSuccess = { gasStations ->
+                        val now = Clock.System.now().toLocalDateTime(SPAIN_TIMEZONE)
+                        val userLocation = _userLocation.value
                         _state.update {
                             it.copy(
-                                gasStations = gasStations.map(::GasStationItemVO),
+                                gasStations = gasStations
+                                    .map { station ->
+                                        station.toGasStationItemVO(
+                                            isOpen = station.isOpen(now),
+                                            distanceInKilometers = userLocation?.let { loc ->
+                                                distanceBetween(loc.latitude, loc.longitude, station.latitude, station.longitude)
+                                            }
+                                        )
+                                    }
+                                    .sortedWith(compareBy(nullsLast()) { it.distanceInKilometers }),
                                 isLoading = false
                             )
                         }
@@ -107,8 +126,9 @@ class GasStationsViewModel(
             val permissionResult = locationPermissionController.requestPermission()
             when (permissionResult) {
                 LocationPermissionState.Granted -> {
-                    val locationName = locationPermissionController.getCurrentLocation()?.province
-                    _selectedProvince.update { resolveProvinceByLocationUseCase(_state.value.provinces, locationName) }
+                    val location = locationPermissionController.getCurrentLocation()
+                    _userLocation.update { location }
+                    _selectedProvince.update { resolveProvinceByLocationUseCase(_state.value.provinces, location?.province) }
                 }
                 LocationPermissionState.DeniedAlways -> {
                     _state.update { it.copy(locationPermissionState = LocationPermissionState.DeniedAlways) }
@@ -130,5 +150,4 @@ class GasStationsViewModel(
     private fun notifyError(error: Throwable) {
         _state.update { it.copy(error = error.toDomainError(), isLoading = false) }
     }
-
 }

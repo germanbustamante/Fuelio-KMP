@@ -79,7 +79,7 @@ fun GasStationItem(gasStation: GasStationItemVO, modifier: Modifier = Modifier) 
                 )
 
                 ScheduleAndLocationChip(
-                    isOpened = gasStation.isOpen(),
+                    isOpened = gasStation.isOpen,
                     kilometersDistance = gasStation.distanceInKilometers
                 )
             }
@@ -95,7 +95,7 @@ fun GasStationItem(gasStation: GasStationItemVO, modifier: Modifier = Modifier) 
 @Composable
 private fun ScheduleAndLocationChip(
     isOpened: Boolean,
-    kilometersDistance: Double,
+    kilometersDistance: Double?,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -121,23 +121,25 @@ private fun ScheduleAndLocationChip(
             style = MaterialTheme.typography.bodySmall
         )
 
-        Box(
-            modifier = Modifier
-                .size(4.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.secondary)
-        )
+        if (kilometersDistance != null) {
+            Box(
+                modifier = Modifier
+                    .size(4.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.secondary)
+            )
 
-        Icon(
-            painter = painterResource(Res.drawable.distance_km_ic),
-            contentDescription = null,
-            modifier = Modifier.size(12.dp)
-        )
+            Icon(
+                painter = painterResource(Res.drawable.distance_km_ic),
+                contentDescription = null,
+                modifier = Modifier.size(12.dp)
+            )
 
-        Text(
-            text = kilometersDistance.formatAsKilometers(),
-            style = MaterialTheme.typography.bodySmall
-        )
+            Text(
+                text = kilometersDistance.formatAsKilometers(),
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
     }
 }
 
