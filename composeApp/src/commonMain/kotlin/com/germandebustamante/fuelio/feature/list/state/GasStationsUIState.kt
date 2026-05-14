@@ -8,6 +8,7 @@ data class GasStationsUIState(
     val gasStations: List<GasStationItemVO> = emptyList(),
     val provinces: List<ProvinceBO> = emptyList(),
     val selectedProvince: ProvinceBO? = null,
+    val selectedFuelFilter: FuelFilter = FuelFilter.Gasoline95,
     val isLoading: Boolean = true,
     val showFilterProvince: Boolean = false,
     val error: DomainError? = null,

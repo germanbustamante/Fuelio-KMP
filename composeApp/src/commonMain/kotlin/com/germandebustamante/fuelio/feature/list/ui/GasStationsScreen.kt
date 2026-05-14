@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.germandebustamante.fuelio.core.domain.province.model.ProvinceBO
 import com.germandebustamante.fuelio.core.ui.theme.FuelioTheme
+import com.germandebustamante.fuelio.feature.list.state.FuelFilter
 import com.germandebustamante.fuelio.designsystem.button.FuelioIconButton
 import com.germandebustamante.fuelio.designsystem.button.config.icon.IconButtonConfig
 import com.germandebustamante.fuelio.designsystem.button.config.icon.IconButtonSize
@@ -77,6 +78,7 @@ fun GasStationsScreen(
         state = state,
         onFilterProvinceToggle = viewModel::onFilterProvinceToggle,
         onProvinceSelected = viewModel::onProvinceSelected,
+        onFuelFilterSelected = viewModel::onFuelFilterSelected,
         onDismissError = viewModel::onDismissError,
         onDetectLocationTapped = viewModel::onDetectLocationTapped,
         onPermissionRationaleAccepted = viewModel::onPermissionRationaleAccepted,
@@ -92,6 +94,7 @@ private fun GasStationsScreen(
     onDismissError: () -> Unit,
     onFilterProvinceToggle: (Boolean) -> Unit,
     onProvinceSelected: (ProvinceBO) -> Unit,
+    onFuelFilterSelected: (FuelFilter) -> Unit,
     onDetectLocationTapped: () -> Unit,
     onPermissionRationaleAccepted: () -> Unit,
     onOpenAppSettings: () -> Unit,
@@ -104,6 +107,7 @@ private fun GasStationsScreen(
                 state = state,
                 onFilterProvinceToggle = onFilterProvinceToggle,
                 onProvinceSelected = onProvinceSelected,
+                onFuelFilterSelected = onFuelFilterSelected,
                 onDetectLocationTapped = onDetectLocationTapped,
                 modifier = Modifier.fillMaxSize(),
             )
@@ -138,6 +142,7 @@ private fun GasStationsContent(
     state: GasStationsUIState,
     onFilterProvinceToggle: (Boolean) -> Unit,
     onProvinceSelected: (ProvinceBO) -> Unit,
+    onFuelFilterSelected: (FuelFilter) -> Unit,
     onDetectLocationTapped: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -181,6 +186,11 @@ private fun GasStationsContent(
                 ProvinceFilterButton(province = it, onClick = { onFilterProvinceToggle(true) })
             }
         }
+
+        FuelFilterSelector(
+            selectedFilter = state.selectedFuelFilter,
+            onFilterSelected = onFuelFilterSelected,
+        )
 
         HorizontalDivider()
 
@@ -284,6 +294,7 @@ private fun GasStationsScreenPreview() {
             state = fakeGasStationsUIState,
             onFilterProvinceToggle = {},
             onProvinceSelected = {},
+            onFuelFilterSelected = {},
             onDismissError = {},
             onDetectLocationTapped = {},
             onPermissionRationaleAccepted = {},
@@ -301,6 +312,7 @@ private fun GasStationWithProvincesModalOpenedPreview() {
             state = fakeGasStationsUIStateShowModalSheet,
             onFilterProvinceToggle = {},
             onProvinceSelected = {},
+            onFuelFilterSelected = {},
             onDismissError = {},
             onDetectLocationTapped = {},
             onPermissionRationaleAccepted = {},
@@ -318,6 +330,7 @@ private fun GasStationsScreenLoadingPreview() {
             state = fakeGasStationsUIStateLoading,
             onFilterProvinceToggle = {},
             onProvinceSelected = {},
+            onFuelFilterSelected = {},
             onDismissError = {},
             onDetectLocationTapped = {},
             onPermissionRationaleAccepted = {},
@@ -335,6 +348,7 @@ private fun GasStationsScreenErrorPreview() {
             state = fakeGasStationsUIStateError,
             onFilterProvinceToggle = {},
             onProvinceSelected = {},
+            onFuelFilterSelected = {},
             onDismissError = {},
             onDetectLocationTapped = {},
             onPermissionRationaleAccepted = {},
@@ -352,6 +366,7 @@ private fun GasStationsScreenPermissionDeniedPreview() {
             state = fakeGasStationsUIStatePermissionDenied,
             onFilterProvinceToggle = {},
             onProvinceSelected = {},
+            onFuelFilterSelected = {},
             onDismissError = {},
             onDetectLocationTapped = {},
             onPermissionRationaleAccepted = {},
@@ -369,6 +384,7 @@ private fun GasStationsScreenPermissionDeniedAlwaysPreview() {
             state = fakeGasStationsUIStatePermissionDeniedAlways,
             onFilterProvinceToggle = {},
             onProvinceSelected = {},
+            onFuelFilterSelected = {},
             onDismissError = {},
             onDetectLocationTapped = {},
             onPermissionRationaleAccepted = {},

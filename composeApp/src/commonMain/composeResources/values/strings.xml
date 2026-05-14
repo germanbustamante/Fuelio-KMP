@@ -12,4 +12,8 @@
     <string name="location_permission_open_settings">Open Settings</string>
     <string name="location_permission_dismiss">Not now</string>
     <string name="detect_location">Detect my location</string>
+    <string name="fuel_filter_gasoline_95">Gasoline 95</string>
+    <string name="fuel_filter_gasoline_98">Gasoline 98</string>
+    <string name="fuel_filter_diesel">Diesel</string>
+    <string name="fuel_filter_diesel_premium">Diesel+</string>
 </resources>

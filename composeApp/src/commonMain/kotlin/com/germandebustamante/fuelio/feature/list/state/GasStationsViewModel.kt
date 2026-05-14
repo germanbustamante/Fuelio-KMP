@@ -74,6 +74,15 @@ class GasStationsViewModel(
         _selectedProvince.update { province }
     }
 
+    fun onFuelFilterSelected(filter: FuelFilter) {
+        _state.update { state ->
+            state.copy(
+                selectedFuelFilter = filter,
+                gasStations = state.gasStations.map { it.copy(fuelFilter = filter) },
+            )
+        }
+    }
+
     private suspend fun fetchProvinces() {
         getProvincesUseCase().collect { result ->
             result.fold(
@@ -99,15 +108,16 @@ class GasStationsViewModel(
                     onSuccess = { gasStations ->
                         val now = Clock.System.now().toLocalDateTime(SPAIN_TIMEZONE)
                         val userLocation = _userLocation.value
-                        _state.update {
-                            it.copy(
+                        _state.update { currentState ->
+                            currentState.copy(
                                 gasStations = gasStations
                                     .map { station ->
                                         station.toGasStationItemVO(
                                             isOpen = station.isOpen(now),
                                             distanceInKilometers = userLocation?.let { loc ->
                                                 distanceBetween(loc.latitude, loc.longitude, station.latitude, station.longitude)
-                                            }
+                                            },
+                                            fuelFilter = currentState.selectedFuelFilter,
                                         )
                                     }
                                     .sortedWith(compareBy(nullsLast()) { it.distanceInKilometers }),
