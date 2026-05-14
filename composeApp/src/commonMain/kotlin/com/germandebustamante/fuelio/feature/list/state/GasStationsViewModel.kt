@@ -3,6 +3,7 @@ package com.germandebustamante.fuelio.feature.list.state
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.germandebustamante.fuelio.core.domain.error.toDomainError
+import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationBO
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationsByLocationUseCase
 import com.germandebustamante.fuelio.core.domain.location.distanceBetween
 import com.germandebustamante.fuelio.core.domain.province.model.ProvinceBO
@@ -19,11 +20,10 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
-
-private val SPAIN_TIMEZONE = TimeZone.of("Europe/Madrid")
 
 class GasStationsViewModel(
     private val getGasStationByLocationUseCase: GetGasStationsByLocationUseCase,
@@ -32,11 +32,18 @@ class GasStationsViewModel(
     private val resolveProvinceByLocationUseCase: ResolveProvinceByLocationUseCase,
 ) : ViewModel() {
 
+    //region State
+
     private val _selectedProvince: MutableStateFlow<ProvinceBO?> = MutableStateFlow(null)
     private val _userLocation: MutableStateFlow<LocationPermissionController.Location?> = MutableStateFlow(null)
+    private var allGasStations: List<GasStationItemVO> = emptyList()
 
     private val _state = MutableStateFlow(GasStationsUIState())
     val state: StateFlow<GasStationsUIState> = _state.asStateFlow()
+
+    //endregion
+
+    //region Init
 
     init {
         viewModelScope.launch {
@@ -45,52 +52,93 @@ class GasStationsViewModel(
         }
     }
 
+    //endregion
+
+    //region Location
+
     fun onDetectLocationTapped() {
         viewModelScope.launch {
-            when (val permissionResult = locationPermissionController.requestPermission()) {
-                LocationPermissionState.Granted -> {
-                    val location = locationPermissionController.getCurrentLocation()
-                    _userLocation.update { location }
-                    _selectedProvince.update { resolveProvinceByLocationUseCase(_state.value.provinces, location?.province) }
-                }
+            when (val result = locationPermissionController.requestPermission()) {
+                LocationPermissionState.Granted -> updateLocationAndProvince()
                 LocationPermissionState.Denied,
-                LocationPermissionState.DeniedAlways -> {
-                    _state.update { it.copy(locationPermissionState = permissionResult) }
-                }
+                LocationPermissionState.DeniedAlways -> _state.update { it.withLocationPermission(result) }
                 LocationPermissionState.NotDetermined -> Unit
             }
         }
     }
 
-    fun onDismissError() {
-        _state.update { it.copy(error = null) }
+    fun onPermissionRationaleAccepted() {
+        viewModelScope.launch {
+            _state.update { it.withLocationPermission(null) }
+            when (locationPermissionController.requestPermission()) {
+                LocationPermissionState.Granted -> updateLocationAndProvince()
+                LocationPermissionState.DeniedAlways -> _state.update { it.withLocationPermission(LocationPermissionState.DeniedAlways) }
+                else -> Unit
+            }
+        }
     }
 
+    fun onPermissionDialogDismissed() {
+        _state.update { it.withLocationPermission(null) }
+    }
+
+    fun onOpenAppSettings() {
+        locationPermissionController.openAppSettings()
+        _state.update { it.withLocationPermission(null) }
+    }
+
+    private suspend fun updateLocationAndProvince() {
+        val location = locationPermissionController.getCurrentLocation()
+        _userLocation.update { location }
+        _selectedProvince.update { resolveProvinceByLocationUseCase(_state.value.provinces, location?.province) }
+    }
+
+    //endregion
+
+    //region Province
+
     fun onFilterProvinceToggle(showFilterProvince: Boolean) {
-        _state.update { it.copy(showFilterProvince = showFilterProvince) }
+        _state.update { it.withProvinceFilterVisible(showFilterProvince) }
     }
 
     fun onProvinceSelected(province: ProvinceBO) {
         _selectedProvince.update { province }
     }
 
+    //endregion
+
+    //region Filters
+
     fun onFuelFilterSelected(filter: FuelFilter) {
         _state.update { state ->
-            state.copy(
-                selectedFuelFilter = filter,
-                gasStations = state.gasStations.map { it.copy(fuelFilter = filter) },
-            )
+            val stations = allGasStations
+                .map { it.withFuelFilter(filter) }
+                .applySearchQuery(state.searchQuery)
+            state.withFuelFilter(filter, stations)
         }
     }
+
+    fun onSearchQueryChanged(query: String) {
+        _state.update { state ->
+            val stations = allGasStations
+                .map { it.withFuelFilter(state.selectedFuelFilter) }
+                .applySearchQuery(query)
+            state.withSearchQuery(query, stations)
+        }
+    }
+
+    //endregion
+
+    //region Data fetching
 
     private suspend fun fetchProvinces() {
         getProvincesUseCase().collect { result ->
             result.fold(
                 onSuccess = { provinces ->
-                    _state.update { it.copy(provinces = provinces) }
+                    _state.update { it.withProvinces(provinces) }
                     _selectedProvince.update { resolveProvinceByLocationUseCase(provinces, null) }
                 },
-                onFailure = this@GasStationsViewModel::notifyError
+                onFailure = ::notifyError,
             )
         }
     }
@@ -99,65 +147,56 @@ class GasStationsViewModel(
     private suspend fun fetchProvinceGasStations() {
         _selectedProvince
             .filterNotNull()
-            .onEach { province ->
-                _state.update { it.copy(isLoading = true, selectedProvince = province) }
-            }
+            .onEach { province -> _state.update { it.withLoadingProvince(province) } }
             .flatMapLatest { province -> getGasStationByLocationUseCase(province.id) }
             .collect { result ->
                 result.fold(
                     onSuccess = { gasStations ->
                         val now = Clock.System.now().toLocalDateTime(SPAIN_TIMEZONE)
-                        val userLocation = _userLocation.value
                         _state.update { currentState ->
-                            currentState.copy(
-                                gasStations = gasStations
-                                    .map { station ->
-                                        station.toGasStationItemVO(
-                                            isOpen = station.isOpen(now),
-                                            distanceInKilometers = userLocation?.let { loc ->
-                                                distanceBetween(loc.latitude, loc.longitude, station.latitude, station.longitude)
-                                            },
-                                            fuelFilter = currentState.selectedFuelFilter,
-                                        )
-                                    }
-                                    .sortedWith(compareBy(nullsLast()) { it.distanceInKilometers }),
-                                isLoading = false
-                            )
+                            allGasStations = buildGasStationItems(gasStations, now, currentState.selectedFuelFilter)
+                            currentState.withStationsLoaded(allGasStations)
                         }
                     },
-                    onFailure = this@GasStationsViewModel::notifyError
+                    onFailure = ::notifyError,
                 )
             }
     }
 
-    fun onPermissionRationaleAccepted() {
-        viewModelScope.launch {
-            _state.update { it.copy(locationPermissionState = null) }
-            val permissionResult = locationPermissionController.requestPermission()
-            when (permissionResult) {
-                LocationPermissionState.Granted -> {
-                    val location = locationPermissionController.getCurrentLocation()
-                    _userLocation.update { location }
-                    _selectedProvince.update { resolveProvinceByLocationUseCase(_state.value.provinces, location?.province) }
-                }
-                LocationPermissionState.DeniedAlways -> {
-                    _state.update { it.copy(locationPermissionState = LocationPermissionState.DeniedAlways) }
-                }
-                else -> Unit
+    private fun buildGasStationItems(
+        gasStations: List<GasStationBO>,
+        now: LocalDateTime,
+        fuelFilter: FuelFilter,
+    ): List<GasStationItemVO> {
+        val userLocation = _userLocation.value
+        return gasStations
+            .map { station ->
+                station.toGasStationItemVO(
+                    isOpen = station.isOpen(now),
+                    distanceInKilometers = userLocation?.let { loc ->
+                        distanceBetween(loc.latitude, loc.longitude, station.latitude, station.longitude)
+                    },
+                    fuelFilter = fuelFilter,
+                )
             }
-        }
+            .sortedWith(compareBy(nullsLast()) { it.distanceInKilometers })
     }
 
-    fun onPermissionDialogDismissed() {
-        _state.update { it.copy(locationPermissionState = null) }
-    }
+    //endregion
 
-    fun onOpenAppSettings() {
-        locationPermissionController.openAppSettings()
-        _state.update { it.copy(locationPermissionState = null) }
+    //region Helpers
+
+    fun onDismissError() {
+        _state.update { it.withErrorCleared() }
     }
 
     private fun notifyError(error: Throwable) {
-        _state.update { it.copy(error = error.toDomainError(), isLoading = false) }
+        _state.update { it.withError(error.toDomainError()) }
+    }
+
+    //endregion
+
+    companion object {
+        private val SPAIN_TIMEZONE = TimeZone.of("Europe/Madrid")
     }
 }

@@ -519,6 +519,131 @@ class GasStationsViewModelTest {
 
     //endregion
 
+    //region onSearchQueryChanged
+
+    @Test
+    fun `onSearchQueryChanged - GIVEN default state WHEN ViewModel initialized THEN searchQuery is empty`() =
+        runTest {
+            createSut()
+            advanceUntilIdle()
+
+            sut.state.test {
+                assertEquals("", awaitItem().searchQuery)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `onSearchQueryChanged - GIVEN stations loaded WHEN query matches station name THEN only matching stations returned`() =
+        runTest {
+            createSut()
+            advanceUntilIdle()
+
+            sut.onSearchQueryChanged("Gasoil")
+
+            sut.state.test {
+                val stations = awaitItem().gasStations
+                assertEquals(1, stations.size)
+                assertTrue(stations.first().station.name.contains("Gasoil", ignoreCase = true))
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `onSearchQueryChanged - GIVEN stations loaded WHEN query matches address THEN only matching stations returned`() =
+        runTest {
+            createSut()
+            advanceUntilIdle()
+
+            sut.onSearchQueryChanged("Calle Principal")
+
+            sut.state.test {
+                val stations = awaitItem().gasStations
+                assertTrue(stations.isNotEmpty())
+                assertTrue(stations.all { it.station.getFullDirection().contains("Calle Principal", ignoreCase = true) })
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `onSearchQueryChanged - GIVEN stations loaded WHEN query matches nothing THEN empty list returned`() =
+        runTest {
+            createSut()
+            advanceUntilIdle()
+
+            sut.onSearchQueryChanged("xyznotexistent")
+
+            sut.state.test {
+                assertTrue(awaitItem().gasStations.isEmpty())
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `onSearchQueryChanged - GIVEN active query WHEN query cleared THEN full list restored`() =
+        runTest {
+            createSut()
+            advanceUntilIdle()
+            sut.onSearchQueryChanged("Gasoil")
+
+            sut.onSearchQueryChanged("")
+
+            sut.state.test {
+                assertEquals(GasStationBOMother.gasStationBOList().size, awaitItem().gasStations.size)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `onSearchQueryChanged - GIVEN active fuel filter WHEN query applied THEN both filters combined`() =
+        runTest {
+            createSut()
+            advanceUntilIdle()
+            sut.onFuelFilterSelected(FuelFilter.Diesel)
+
+            sut.onSearchQueryChanged("Gasoil")
+
+            sut.state.test {
+                val stations = awaitItem().gasStations
+                assertEquals(1, stations.size)
+                assertTrue(stations.all { it.fuelFilter == FuelFilter.Diesel })
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    //endregion
+
+    //region isContentReady
+
+    @Test
+    fun `isContentReady - GIVEN initial state WHEN ViewModel initialized THEN isContentReady is false`() =
+        runTest {
+            createSut()
+
+            sut.state.test {
+                assertFalse(awaitItem().isContentReady())
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `isContentReady - GIVEN stations loaded WHEN search empties list THEN isContentReady remains true`() =
+        runTest {
+            createSut()
+            advanceUntilIdle()
+
+            sut.onSearchQueryChanged("xyznotexistent")
+
+            sut.state.test {
+                val state = awaitItem()
+                assertTrue(state.gasStations.isEmpty())
+                assertTrue(state.isContentReady())
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    //endregion
+
     private fun createSut() {
         sut = GasStationsViewModel(
             getGasStationByLocationUseCase = getGasStationsByLocationUseCase,
