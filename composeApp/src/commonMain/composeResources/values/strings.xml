@@ -16,4 +16,7 @@
     <string name="fuel_filter_gasoline_98">Gasoline 98</string>
     <string name="fuel_filter_diesel">Diesel</string>
     <string name="fuel_filter_diesel_premium">Diesel+</string>
+    <string name="search_gas_station">Search gas station…</string>
+    <string name="empty_state_title">No gas stations found</string>
+    <string name="empty_state_subtitle">Try a different search or filter</string>
 </resources>

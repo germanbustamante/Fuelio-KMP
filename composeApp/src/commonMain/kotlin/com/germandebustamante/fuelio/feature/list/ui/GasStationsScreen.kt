@@ -79,6 +79,7 @@ fun GasStationsScreen(
         onFilterProvinceToggle = viewModel::onFilterProvinceToggle,
         onProvinceSelected = viewModel::onProvinceSelected,
         onFuelFilterSelected = viewModel::onFuelFilterSelected,
+        onSearchQueryChanged = viewModel::onSearchQueryChanged,
         onDismissError = viewModel::onDismissError,
         onDetectLocationTapped = viewModel::onDetectLocationTapped,
         onPermissionRationaleAccepted = viewModel::onPermissionRationaleAccepted,
@@ -95,6 +96,7 @@ private fun GasStationsScreen(
     onFilterProvinceToggle: (Boolean) -> Unit,
     onProvinceSelected: (ProvinceBO) -> Unit,
     onFuelFilterSelected: (FuelFilter) -> Unit,
+    onSearchQueryChanged: (String) -> Unit,
     onDetectLocationTapped: () -> Unit,
     onPermissionRationaleAccepted: () -> Unit,
     onOpenAppSettings: () -> Unit,
@@ -102,12 +104,13 @@ private fun GasStationsScreen(
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.background(MaterialTheme.colorScheme.background)) {
-        if (state.hasGasStationsLoaded()) {
+        if (state.isContentReady()) {
             GasStationsContent(
                 state = state,
                 onFilterProvinceToggle = onFilterProvinceToggle,
                 onProvinceSelected = onProvinceSelected,
                 onFuelFilterSelected = onFuelFilterSelected,
+                onSearchQueryChanged = onSearchQueryChanged,
                 onDetectLocationTapped = onDetectLocationTapped,
                 modifier = Modifier.fillMaxSize(),
             )
@@ -143,6 +146,7 @@ private fun GasStationsContent(
     onFilterProvinceToggle: (Boolean) -> Unit,
     onProvinceSelected: (ProvinceBO) -> Unit,
     onFuelFilterSelected: (FuelFilter) -> Unit,
+    onSearchQueryChanged: (String) -> Unit,
     onDetectLocationTapped: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -187,6 +191,8 @@ private fun GasStationsContent(
             }
         }
 
+        GasStationSearchBar(onQueryChange = onSearchQueryChanged)
+
         FuelFilterSelector(
             selectedFilter = state.selectedFuelFilter,
             onFilterSelected = onFuelFilterSelected,
@@ -194,15 +200,24 @@ private fun GasStationsContent(
 
         HorizontalDivider()
 
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .navigationBarsPadding(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            items(state.gasStations, key = { it.station.id }) {
-                GasStationItem(it)
+        if (state.gasStations.isEmpty()) {
+            GasStationsEmptyState(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .navigationBarsPadding(),
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .navigationBarsPadding(),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                items(state.gasStations, key = { it.station.id }) {
+                    GasStationItem(it)
+                }
             }
         }
 
@@ -295,6 +310,7 @@ private fun GasStationsScreenPreview() {
             onFilterProvinceToggle = {},
             onProvinceSelected = {},
             onFuelFilterSelected = {},
+            onSearchQueryChanged = {},
             onDismissError = {},
             onDetectLocationTapped = {},
             onPermissionRationaleAccepted = {},
@@ -313,6 +329,7 @@ private fun GasStationWithProvincesModalOpenedPreview() {
             onFilterProvinceToggle = {},
             onProvinceSelected = {},
             onFuelFilterSelected = {},
+            onSearchQueryChanged = {},
             onDismissError = {},
             onDetectLocationTapped = {},
             onPermissionRationaleAccepted = {},
@@ -331,6 +348,7 @@ private fun GasStationsScreenLoadingPreview() {
             onFilterProvinceToggle = {},
             onProvinceSelected = {},
             onFuelFilterSelected = {},
+            onSearchQueryChanged = {},
             onDismissError = {},
             onDetectLocationTapped = {},
             onPermissionRationaleAccepted = {},
@@ -349,6 +367,7 @@ private fun GasStationsScreenErrorPreview() {
             onFilterProvinceToggle = {},
             onProvinceSelected = {},
             onFuelFilterSelected = {},
+            onSearchQueryChanged = {},
             onDismissError = {},
             onDetectLocationTapped = {},
             onPermissionRationaleAccepted = {},
@@ -367,6 +386,7 @@ private fun GasStationsScreenPermissionDeniedPreview() {
             onFilterProvinceToggle = {},
             onProvinceSelected = {},
             onFuelFilterSelected = {},
+            onSearchQueryChanged = {},
             onDismissError = {},
             onDetectLocationTapped = {},
             onPermissionRationaleAccepted = {},
@@ -385,6 +405,7 @@ private fun GasStationsScreenPermissionDeniedAlwaysPreview() {
             onFilterProvinceToggle = {},
             onProvinceSelected = {},
             onFuelFilterSelected = {},
+            onSearchQueryChanged = {},
             onDismissError = {},
             onDetectLocationTapped = {},
             onPermissionRationaleAccepted = {},

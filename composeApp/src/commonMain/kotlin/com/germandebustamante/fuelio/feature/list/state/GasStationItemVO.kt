@@ -26,3 +26,13 @@ fun GasStationBO.toGasStationItemVO(
     isOpen = isOpen,
     distanceInKilometers = distanceInKilometers,
 )
+
+fun GasStationItemVO.withFuelFilter(filter: FuelFilter) = copy(fuelFilter = filter)
+
+fun List<GasStationItemVO>.applySearchQuery(query: String): List<GasStationItemVO> {
+    if (query.isBlank()) return this
+    return filter { vo ->
+        vo.station.name.contains(query, ignoreCase = true) ||
+            vo.station.getFullDirection().contains(query, ignoreCase = true)
+    }
+}
