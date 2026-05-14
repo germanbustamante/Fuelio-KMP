@@ -180,7 +180,7 @@ class GasStationsViewModelTest {
         runTest {
             val targetProvince = ProvinceBOMother.provinceBOList()[1]
             everySuspend { locationPermissionController.getCurrentLocation() } returns
-                LocationPermissionController.Location(targetProvince.name)
+                LocationPermissionController.Location(province = targetProvince.name, latitude = 0.0, longitude = 0.0)
             createSut()
             advanceUntilIdle()
 
@@ -197,7 +197,7 @@ class GasStationsViewModelTest {
     fun `onDetectLocationTapped - GIVEN location does not match any province WHEN tapped THEN first province is selected`() =
         runTest {
             everySuspend { locationPermissionController.getCurrentLocation() } returns
-                LocationPermissionController.Location("Tokio")
+                LocationPermissionController.Location(province = "Tokio", latitude = 0.0, longitude = 0.0)
             createSut()
             advanceUntilIdle()
 
@@ -347,7 +347,7 @@ class GasStationsViewModelTest {
 
             everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.Granted
             everySuspend { locationPermissionController.getCurrentLocation() } returns
-                LocationPermissionController.Location(targetProvince.name)
+                LocationPermissionController.Location(province = targetProvince.name, latitude = 0.0, longitude = 0.0)
             sut.onPermissionRationaleAccepted()
             advanceUntilIdle()
 
@@ -415,6 +415,71 @@ class GasStationsViewModelTest {
             verify { locationPermissionController.openAppSettings() }
             sut.state.test {
                 assertNull(awaitItem().locationPermissionState)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    //endregion
+
+    //region onFuelFilterSelected
+
+    @Test
+    fun `onFuelFilterSelected - GIVEN default state WHEN ViewModel initialized THEN selectedFuelFilter is Gasoline95`() =
+        runTest {
+            createSut()
+            advanceUntilIdle()
+
+            sut.state.test {
+                assertEquals(FuelFilter.Gasoline95, awaitItem().selectedFuelFilter)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `onFuelFilterSelected - GIVEN Gasoline95 selected WHEN Diesel selected THEN selectedFuelFilter is Diesel`() =
+        runTest {
+            createSut()
+            advanceUntilIdle()
+
+            sut.onFuelFilterSelected(FuelFilter.Diesel)
+
+            sut.state.test {
+                assertEquals(FuelFilter.Diesel, awaitItem().selectedFuelFilter)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `onFuelFilterSelected - GIVEN gas stations loaded WHEN filter changed THEN all items have updated fuelFilter`() =
+        runTest {
+            createSut()
+            advanceUntilIdle()
+
+            sut.onFuelFilterSelected(FuelFilter.Gasoline98)
+
+            sut.state.test {
+                val stations = awaitItem().gasStations
+                assertTrue(stations.isNotEmpty())
+                assertTrue(stations.all { it.fuelFilter == FuelFilter.Gasoline98 })
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `onFuelFilterSelected - GIVEN filter changed WHEN new province is selected THEN new stations inherit active filter`() =
+        runTest {
+            val secondProvince = ProvinceBOMother.provinceBOList()[1]
+            createSut()
+            advanceUntilIdle()
+
+            sut.onFuelFilterSelected(FuelFilter.DieselPremium)
+            sut.onProvinceSelected(secondProvince)
+            advanceUntilIdle()
+
+            sut.state.test {
+                val stations = awaitItem().gasStations
+                assertTrue(stations.isNotEmpty())
+                assertTrue(stations.all { it.fuelFilter == FuelFilter.DieselPremium })
                 cancelAndIgnoreRemainingEvents()
             }
         }
