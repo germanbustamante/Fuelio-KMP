@@ -36,6 +36,7 @@ class GasStationsViewModel(
 
     private val _selectedProvince: MutableStateFlow<ProvinceBO?> = MutableStateFlow(null)
     private val _userLocation: MutableStateFlow<LocationPermissionController.Location?> = MutableStateFlow(null)
+    private var rawGasStations: List<GasStationBO> = emptyList()
     private var allGasStations: List<GasStationItemVO> = emptyList()
 
     private val _state = MutableStateFlow(GasStationsUIState())
@@ -91,6 +92,19 @@ class GasStationsViewModel(
         val location = locationPermissionController.getCurrentLocation()
         _userLocation.update { location }
         _selectedProvince.update { resolveProvinceByLocationUseCase(_state.value.provinces, location?.province) }
+        rebuildStationsWithCurrentLocation()
+    }
+
+    private fun rebuildStationsWithCurrentLocation() {
+        if (rawGasStations.isEmpty()) return
+        val now = Clock.System.now().toLocalDateTime(SPAIN_TIMEZONE)
+        _state.update { currentState ->
+            allGasStations = buildGasStationItems(rawGasStations, now, currentState.selectedFuelFilter)
+            val filtered = allGasStations
+                .map { it.withFuelFilter(currentState.selectedFuelFilter) }
+                .applySearchQuery(currentState.searchQuery)
+            currentState.withSearchQuery(currentState.searchQuery, filtered)
+        }
     }
 
     //endregion
@@ -152,6 +166,7 @@ class GasStationsViewModel(
             .collect { result ->
                 result.fold(
                     onSuccess = { gasStations ->
+                        rawGasStations = gasStations
                         val now = Clock.System.now().toLocalDateTime(SPAIN_TIMEZONE)
                         _state.update { currentState ->
                             allGasStations = buildGasStationItems(gasStations, now, currentState.selectedFuelFilter)

@@ -1,5 +1,7 @@
 package com.germandebustamante.fuelio.feature.common.permission.location
 
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.useContents
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import platform.CoreLocation.CLAuthorizationStatus
@@ -65,6 +67,7 @@ class IosLocationPermissionController : LocationPermissionController {
         }
     }
 
+    @OptIn(ExperimentalForeignApi::class)
     private suspend fun reverseGeocode(location: CLLocation): LocationPermissionController.Location? = suspendCancellableCoroutine { continuation ->
         CLGeocoder().reverseGeocodeLocation(location) { placemarks, _ ->
             val province = (placemarks?.firstOrNull() as? CLPlacemark)?.administrativeArea
