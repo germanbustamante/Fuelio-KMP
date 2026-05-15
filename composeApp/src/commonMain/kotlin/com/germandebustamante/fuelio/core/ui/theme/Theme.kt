@@ -9,14 +9,12 @@ fun FuelioTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) {
-        DarkColorScheme
-    } else {
-        LightColorScheme
-    }
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
     MaterialTheme(
         colorScheme = colorScheme,
-        content = content
+        typography = FuelioTypography,
+        shapes = FuelioShapes,
+        content = content,
     )
 }
