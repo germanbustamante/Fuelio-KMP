@@ -5,12 +5,8 @@
     <string name="closed">Closed</string>
     <string name="accept">Accept</string>
     <string name="select_province">Select Province</string>
-    <string name="location_permission_title">Location Permission</string>
-    <string name="location_permission_denied_description">Fuelio uses your location to show you the nearest fuel stations.</string>
-    <string name="location_permission_denied_always_description">Location permission was permanently denied. You can enable it from the app settings.</string>
-    <string name="location_permission_allow">Allow</string>
     <string name="location_permission_open_settings">Open Settings</string>
-    <string name="location_permission_dismiss">Not now</string>
+    <string name="location_permission_snackbar_message">Location access permanently denied. Enable it in Settings to see nearby stations.</string>
     <string name="detect_location">Detect my location</string>
     <string name="fuel_filter_gasoline_95">Gasoline 95</string>
     <string name="fuel_filter_gasoline_98">Gasoline 98</string>
