@@ -128,6 +128,7 @@ class GasStationsViewModel(
             val stations = allGasStations
                 .map { it.withFuelFilter(filter) }
                 .applySearchQuery(state.searchQuery)
+                .markCheapest()
             state.withFuelFilter(filter, stations)
         }
     }
@@ -195,6 +196,7 @@ class GasStationsViewModel(
                 )
             }
             .sortedWith(compareBy(nullsLast()) { it.distanceInKilometers })
+            .markCheapest()
     }
 
     //endregion
@@ -205,8 +207,54 @@ class GasStationsViewModel(
         _state.update { it.withErrorCleared() }
     }
 
+    fun onRefresh() {
+        viewModelScope.launch {
+            _state.update { it.withRefreshing() }
+            _selectedProvince.value?.let { province ->
+                getGasStationByLocationUseCase(province.id).collect { result ->
+                    result.fold(
+                        onSuccess = { gasStations ->
+                            val now = Clock.System.now().toLocalDateTime(SPAIN_TIMEZONE)
+                            _state.update { currentState ->
+                                allGasStations = buildGasStationItems(gasStations, now, currentState.selectedFuelFilter)
+                                currentState.withStationsLoaded(allGasStations)
+                            }
+                        },
+                        onFailure = ::notifyError,
+                    )
+                }
+            }
+        }
+    }
+
+    fun onRetry() {
+        _state.update { it.withErrorCleared() }
+        _selectedProvince.value?.let {
+            _selectedProvince.update { it }
+        }
+    }
+
+    fun onItemClick(stationId: String) {
+        // TODO: Navigate to detail screen
+    }
+
+    fun onToggleFavorite(stationId: String) {
+        _state.update { it.withFavoriteToggled(stationId) }
+    }
+
     private fun notifyError(error: Throwable) {
         _state.update { it.withError(error.toDomainError()) }
+    }
+
+    private fun List<GasStationItemVO>.markCheapest(): List<GasStationItemVO> {
+        val cheapestPrice = mapNotNull { it.getCurrentFuelPrice() }.minOrNull() ?: return this
+        var cheapestMarked = false
+        return map { vo ->
+            val price = vo.getCurrentFuelPrice()
+            val isCheapest = !cheapestMarked && price != null && price == cheapestPrice
+            if (isCheapest) cheapestMarked = true
+            vo.copy(isCheapest = isCheapest)
+        }
     }
 
     //endregion

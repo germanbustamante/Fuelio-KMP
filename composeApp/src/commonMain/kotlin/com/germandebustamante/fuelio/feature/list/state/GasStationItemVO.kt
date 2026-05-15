@@ -7,6 +7,7 @@ data class GasStationItemVO(
     val fuelFilter: FuelFilter = FuelFilter.Gasoline95,
     val isOpen: Boolean = false,
     val distanceInKilometers: Double? = null,
+    val isCheapest: Boolean = false,
 ) {
     fun getCurrentFuelPrice(): Double? = when (fuelFilter) {
         is FuelFilter.Diesel -> station.dieselPrice

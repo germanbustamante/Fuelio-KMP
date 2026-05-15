@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Fuelio</string>
-    <string name="cheapper_gas_station_tag">Cheap</string>
+    <string name="cheapest_station_tag">Cheapest</string>
     <string name="open">Open</string>
     <string name="closed">Closed</string>
     <string name="accept">Accept</string>
@@ -19,4 +19,15 @@
     <string name="search_gas_station">Search gas station…</string>
     <string name="empty_state_title">No gas stations found</string>
     <string name="empty_state_subtitle">Try a different search or filter</string>
+    <string name="top_bar_subtitle_change_province">Change province</string>
+    <string name="search_clear">Clear search</string>
+    <string name="scroll_to_top">Scroll to top</string>
+    <string name="empty_state_change_filters">Change filters</string>
+    <string name="error_state_title">Something went wrong</string>
+    <string name="error_state_retry">Retry</string>
+    <string name="province_search_placeholder">Search province…</string>
+    <string name="favorite_add">Add to favorites</string>
+    <string name="favorite_remove">Remove from favorites</string>
+    <string name="at_distance">at {distance}</string>
+    <string name="cheapest_station">cheapest station</string>
 </resources>

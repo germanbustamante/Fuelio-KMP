@@ -61,6 +61,7 @@ import com.germandebustamante.fuelio.designsystem.button.FuelioIconButton
 import com.germandebustamante.fuelio.designsystem.button.FuelioTextButton
 import com.germandebustamante.fuelio.designsystem.button.config.icon.IconButtonConfig
 import com.germandebustamante.fuelio.designsystem.button.config.icon.IconButtonSize
+import com.germandebustamante.fuelio.designsystem.button.config.icon.IconButtonVariant
 import com.germandebustamante.fuelio.designsystem.dialog.FuelioDialog
 import com.germandebustamante.fuelio.designsystem.divider.FuelioDivider
 import com.germandebustamante.fuelio.designsystem.scaffold.FuelioScaffold
@@ -200,7 +201,7 @@ private fun GasStationsScreen(
                     FuelioIconButton(
                         onClick = onDetectLocationTapped,
                         drawableRes = Res.drawable.my_location_ic,
-                        config = IconButtonConfig(size = IconButtonSize.MEDIUM),
+                        config = IconButtonConfig(size = IconButtonSize.MEDIUM, variant = IconButtonVariant.Standard),
                     )
                 },
             )
@@ -383,7 +384,7 @@ private fun ProvinceBottomSheetDialog(
                     )
                     FuelioIconButton(
                         drawableRes = Res.drawable.close_ic,
-                        config = IconButtonConfig(size = IconButtonSize.SMALL),
+                        config = IconButtonConfig(size = IconButtonSize.SMALL, variant = IconButtonVariant.Standard),
                         onClick = {
                             provinceSearchQuery = ""
                             onDismissRequest()

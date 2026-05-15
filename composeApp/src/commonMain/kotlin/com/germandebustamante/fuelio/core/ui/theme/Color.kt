@@ -6,23 +6,29 @@ import androidx.compose.ui.graphics.Color
 
 // ========== PALETTE COLORS ==========
 
-// Primary - Orange (Energy/Fuel)
-internal val Orange500 = Color(0xFFFF6B00)
-internal val Orange400 = Color(0xFFFF8534)
-internal val Orange300 = Color(0xFFFFA366)
-internal val Orange600 = Color(0xFFE65100)
-internal val Orange700 = Color(0xFFCC4700)
-internal val Orange50 = Color(0xFFFFF3E0)
-internal val Orange100 = Color(0xFFFFE0B2)
+// Primary - Deep Orange (Energy/Fuel)
+internal val DeepOrange50 = Color(0xFFFBE9E7)
+internal val DeepOrange100 = Color(0xFFFFCCBC)
+internal val DeepOrange200 = Color(0xFFFFAB91)
+internal val DeepOrange300 = Color(0xFFFF8A65)
+internal val DeepOrange400 = Color(0xFFFF7043)
+internal val DeepOrange500 = Color(0xFFFF5722)
+internal val DeepOrange600 = Color(0xFFF4511E)
+internal val DeepOrange700 = Color(0xFFE64A19)
+internal val DeepOrange800 = Color(0xFFD84315)
+internal val DeepOrange900 = Color(0xFFBF360C)
 
-// Secondary - Blue (Trust/Technology)
-internal val Blue500 = Color(0xFF2196F3)
-internal val Blue400 = Color(0xFF42A5F5)
-internal val Blue300 = Color(0xFF64B5F6)
-internal val Blue600 = Color(0xFF1976D2)
-internal val Blue700 = Color(0xFF1565C0)
-internal val Blue50 = Color(0xFFE3F2FD)
-internal val Blue100 = Color(0xFFBBDEFB)
+// Secondary - Blue Grey (Trust/Technology)
+internal val BlueGrey50 = Color(0xFFECEFF1)
+internal val BlueGrey100 = Color(0xFFCFD8DC)
+internal val BlueGrey200 = Color(0xFFB0BEC5)
+internal val BlueGrey300 = Color(0xFF90A4AE)
+internal val BlueGrey400 = Color(0xFF78909C)
+internal val BlueGrey500 = Color(0xFF607D8B)
+internal val BlueGrey600 = Color(0xFF546E7A)
+internal val BlueGrey700 = Color(0xFF455A64)
+internal val BlueGrey800 = Color(0xFF37474F)
+internal val BlueGrey900 = Color(0xFF263238)
 
 // Tertiary - Green (Savings/Eco)
 internal val Green500 = Color(0xFF4CAF50)
@@ -58,16 +64,16 @@ internal val Gray900 = Color(0xFF212121)
 
 internal val LightColorScheme = lightColorScheme(
     // Primary
-    primary = Orange500,
+    primary = DeepOrange600,
     onPrimary = Color.White,
-    primaryContainer = Orange100,
-    onPrimaryContainer = Orange700,
+    primaryContainer = DeepOrange100,
+    onPrimaryContainer = DeepOrange900,
 
     // Secondary
-    secondary = Blue500,
+    secondary = BlueGrey600,
     onSecondary = Color.White,
-    secondaryContainer = Blue100,
-    onSecondaryContainer = Blue700,
+    secondaryContainer = BlueGrey100,
+    onSecondaryContainer = BlueGrey900,
 
     // Tertiary
     tertiary = Green500,
@@ -98,27 +104,27 @@ internal val LightColorScheme = lightColorScheme(
     // Inverse
     inverseSurface = Gray800,
     inverseOnSurface = Gray100,
-    inversePrimary = Orange300,
+    inversePrimary = DeepOrange300,
 
     // Other
     scrim = Color.Black.copy(alpha = 0.32f),
-    surfaceTint = Orange500,
+    surfaceTint = DeepOrange600,
 )
 
 // ========== DARK COLOR SCHEME ==========
 
 internal val DarkColorScheme = darkColorScheme(
     // Primary
-    primary = Orange400,
-    onPrimary = Orange700,
-    primaryContainer = Orange600,
-    onPrimaryContainer = Orange100,
+    primary = DeepOrange300,
+    onPrimary = DeepOrange900,
+    primaryContainer = DeepOrange800,
+    onPrimaryContainer = DeepOrange100,
 
     // Secondary
-    secondary = Blue400,
-    onSecondary = Blue700,
-    secondaryContainer = Blue600,
-    onSecondaryContainer = Blue100,
+    secondary = BlueGrey300,
+    onSecondary = BlueGrey900,
+    secondaryContainer = BlueGrey700,
+    onSecondaryContainer = BlueGrey100,
 
     // Tertiary
     tertiary = Green400,
@@ -149,9 +155,9 @@ internal val DarkColorScheme = darkColorScheme(
     // Inverse
     inverseSurface = Gray100,
     inverseOnSurface = Gray900,
-    inversePrimary = Orange600,
+    inversePrimary = DeepOrange700,
 
     // Other
     scrim = Color.Black.copy(alpha = 0.32f),
-    surfaceTint = Orange400,
+    surfaceTint = DeepOrange300,
 )
