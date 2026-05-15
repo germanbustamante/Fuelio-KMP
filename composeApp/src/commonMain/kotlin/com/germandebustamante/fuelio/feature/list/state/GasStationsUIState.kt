@@ -2,7 +2,6 @@ package com.germandebustamante.fuelio.feature.list.state
 
 import com.germandebustamante.fuelio.core.domain.error.DomainError
 import com.germandebustamante.fuelio.core.domain.province.model.ProvinceBO
-import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionState
 
 sealed interface ContentState {
     data object Initial : ContentState
@@ -22,7 +21,7 @@ data class GasStationsUIState(
     val isRefreshing: Boolean = false,
     val showFilterProvince: Boolean = false,
     val error: DomainError? = null,
-    val locationPermissionState: LocationPermissionState? = null,
+    val showPermissionDeniedPermanentlySnackbar: Boolean = false,
     val favorites: Set<String> = emptySet(),
 ) {
     fun isContentReady() = selectedProvince != null && !isLoading
@@ -47,7 +46,9 @@ data class GasStationsUIState(
 
     fun withProvinceFilterVisible(visible: Boolean) = copy(showFilterProvince = visible)
 
-    fun withLocationPermission(permissionState: LocationPermissionState?) = copy(locationPermissionState = permissionState)
+    fun withPermissionDeniedPermanently() = copy(showPermissionDeniedPermanentlySnackbar = true)
+
+    fun withPermissionSnackbarDismissed() = copy(showPermissionDeniedPermanentlySnackbar = false)
 
     fun withError(error: DomainError) = copy(error = error, isLoading = false, isRefreshing = false)
 

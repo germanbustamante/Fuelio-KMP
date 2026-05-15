@@ -45,7 +45,7 @@ class GasStationsViewModelTest {
 
     private val locationPermissionController: LocationPermissionController = mock {
         everySuspend { requestPermission() } returns LocationPermissionState.Granted
-        everySuspend { checkCurrentStatus() } returns LocationPermissionState.Granted
+        everySuspend { checkCurrentStatus() } returns LocationPermissionState.DeniedAlways
         everySuspend { getCurrentLocation() } returns null
         every { openAppSettings() } returns Unit
     }
@@ -160,15 +160,76 @@ class GasStationsViewModelTest {
         }
 
     @Test
-    fun `init - WHEN ViewModel initialized THEN locationPermissionState is null`() =
+    fun `init - WHEN ViewModel initialized THEN showPermissionDeniedPermanentlySnackbar is false`() =
         runTest {
             createSut()
             advanceUntilIdle()
 
             sut.state.test {
-                assertNull(awaitItem().locationPermissionState)
+                assertFalse(awaitItem().showPermissionDeniedPermanentlySnackbar)
                 cancelAndIgnoreRemainingEvents()
             }
+        }
+
+    @Test
+    fun `init - GIVEN location already granted WHEN ViewModel initialized THEN province is resolved from location silently`() =
+        runTest {
+            val targetProvince = ProvinceBOMother.provinceBOList()[1]
+            everySuspend { locationPermissionController.checkCurrentStatus() } returns LocationPermissionState.Granted
+            everySuspend { locationPermissionController.getCurrentLocation() } returns
+                LocationPermissionController.Location(province = targetProvince.name, latitude = 0.0, longitude = 0.0)
+            createSut()
+            advanceUntilIdle()
+
+            sut.state.test {
+                val state = awaitItem()
+                assertEquals(targetProvince, state.selectedProvince)
+                assertFalse(state.showPermissionDeniedPermanentlySnackbar)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `init - GIVEN permission NotDetermined WHEN ViewModel initialized THEN permission is requested and if granted location is used`() =
+        runTest {
+            val targetProvince = ProvinceBOMother.provinceBOList()[1]
+            everySuspend { locationPermissionController.checkCurrentStatus() } returns LocationPermissionState.NotDetermined
+            everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.Granted
+            everySuspend { locationPermissionController.getCurrentLocation() } returns
+                LocationPermissionController.Location(province = targetProvince.name, latitude = 0.0, longitude = 0.0)
+            createSut()
+            advanceUntilIdle()
+
+            sut.state.test {
+                assertEquals(targetProvince, awaitItem().selectedProvince)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `init - GIVEN permission Denied WHEN ViewModel initialized THEN permission is re-requested and if granted location is used`() =
+        runTest {
+            val targetProvince = ProvinceBOMother.provinceBOList()[1]
+            everySuspend { locationPermissionController.checkCurrentStatus() } returns LocationPermissionState.Denied
+            everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.Granted
+            everySuspend { locationPermissionController.getCurrentLocation() } returns
+                LocationPermissionController.Location(province = targetProvince.name, latitude = 0.0, longitude = 0.0)
+            createSut()
+            advanceUntilIdle()
+
+            sut.state.test {
+                assertEquals(targetProvince, awaitItem().selectedProvince)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `init - GIVEN permission DeniedAlways WHEN ViewModel initialized THEN location is not fetched`() =
+        runTest {
+            createSut()
+            advanceUntilIdle()
+
+            verifySuspend(dev.mokkery.verify.VerifyMode.not) { locationPermissionController.getCurrentLocation() }
         }
 
     //endregion
@@ -227,7 +288,7 @@ class GasStationsViewModelTest {
         }
 
     @Test
-    fun `onDetectLocationTapped - GIVEN permission denied WHEN tapped THEN locationPermissionState is Denied`() =
+    fun `onDetectLocationTapped - GIVEN permission denied WHEN tapped THEN snackbar is not shown`() =
         runTest {
             everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.Denied
             createSut()
@@ -237,13 +298,13 @@ class GasStationsViewModelTest {
             advanceUntilIdle()
 
             sut.state.test {
-                assertEquals(LocationPermissionState.Denied, awaitItem().locationPermissionState)
+                assertFalse(awaitItem().showPermissionDeniedPermanentlySnackbar)
                 cancelAndIgnoreRemainingEvents()
             }
         }
 
     @Test
-    fun `onDetectLocationTapped - GIVEN permission denied always WHEN tapped THEN locationPermissionState is DeniedAlways`() =
+    fun `onDetectLocationTapped - GIVEN permission denied always WHEN tapped THEN snackbar is shown`() =
         runTest {
             everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.DeniedAlways
             createSut()
@@ -253,7 +314,7 @@ class GasStationsViewModelTest {
             advanceUntilIdle()
 
             sut.state.test {
-                assertEquals(LocationPermissionState.DeniedAlways, awaitItem().locationPermissionState)
+                assertTrue(awaitItem().showPermissionDeniedPermanentlySnackbar)
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -314,95 +375,10 @@ class GasStationsViewModelTest {
 
     //endregion
 
-    //region onPermissionRationaleAccepted
-
-    @Test
-    fun `onPermissionRationaleAccepted - WHEN re-request granted THEN locationPermissionState is null`() =
-        runTest {
-            everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.Denied
-            createSut()
-            advanceUntilIdle()
-            sut.onDetectLocationTapped()
-            advanceUntilIdle()
-
-            everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.Granted
-            sut.onPermissionRationaleAccepted()
-            advanceUntilIdle()
-
-            sut.state.test {
-                assertNull(awaitItem().locationPermissionState)
-                cancelAndIgnoreRemainingEvents()
-            }
-        }
-
-    @Test
-    fun `onPermissionRationaleAccepted - WHEN re-request granted THEN province resolved from location`() =
-        runTest {
-            val targetProvince = ProvinceBOMother.provinceBOList()[1]
-            everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.Denied
-            createSut()
-            advanceUntilIdle()
-            sut.onDetectLocationTapped()
-            advanceUntilIdle()
-
-            everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.Granted
-            everySuspend { locationPermissionController.getCurrentLocation() } returns
-                LocationPermissionController.Location(province = targetProvince.name, latitude = 0.0, longitude = 0.0)
-            sut.onPermissionRationaleAccepted()
-            advanceUntilIdle()
-
-            sut.state.test {
-                assertEquals(targetProvince, awaitItem().selectedProvince)
-                cancelAndIgnoreRemainingEvents()
-            }
-        }
-
-    @Test
-    fun `onPermissionRationaleAccepted - WHEN re-request denied always THEN locationPermissionState is DeniedAlways`() =
-        runTest {
-            everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.Denied
-            createSut()
-            advanceUntilIdle()
-            sut.onDetectLocationTapped()
-            advanceUntilIdle()
-
-            everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.DeniedAlways
-            sut.onPermissionRationaleAccepted()
-            advanceUntilIdle()
-
-            sut.state.test {
-                assertEquals(LocationPermissionState.DeniedAlways, awaitItem().locationPermissionState)
-                cancelAndIgnoreRemainingEvents()
-            }
-        }
-
-    //endregion
-
-    //region onPermissionDialogDismissed
-
-    @Test
-    fun `onPermissionDialogDismissed - GIVEN permission denied state WHEN dismissed THEN locationPermissionState is null`() =
-        runTest {
-            everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.Denied
-            createSut()
-            advanceUntilIdle()
-            sut.onDetectLocationTapped()
-            advanceUntilIdle()
-
-            sut.onPermissionDialogDismissed()
-
-            sut.state.test {
-                assertNull(awaitItem().locationPermissionState)
-                cancelAndIgnoreRemainingEvents()
-            }
-        }
-
-    //endregion
-
     //region onOpenAppSettings
 
     @Test
-    fun `onOpenAppSettings - WHEN called THEN openAppSettings is invoked and locationPermissionState is null`() =
+    fun `onOpenAppSettings - WHEN called THEN openAppSettings is invoked and snackbar is dismissed`() =
         runTest {
             everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.DeniedAlways
             createSut()
@@ -414,7 +390,7 @@ class GasStationsViewModelTest {
 
             verify { locationPermissionController.openAppSettings() }
             sut.state.test {
-                assertNull(awaitItem().locationPermissionState)
+                assertFalse(awaitItem().showPermissionDeniedPermanentlySnackbar)
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -638,6 +614,329 @@ class GasStationsViewModelTest {
                 val state = awaitItem()
                 assertTrue(state.gasStations.isEmpty())
                 assertTrue(state.isContentReady())
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    //endregion
+
+    //region contentState
+
+    @Test
+    fun `contentState - GIVEN initial state WHEN ViewModel initialized THEN contentState is Loading`() =
+        runTest {
+            createSut()
+
+            sut.state.test {
+                assertTrue(awaitItem().contentState is ContentState.Loading)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `contentState - GIVEN stations loaded WHEN data available THEN contentState is Success`() =
+        runTest {
+            createSut()
+            advanceUntilIdle()
+
+            sut.state.test {
+                assertTrue(awaitItem().contentState is ContentState.Success)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `contentState - GIVEN stations loaded WHEN search returns empty list THEN contentState is Empty`() =
+        runTest {
+            createSut()
+            advanceUntilIdle()
+
+            sut.onSearchQueryChanged("xyznotexistent")
+
+            sut.state.test {
+                assertTrue(awaitItem().contentState is ContentState.Empty)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `contentState - GIVEN gas stations returns error WHEN error notified THEN contentState is Error`() =
+        runTest {
+            every { getGasStationsByLocationUseCase(any()) } returns flowOf(Result.failure(DomainErrorMother.serverError()))
+            createSut()
+            advanceUntilIdle()
+
+            sut.state.test {
+                assertTrue(awaitItem().contentState is ContentState.Error)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    //endregion
+
+    //region onRetry
+
+    @Test
+    fun `onRetry - GIVEN error in state WHEN called THEN error is cleared`() =
+        runTest {
+            every { getGasStationsByLocationUseCase(any()) } returns flowOf(Result.failure(DomainErrorMother.serverError()))
+            createSut()
+            advanceUntilIdle()
+
+            sut.onRetry()
+
+            sut.state.test {
+                assertNull(awaitItem().error)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    //endregion
+
+    //region onRefresh
+
+    @Test
+    fun `onRefresh - GIVEN stations loaded WHEN called THEN stations are re-fetched and state updated`() =
+        runTest {
+            val refreshedStation = GasStationBOMother.gasStationBO(id = "99", name = "Refreshed Station")
+            createSut()
+            advanceUntilIdle()
+
+            every { getGasStationsByLocationUseCase(any()) } returns flowOf(Result.success(listOf(refreshedStation)))
+            sut.onRefresh()
+            advanceUntilIdle()
+
+            sut.state.test {
+                assertEquals(listOf(refreshedStation), awaitItem().gasStations.map { it.station })
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `onRefresh - GIVEN stations loaded WHEN refresh fails THEN error is notified`() =
+        runTest {
+            val error = DomainErrorMother.serverError()
+            createSut()
+            advanceUntilIdle()
+
+            every { getGasStationsByLocationUseCase(any()) } returns flowOf(Result.failure(error))
+            sut.onRefresh()
+            advanceUntilIdle()
+
+            sut.state.test {
+                assertEquals(error, awaitItem().error)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `onRefresh - GIVEN stations loaded WHEN refresh completes THEN isRefreshing is false`() =
+        runTest {
+            createSut()
+            advanceUntilIdle()
+
+            sut.onRefresh()
+            advanceUntilIdle()
+
+            sut.state.test {
+                assertFalse(awaitItem().isRefreshing)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `onRefresh - GIVEN active fuel filter WHEN refresh called THEN refreshed stations use active filter`() =
+        runTest {
+            createSut()
+            advanceUntilIdle()
+            sut.onFuelFilterSelected(FuelFilter.Diesel)
+
+            sut.onRefresh()
+            advanceUntilIdle()
+
+            sut.state.test {
+                val state = awaitItem()
+                assertEquals(FuelFilter.Diesel, state.selectedFuelFilter)
+                assertTrue(state.gasStations.all { it.fuelFilter == FuelFilter.Diesel })
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    //endregion
+
+    //region onToggleFavorite
+
+    @Test
+    fun `onToggleFavorite - GIVEN station not in favorites WHEN toggled THEN station is added to favorites`() =
+        runTest {
+            createSut()
+            advanceUntilIdle()
+
+            sut.onToggleFavorite("1")
+
+            sut.state.test {
+                assertTrue("1" in awaitItem().favorites)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `onToggleFavorite - GIVEN station in favorites WHEN toggled again THEN station is removed from favorites`() =
+        runTest {
+            createSut()
+            advanceUntilIdle()
+            sut.onToggleFavorite("1")
+
+            sut.onToggleFavorite("1")
+
+            sut.state.test {
+                assertFalse("1" in awaitItem().favorites)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    //endregion
+
+    //region onDetectLocationTapped - NotDetermined
+
+    @Test
+    fun `onDetectLocationTapped - GIVEN permission NotDetermined WHEN tapped THEN snackbar is not shown`() =
+        runTest {
+            everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.NotDetermined
+            createSut()
+            advanceUntilIdle()
+
+            sut.onDetectLocationTapped()
+            advanceUntilIdle()
+
+            sut.state.test {
+                assertFalse(awaitItem().showPermissionDeniedPermanentlySnackbar)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    //endregion
+
+    //region onDismissPermissionSnackbar
+
+    @Test
+    fun `onDismissPermissionSnackbar - GIVEN snackbar showing WHEN called THEN showPermissionDeniedPermanentlySnackbar is false`() =
+        runTest {
+            everySuspend { locationPermissionController.requestPermission() } returns LocationPermissionState.DeniedAlways
+            createSut()
+            advanceUntilIdle()
+            sut.onDetectLocationTapped()
+            advanceUntilIdle()
+
+            sut.onDismissPermissionSnackbar()
+
+            sut.state.test {
+                assertFalse(awaitItem().showPermissionDeniedPermanentlySnackbar)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    //endregion
+
+    //region markCheapest
+
+    @Test
+    fun `markCheapest - GIVEN stations with same price WHEN loaded THEN only first station is marked cheapest`() =
+        runTest {
+            createSut()
+            advanceUntilIdle()
+
+            sut.state.test {
+                val stations = awaitItem().gasStations
+                assertEquals(2, stations.size)
+                assertTrue(stations[0].isCheapest)
+                assertFalse(stations[1].isCheapest)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `markCheapest - GIVEN stations with different prices WHEN loaded THEN station with lowest price is marked cheapest`() =
+        runTest {
+            val cheapStation = GasStationBOMother.gasStationBO(id = "1", gasolinePrice95 = 1.40)
+            val expensiveStation = GasStationBOMother.gasStationBO(id = "2", gasolinePrice95 = 1.75)
+            every { getGasStationsByLocationUseCase(any()) } returns flowOf(Result.success(listOf(cheapStation, expensiveStation)))
+            createSut()
+            advanceUntilIdle()
+
+            sut.state.test {
+                val stations = awaitItem().gasStations
+                assertTrue(stations.first { it.station.id == "1" }.isCheapest)
+                assertFalse(stations.first { it.station.id == "2" }.isCheapest)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `markCheapest - GIVEN no station has price for selected fuel WHEN loaded THEN no station is marked cheapest`() =
+        runTest {
+            val stations = listOf(
+                GasStationBOMother.gasStationBO(id = "1", gasolinePrice95 = null),
+                GasStationBOMother.gasStationBO(id = "2", gasolinePrice95 = null),
+            )
+            every { getGasStationsByLocationUseCase(any()) } returns flowOf(Result.success(stations))
+            createSut()
+            advanceUntilIdle()
+
+            sut.state.test {
+                assertTrue(awaitItem().gasStations.none { it.isCheapest })
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `markCheapest - GIVEN stations with different diesel prices WHEN Diesel filter selected THEN cheapest recalculated for Diesel`() =
+        runTest {
+            val cheapDiesel = GasStationBOMother.gasStationBO(id = "1", dieselPrice = 1.30, gasolinePrice95 = 1.65)
+            val expensiveDiesel = GasStationBOMother.gasStationBO(id = "2", dieselPrice = 1.60, gasolinePrice95 = 1.55)
+            every { getGasStationsByLocationUseCase(any()) } returns flowOf(Result.success(listOf(cheapDiesel, expensiveDiesel)))
+            createSut()
+            advanceUntilIdle()
+
+            sut.onFuelFilterSelected(FuelFilter.Diesel)
+
+            sut.state.test {
+                val stations = awaitItem().gasStations
+                assertTrue(stations.first { it.station.id == "1" }.isCheapest)
+                assertFalse(stations.first { it.station.id == "2" }.isCheapest)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    //endregion
+
+    //region distanceInKilometers
+
+    @Test
+    fun `distanceInKilometers - GIVEN no user location WHEN stations loaded THEN distance is null for all stations`() =
+        runTest {
+            createSut()
+            advanceUntilIdle()
+
+            sut.state.test {
+                assertTrue(awaitItem().gasStations.all { it.distanceInKilometers == null })
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `distanceInKilometers - GIVEN user location granted WHEN location detected THEN stations have distance set`() =
+        runTest {
+            everySuspend { locationPermissionController.getCurrentLocation() } returns
+                LocationPermissionController.Location(province = "Madrid", latitude = 40.5, longitude = -3.6)
+            createSut()
+            advanceUntilIdle()
+
+            sut.onDetectLocationTapped()
+            advanceUntilIdle()
+
+            sut.state.test {
+                assertTrue(awaitItem().gasStations.all { it.distanceInKilometers != null })
                 cancelAndIgnoreRemainingEvents()
             }
         }
