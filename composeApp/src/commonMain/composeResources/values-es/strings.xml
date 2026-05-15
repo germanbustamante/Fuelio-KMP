@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Fuelio</string>
-    <string name="cheapper_gas_station_tag">Barato</string>
+    <string name="cheapest_station_tag">Más barata</string>
     <string name="open">Abierto</string>
     <string name="closed">Cerrado</string>
     <string name="accept">Aceptar</string>
@@ -12,4 +12,20 @@
     <string name="location_permission_open_settings">Abrir ajustes</string>
     <string name="location_permission_dismiss">Ahora no</string>
     <string name="detect_location">Detectar mi ubicación</string>
+    <string name="fuel_filter_gasoline_95">Gasolina 95</string>
+    <string name="fuel_filter_gasoline_98">Gasolina 98</string>
+    <string name="fuel_filter_diesel">Diésel</string>
+    <string name="fuel_filter_diesel_premium">Diésel+</string>
+    <string name="search_gas_station">Buscar gasolinera…</string>
+    <string name="empty_state_title">No se encontraron gasolineras</string>
+    <string name="empty_state_subtitle">Prueba con otra búsqueda o filtro</string>
+    <string name="top_bar_subtitle_change_province">Cambiar provincia</string>
+    <string name="search_clear">Borrar búsqueda</string>
+    <string name="scroll_to_top">Volver arriba</string>
+    <string name="empty_state_change_filters">Cambiar filtros</string>
+    <string name="error_state_title">Algo salió mal</string>
+    <string name="error_state_retry">Reintentar</string>
+    <string name="province_search_placeholder">Buscar provincia…</string>
+    <string name="favorite_add">Añadir a favoritos</string>
+    <string name="favorite_remove">Quitar de favoritos</string>
 </resources>

@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -17,6 +19,7 @@ import com.germandebustamante.fuelio.core.ui.theme.FuelioTheme
 import com.germandebustamante.fuelio.designsystem.button.config.icon.IconButtonConfig
 import com.germandebustamante.fuelio.designsystem.button.config.icon.IconButtonShape
 import com.germandebustamante.fuelio.designsystem.button.config.icon.IconButtonSize
+import com.germandebustamante.fuelio.designsystem.button.config.icon.IconButtonVariant
 import com.germandebustamante.fuelio.designsystem.button.config.icon.getShape
 import fuelio.composeapp.generated.resources.Res
 import fuelio.composeapp.generated.resources.compose_multiplatform
@@ -33,19 +36,57 @@ fun FuelioIconButton(
     enabled: Boolean = true,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-
-    Button(
-        onClick = onClick,
-        interactionSource = interactionSource,
-        shape = config.getShape(),
-        contentPadding = PaddingValues(config.size.contentPadding),
-        modifier = modifier.size(config.size.size),
-        enabled = enabled,
-    ) {
+    val shape = config.getShape()
+    val contentPadding = PaddingValues(config.size.contentPadding)
+    val buttonModifier = modifier.size(config.size.size)
+    val iconContent: @Composable () -> Unit = {
         Icon(
             painterResource(drawableRes),
             null,
             modifier = Modifier.size(config.size.iconSize)
+        )
+    }
+
+    when (config.variant) {
+        IconButtonVariant.Standard -> Button(
+            onClick = onClick,
+            interactionSource = interactionSource,
+            shape = shape,
+            contentPadding = contentPadding,
+            modifier = buttonModifier,
+            enabled = enabled,
+            colors = ButtonDefaults.textButtonColors(),
+            content = { iconContent() },
+        )
+        IconButtonVariant.Filled -> Button(
+            onClick = onClick,
+            interactionSource = interactionSource,
+            shape = shape,
+            contentPadding = contentPadding,
+            modifier = buttonModifier,
+            enabled = enabled,
+            colors = ButtonDefaults.buttonColors(),
+            content = { iconContent() },
+        )
+        IconButtonVariant.FilledTonal -> Button(
+            onClick = onClick,
+            interactionSource = interactionSource,
+            shape = shape,
+            contentPadding = contentPadding,
+            modifier = buttonModifier,
+            enabled = enabled,
+            colors = ButtonDefaults.filledTonalButtonColors(),
+            content = { iconContent() },
+        )
+        IconButtonVariant.Outlined -> OutlinedButton(
+            onClick = onClick,
+            interactionSource = interactionSource,
+            shape = shape,
+            contentPadding = contentPadding,
+            modifier = buttonModifier,
+            enabled = enabled,
+            colors = ButtonDefaults.outlinedButtonColors(),
+            content = { iconContent() },
         )
     }
 }
@@ -61,6 +102,17 @@ fun FuelioIconButtonPreview() {
                 config = IconButtonConfig(
                     size = IconButtonSize.LARGE,
                     shape = IconButtonShape.CIRCLE,
+                    variant = IconButtonVariant.Standard,
+                )
+            )
+
+            FuelioIconButton(
+                onClick = {},
+                drawableRes = Res.drawable.compose_multiplatform,
+                config = IconButtonConfig(
+                    size = IconButtonSize.LARGE,
+                    shape = IconButtonShape.CIRCLE,
+                    variant = IconButtonVariant.Filled,
                 )
             )
 
@@ -70,6 +122,17 @@ fun FuelioIconButtonPreview() {
                 config = IconButtonConfig(
                     size = IconButtonSize.MEDIUM,
                     shape = IconButtonShape.CIRCLE,
+                    variant = IconButtonVariant.FilledTonal,
+                )
+            )
+
+            FuelioIconButton(
+                onClick = {},
+                drawableRes = Res.drawable.compose_multiplatform,
+                config = IconButtonConfig(
+                    size = IconButtonSize.MEDIUM,
+                    shape = IconButtonShape.CIRCLE,
+                    variant = IconButtonVariant.Outlined,
                 )
             )
 
@@ -87,15 +150,6 @@ fun FuelioIconButtonPreview() {
                 drawableRes = Res.drawable.compose_multiplatform,
                 config = IconButtonConfig(
                     size = IconButtonSize.EXTRA_SMALL,
-                    shape = IconButtonShape.CIRCLE,
-                )
-            )
-
-            FuelioIconButton(
-                onClick = {},
-                drawableRes = Res.drawable.compose_multiplatform,
-                config = IconButtonConfig(
-                    size = IconButtonSize.MEDIUM,
                     shape = IconButtonShape.CIRCLE,
                 )
             )
