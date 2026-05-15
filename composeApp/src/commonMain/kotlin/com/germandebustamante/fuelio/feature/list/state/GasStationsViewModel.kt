@@ -49,7 +49,21 @@ class GasStationsViewModel(
     init {
         viewModelScope.launch {
             fetchProvinces()
+            initLocationPermission()
             fetchProvinceGasStations()
+        }
+    }
+
+    private suspend fun initLocationPermission() {
+        when (locationPermissionController.checkCurrentStatus()) {
+            LocationPermissionState.Granted -> updateLocationAndProvince()
+            LocationPermissionState.NotDetermined,
+            LocationPermissionState.Denied -> {
+                if (locationPermissionController.requestPermission() == LocationPermissionState.Granted) {
+                    updateLocationAndProvince()
+                }
+            }
+            LocationPermissionState.DeniedAlways -> Unit
         }
     }
 
@@ -59,33 +73,21 @@ class GasStationsViewModel(
 
     fun onDetectLocationTapped() {
         viewModelScope.launch {
-            when (val result = locationPermissionController.requestPermission()) {
-                LocationPermissionState.Granted -> updateLocationAndProvince()
-                LocationPermissionState.Denied,
-                LocationPermissionState.DeniedAlways -> _state.update { it.withLocationPermission(result) }
-                LocationPermissionState.NotDetermined -> Unit
-            }
-        }
-    }
-
-    fun onPermissionRationaleAccepted() {
-        viewModelScope.launch {
-            _state.update { it.withLocationPermission(null) }
             when (locationPermissionController.requestPermission()) {
                 LocationPermissionState.Granted -> updateLocationAndProvince()
-                LocationPermissionState.DeniedAlways -> _state.update { it.withLocationPermission(LocationPermissionState.DeniedAlways) }
+                LocationPermissionState.DeniedAlways -> _state.update { it.withPermissionDeniedPermanently() }
                 else -> Unit
             }
         }
     }
 
-    fun onPermissionDialogDismissed() {
-        _state.update { it.withLocationPermission(null) }
+    fun onDismissPermissionSnackbar() {
+        _state.update { it.withPermissionSnackbarDismissed() }
     }
 
     fun onOpenAppSettings() {
         locationPermissionController.openAppSettings()
-        _state.update { it.withLocationPermission(null) }
+        _state.update { it.withPermissionSnackbarDismissed() }
     }
 
     private suspend fun updateLocationAndProvince() {

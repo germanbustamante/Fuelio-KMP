@@ -33,12 +33,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SmallFloatingActionButton
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,17 +61,14 @@ import com.germandebustamante.fuelio.core.domain.province.model.ProvinceBO
 import com.germandebustamante.fuelio.core.ui.theme.FuelioSpacing
 import com.germandebustamante.fuelio.core.ui.theme.FuelioTheme
 import com.germandebustamante.fuelio.designsystem.button.FuelioIconButton
-import com.germandebustamante.fuelio.designsystem.button.FuelioTextButton
 import com.germandebustamante.fuelio.designsystem.button.config.icon.IconButtonConfig
 import com.germandebustamante.fuelio.designsystem.button.config.icon.IconButtonSize
 import com.germandebustamante.fuelio.designsystem.button.config.icon.IconButtonVariant
-import com.germandebustamante.fuelio.designsystem.dialog.FuelioDialog
 import com.germandebustamante.fuelio.designsystem.divider.FuelioDivider
 import com.germandebustamante.fuelio.designsystem.scaffold.FuelioScaffold
 import com.germandebustamante.fuelio.designsystem.topbar.FuelioTopBar
 import com.germandebustamante.fuelio.designsystem.topbar.FuelioTopBarVariant
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
-import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionState
 import com.germandebustamante.fuelio.feature.list.state.ContentState
 import com.germandebustamante.fuelio.feature.list.state.FuelFilter
 import com.germandebustamante.fuelio.feature.list.state.GasStationsUIState
@@ -76,8 +76,7 @@ import com.germandebustamante.fuelio.feature.list.state.GasStationsViewModel
 import com.germandebustamante.fuelio.feature.list.state.fakeGasStationsUIState
 import com.germandebustamante.fuelio.feature.list.state.fakeGasStationsUIStateError
 import com.germandebustamante.fuelio.feature.list.state.fakeGasStationsUIStateLoading
-import com.germandebustamante.fuelio.feature.list.state.fakeGasStationsUIStatePermissionDenied
-import com.germandebustamante.fuelio.feature.list.state.fakeGasStationsUIStatePermissionDeniedAlways
+import com.germandebustamante.fuelio.feature.list.state.fakeGasStationsUIStatePermissionSnackbar
 import com.germandebustamante.fuelio.feature.list.state.fakeGasStationsUIStateShowModalSheet
 import com.germandebustamante.fuelio.feature.list.ui.state.GasStationsErrorState
 import com.germandebustamante.fuelio.feature.list.ui.state.GasStationsLoadingSkeleton
@@ -85,12 +84,8 @@ import fuelio.composeapp.generated.resources.Res
 import fuelio.composeapp.generated.resources.app_icon
 import fuelio.composeapp.generated.resources.app_name
 import fuelio.composeapp.generated.resources.close_ic
-import fuelio.composeapp.generated.resources.location_permission_allow
-import fuelio.composeapp.generated.resources.location_permission_denied_always_description
-import fuelio.composeapp.generated.resources.location_permission_denied_description
-import fuelio.composeapp.generated.resources.location_permission_dismiss
 import fuelio.composeapp.generated.resources.location_permission_open_settings
-import fuelio.composeapp.generated.resources.location_permission_title
+import fuelio.composeapp.generated.resources.location_permission_snackbar_message
 import fuelio.composeapp.generated.resources.my_location_ic
 import fuelio.composeapp.generated.resources.province_search_placeholder
 import fuelio.composeapp.generated.resources.scroll_to_top
@@ -118,9 +113,8 @@ fun GasStationsScreen(
         onSearchQueryChanged = viewModel::onSearchQueryChanged,
         onDismissError = viewModel::onDismissError,
         onDetectLocationTapped = viewModel::onDetectLocationTapped,
-        onPermissionRationaleAccepted = viewModel::onPermissionRationaleAccepted,
         onOpenAppSettings = viewModel::onOpenAppSettings,
-        onPermissionDialogDismissed = viewModel::onPermissionDialogDismissed,
+        onDismissPermissionSnackbar = viewModel::onDismissPermissionSnackbar,
         onRefresh = viewModel::onRefresh,
         onRetry = viewModel::onRetry,
         onItemClick = viewModel::onItemClick,
@@ -138,9 +132,8 @@ private fun GasStationsScreen(
     onFuelFilterSelected: (FuelFilter) -> Unit,
     onSearchQueryChanged: (String) -> Unit,
     onDetectLocationTapped: () -> Unit,
-    onPermissionRationaleAccepted: () -> Unit,
     onOpenAppSettings: () -> Unit,
-    onPermissionDialogDismissed: () -> Unit,
+    onDismissPermissionSnackbar: () -> Unit,
     onRefresh: () -> Unit,
     onRetry: () -> Unit,
     onItemClick: (String) -> Unit,
@@ -296,42 +289,20 @@ private fun GasStationsScreen(
         }
     }
 
-    state.locationPermissionState?.let { permissionState ->
-        val description = when (permissionState) {
-            LocationPermissionState.DeniedAlways -> stringResource(Res.string.location_permission_denied_always_description)
-            else -> stringResource(Res.string.location_permission_denied_description)
+    val permissionSnackbarMessage = stringResource(Res.string.location_permission_snackbar_message)
+    val permissionSnackbarAction = stringResource(Res.string.location_permission_open_settings)
+    LaunchedEffect(state.showPermissionDeniedPermanentlySnackbar) {
+        if (state.showPermissionDeniedPermanentlySnackbar) {
+            val result = snackbarHostState.showSnackbar(
+                message = permissionSnackbarMessage,
+                actionLabel = permissionSnackbarAction,
+                duration = SnackbarDuration.Long,
+            )
+            when (result) {
+                SnackbarResult.ActionPerformed -> onOpenAppSettings()
+                SnackbarResult.Dismissed -> onDismissPermissionSnackbar()
+            }
         }
-        val primaryButtonText = when (permissionState) {
-            LocationPermissionState.DeniedAlways -> stringResource(Res.string.location_permission_open_settings)
-            else -> stringResource(Res.string.location_permission_allow)
-        }
-        val onPrimaryAction = when (permissionState) {
-            LocationPermissionState.DeniedAlways -> onOpenAppSettings
-            else -> onPermissionRationaleAccepted
-        }
-        FuelioDialog(
-            onDismissRequest = onPermissionDialogDismissed,
-            title = stringResource(Res.string.location_permission_title),
-            text = description,
-            confirmButton = {
-                FuelioTextButton(
-                    text = primaryButtonText,
-                    onClick = onPrimaryAction,
-                    config = com.germandebustamante.fuelio.designsystem.button.config.text.TextButtonConfig(
-                        size = com.germandebustamante.fuelio.designsystem.button.config.text.TextButtonSize.SMALL,
-                    ),
-                )
-            },
-            dismissButton = {
-                FuelioTextButton(
-                    text = stringResource(Res.string.location_permission_dismiss),
-                    onClick = onPermissionDialogDismissed,
-                    config = com.germandebustamante.fuelio.designsystem.button.config.text.TextButtonConfig(
-                        size = com.germandebustamante.fuelio.designsystem.button.config.text.TextButtonSize.SMALL,
-                    ),
-                )
-            },
-        )
     }
 
     ProvinceBottomSheetDialog(
@@ -453,9 +424,8 @@ private fun GasStationsScreenPreview() {
             onSearchQueryChanged = {},
             onDismissError = {},
             onDetectLocationTapped = {},
-            onPermissionRationaleAccepted = {},
             onOpenAppSettings = {},
-            onPermissionDialogDismissed = {},
+            onDismissPermissionSnackbar = {},
             onRefresh = {},
             onRetry = {},
             onItemClick = {},
@@ -476,9 +446,8 @@ private fun GasStationWithProvincesModalOpenedPreview() {
             onSearchQueryChanged = {},
             onDismissError = {},
             onDetectLocationTapped = {},
-            onPermissionRationaleAccepted = {},
             onOpenAppSettings = {},
-            onPermissionDialogDismissed = {},
+            onDismissPermissionSnackbar = {},
             onRefresh = {},
             onRetry = {},
             onItemClick = {},
@@ -499,9 +468,8 @@ private fun GasStationsScreenLoadingPreview() {
             onSearchQueryChanged = {},
             onDismissError = {},
             onDetectLocationTapped = {},
-            onPermissionRationaleAccepted = {},
             onOpenAppSettings = {},
-            onPermissionDialogDismissed = {},
+            onDismissPermissionSnackbar = {},
             onRefresh = {},
             onRetry = {},
             onItemClick = {},
@@ -522,9 +490,8 @@ private fun GasStationsScreenErrorPreview() {
             onSearchQueryChanged = {},
             onDismissError = {},
             onDetectLocationTapped = {},
-            onPermissionRationaleAccepted = {},
             onOpenAppSettings = {},
-            onPermissionDialogDismissed = {},
+            onDismissPermissionSnackbar = {},
             onRefresh = {},
             onRetry = {},
             onItemClick = {},
@@ -533,44 +500,20 @@ private fun GasStationsScreenErrorPreview() {
     }
 }
 
-@Preview("Permission Denied", showBackground = true)
+@Preview("Permission Denied Permanently (Snackbar)", showBackground = true)
 @Composable
-private fun GasStationsScreenPermissionDeniedPreview() {
+private fun GasStationsScreenPermissionSnackbarPreview() {
     FuelioTheme {
         GasStationsScreen(
-            state = fakeGasStationsUIStatePermissionDenied,
+            state = fakeGasStationsUIStatePermissionSnackbar,
             onFilterProvinceToggle = {},
             onProvinceSelected = {},
             onFuelFilterSelected = {},
             onSearchQueryChanged = {},
             onDismissError = {},
             onDetectLocationTapped = {},
-            onPermissionRationaleAccepted = {},
             onOpenAppSettings = {},
-            onPermissionDialogDismissed = {},
-            onRefresh = {},
-            onRetry = {},
-            onItemClick = {},
-            onToggleFavorite = {},
-        )
-    }
-}
-
-@Preview("Permission Denied Always", showBackground = true)
-@Composable
-private fun GasStationsScreenPermissionDeniedAlwaysPreview() {
-    FuelioTheme {
-        GasStationsScreen(
-            state = fakeGasStationsUIStatePermissionDeniedAlways,
-            onFilterProvinceToggle = {},
-            onProvinceSelected = {},
-            onFuelFilterSelected = {},
-            onSearchQueryChanged = {},
-            onDismissError = {},
-            onDetectLocationTapped = {},
-            onPermissionRationaleAccepted = {},
-            onOpenAppSettings = {},
-            onPermissionDialogDismissed = {},
+            onDismissPermissionSnackbar = {},
             onRefresh = {},
             onRetry = {},
             onItemClick = {},
