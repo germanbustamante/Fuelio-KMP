@@ -11,15 +11,20 @@ import com.germandebustamante.fuelio.core.domain.province.usecase.GetProvincesUs
 import com.germandebustamante.fuelio.core.domain.province.usecase.ResolveProvinceByLocationUseCase
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionState
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -36,6 +41,7 @@ class GasStationsViewModel(
 
     private val _selectedProvince: MutableStateFlow<ProvinceBO?> = MutableStateFlow(null)
     private val _userLocation: MutableStateFlow<LocationPermissionController.Location?> = MutableStateFlow(null)
+    private val _searchQueryFlow: MutableStateFlow<String> = MutableStateFlow("")
     private var rawGasStations: List<GasStationBO> = emptyList()
     private var allGasStations: List<GasStationItemVO> = emptyList()
 
@@ -47,11 +53,26 @@ class GasStationsViewModel(
     //region Init
 
     init {
+        viewModelScope.launch { fetchProvinces() }
+        viewModelScope.launch { fetchProvinceGasStations() }
         viewModelScope.launch {
-            fetchProvinces()
+            // Wait for provinces before resolving location province
+            _state.first { it.provinces.isNotEmpty() }
             initLocationPermission()
-            fetchProvinceGasStations()
         }
+        viewModelScope.launch { observeSearchQuery() }
+    }
+
+    @OptIn(FlowPreview::class)
+    private suspend fun observeSearchQuery() {
+        _searchQueryFlow
+            .debounce(300L)
+            .collect { query ->
+                val stations = withContext(Dispatchers.Default) {
+                    allGasStations.applySearchQuery(query)
+                }
+                _state.update { it.withSearchQuery(query, stations) }
+            }
     }
 
     private suspend fun initLocationPermission() {
@@ -97,16 +118,16 @@ class GasStationsViewModel(
         rebuildStationsWithCurrentLocation()
     }
 
-    private fun rebuildStationsWithCurrentLocation() {
+    private suspend fun rebuildStationsWithCurrentLocation() {
         if (rawGasStations.isEmpty()) return
         val now = Clock.System.now().toLocalDateTime(SPAIN_TIMEZONE)
-        _state.update { currentState ->
-            allGasStations = buildGasStationItems(rawGasStations, now, currentState.selectedFuelFilter)
-            val filtered = allGasStations
-                .map { it.withFuelFilter(currentState.selectedFuelFilter) }
-                .applySearchQuery(currentState.searchQuery)
-            currentState.withSearchQuery(currentState.searchQuery, filtered)
-        }
+        val currentState = _state.value
+        val built = buildGasStationItems(rawGasStations, now, currentState.selectedFuelFilter)
+        val filtered = built
+            .map { it.withFuelFilter(currentState.selectedFuelFilter) }
+            .applySearchQuery(currentState.searchQuery)
+        allGasStations = built
+        _state.update { it.withSearchQuery(currentState.searchQuery, filtered) }
     }
 
     //endregion
@@ -126,22 +147,22 @@ class GasStationsViewModel(
     //region Filters
 
     fun onFuelFilterSelected(filter: FuelFilter) {
-        _state.update { state ->
-            val stations = allGasStations
-                .map { it.withFuelFilter(filter) }
-                .applySearchQuery(state.searchQuery)
-                .markCheapest()
-            state.withFuelFilter(filter, stations)
+        viewModelScope.launch {
+            val currentState = _state.value
+            val stations = withContext(Dispatchers.Default) {
+                allGasStations
+                    .map { it.withFuelFilter(filter) }
+                    .applySearchQuery(currentState.searchQuery)
+                    .markCheapest()
+            }
+            _state.update { it.withFuelFilter(filter, stations) }
         }
     }
 
     fun onSearchQueryChanged(query: String) {
-        _state.update { state ->
-            val stations = allGasStations
-                .map { it.withFuelFilter(state.selectedFuelFilter) }
-                .applySearchQuery(query)
-            state.withSearchQuery(query, stations)
-        }
+        // Update the text field immediately; filtering is debounced in observeSearchQuery
+        _state.update { it.copy(searchQuery = query) }
+        _searchQueryFlow.value = query
     }
 
     //endregion
@@ -167,27 +188,28 @@ class GasStationsViewModel(
             .onEach { province -> _state.update { it.withLoadingProvince(province) } }
             .flatMapLatest { province -> getGasStationByLocationUseCase(province.id) }
             .collect { result ->
+                var successStations: List<GasStationBO>? = null
                 result.fold(
-                    onSuccess = { gasStations ->
-                        rawGasStations = gasStations
-                        val now = Clock.System.now().toLocalDateTime(SPAIN_TIMEZONE)
-                        _state.update { currentState ->
-                            allGasStations = buildGasStationItems(gasStations, now, currentState.selectedFuelFilter)
-                            currentState.withStationsLoaded(allGasStations)
-                        }
-                    },
+                    onSuccess = { stations -> successStations = stations },
                     onFailure = ::notifyError,
                 )
+                successStations?.let { gasStations ->
+                    rawGasStations = gasStations
+                    val now = Clock.System.now().toLocalDateTime(SPAIN_TIMEZONE)
+                    val built = buildGasStationItems(gasStations, now, _state.value.selectedFuelFilter)
+                    allGasStations = built
+                    _state.update { it.withStationsLoaded(built) }
+                }
             }
     }
 
-    private fun buildGasStationItems(
+    private suspend fun buildGasStationItems(
         gasStations: List<GasStationBO>,
         now: LocalDateTime,
         fuelFilter: FuelFilter,
-    ): List<GasStationItemVO> {
+    ): List<GasStationItemVO> = withContext(Dispatchers.Default) {
         val userLocation = _userLocation.value
-        return gasStations
+        gasStations
             .map { station ->
                 station.toGasStationItemVO(
                     isOpen = station.isOpen(now),
@@ -214,16 +236,17 @@ class GasStationsViewModel(
             _state.update { it.withRefreshing() }
             _selectedProvince.value?.let { province ->
                 getGasStationByLocationUseCase(province.id).collect { result ->
+                    var successStations: List<GasStationBO>? = null
                     result.fold(
-                        onSuccess = { gasStations ->
-                            val now = Clock.System.now().toLocalDateTime(SPAIN_TIMEZONE)
-                            _state.update { currentState ->
-                                allGasStations = buildGasStationItems(gasStations, now, currentState.selectedFuelFilter)
-                                currentState.withStationsLoaded(allGasStations)
-                            }
-                        },
+                        onSuccess = { stations -> successStations = stations },
                         onFailure = ::notifyError,
                     )
+                    successStations?.let { gasStations ->
+                        val now = Clock.System.now().toLocalDateTime(SPAIN_TIMEZONE)
+                        val built = buildGasStationItems(gasStations, now, _state.value.selectedFuelFilter)
+                        allGasStations = built
+                        _state.update { it.withStationsLoaded(built) }
+                    }
                 }
             }
         }
