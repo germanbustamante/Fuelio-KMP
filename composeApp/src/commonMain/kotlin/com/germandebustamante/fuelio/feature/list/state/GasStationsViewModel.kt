@@ -11,6 +11,7 @@ import com.germandebustamante.fuelio.core.domain.province.usecase.GetProvincesUs
 import com.germandebustamante.fuelio.core.domain.province.usecase.ResolveProvinceByLocationUseCase
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionState
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -35,6 +36,7 @@ class GasStationsViewModel(
     private val getProvincesUseCase: GetProvincesUseCase,
     private val locationPermissionController: LocationPermissionController,
     private val resolveProvinceByLocationUseCase: ResolveProvinceByLocationUseCase,
+    private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
 
     //region State
@@ -66,10 +68,14 @@ class GasStationsViewModel(
     @OptIn(FlowPreview::class)
     private suspend fun observeSearchQuery() {
         _searchQueryFlow
-            .debounce(300L)
+            .debounce(SEARCH_DEBOUNCE_MS)
             .collect { query ->
-                val stations = withContext(Dispatchers.Default) {
-                    allGasStations.applySearchQuery(query)
+                val currentState = _state.value
+                val stations = withContext(defaultDispatcher) {
+                    allGasStations
+                        .map { it.withFuelFilter(currentState.selectedFuelFilter) }
+                        .applySearchQuery(query)
+                        .markCheapest()
                 }
                 _state.update { it.withSearchQuery(query, stations) }
             }
@@ -149,7 +155,7 @@ class GasStationsViewModel(
     fun onFuelFilterSelected(filter: FuelFilter) {
         viewModelScope.launch {
             val currentState = _state.value
-            val stations = withContext(Dispatchers.Default) {
+            val stations = withContext(defaultDispatcher) {
                 allGasStations
                     .map { it.withFuelFilter(filter) }
                     .applySearchQuery(currentState.searchQuery)
@@ -207,7 +213,7 @@ class GasStationsViewModel(
         gasStations: List<GasStationBO>,
         now: LocalDateTime,
         fuelFilter: FuelFilter,
-    ): List<GasStationItemVO> = withContext(Dispatchers.Default) {
+    ): List<GasStationItemVO> = withContext(defaultDispatcher) {
         val userLocation = _userLocation.value
         gasStations
             .map { station ->
@@ -286,5 +292,6 @@ class GasStationsViewModel(
 
     companion object {
         private val SPAIN_TIMEZONE = TimeZone.of("Europe/Madrid")
+        const val SEARCH_DEBOUNCE_MS = 300L
     }
 }
