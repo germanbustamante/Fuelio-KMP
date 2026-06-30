@@ -1,0 +1,37 @@
+<!--
+  ~ Copyright (C) 2026 The Android Open Source Project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="136dp"
+    android:height="126dp"
+    android:viewportWidth="136"
+    android:viewportHeight="126">
+  <path
+      android:pathData="M68.27,123.18C63.62,123.18 61.23,120.15 61.23,120.15C57.4,119.99 27.53,120.07 27.53,120.07L24.62,95.52C24.62,95.52 6.22,82.55 4.72,81.05C-4.11,40.98 27.81,2.78 68.27,2.78C108.72,2.78 140.65,40.98 131.82,81.05C130.32,82.55 111.92,95.52 111.92,95.52L109.01,120.07C109.01,120.07 79.14,119.99 75.31,120.15C75.31,120.15 72.92,123.18 68.27,123.18z"
+      android:strokeLineJoin="miter"
+      android:strokeWidth="1"
+      android:fillColor="#ed1c24"
+      android:strokeColor="#00000000"
+      android:fillType="evenOdd"
+      android:strokeLineCap="butt"/>
+  <path
+      android:pathData="M68.31,85.85L65.49,14.98C62.08,14.28 53.4,15.12 48.74,18.59L62.29,86.12C62.29,86.12 43.81,21.37 43.81,21.37C39.38,21.31 30.44,28.81 29.78,31.03L56.73,88.49C56.73,88.49 26.44,35.96 26.44,35.96C23.45,37.07 16.92,49.09 17.96,50.49C17.96,50.49 51.73,91.82 51.73,91.82L16.99,56.53C16.99,56.53 12.47,63.4 15.42,75.06L35.04,89.23L37.5,108.59L61.56,108.59C61.56,108.59 65.49,112.32 68.29,112.32C71.08,112.32 75.02,108.59 75.02,108.59L99.07,108.59L101.53,89.23L121.15,75.06C124.1,63.4 119.58,56.53 119.58,56.53L84.84,91.82C84.84,91.82 118.61,50.49 118.61,50.49C119.65,49.09 113.12,37.07 110.13,35.96C110.13,35.96 79.84,88.49 79.84,88.49L106.8,31.03C106.13,28.81 97.19,21.31 92.76,21.37C92.76,21.37 74.28,86.12 74.28,86.12L87.83,18.59C83.17,15.12 74.49,14.28 71.08,14.98L68.31,85.85z"
+      android:strokeLineJoin="miter"
+      android:strokeWidth="1"
+      android:fillColor="#ffd500"
+      android:strokeColor="#00000000"
+      android:fillType="evenOdd"
+      android:strokeLineCap="butt"/>
+</vector>

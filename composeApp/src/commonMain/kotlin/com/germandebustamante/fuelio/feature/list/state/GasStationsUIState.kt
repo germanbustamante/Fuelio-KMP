@@ -28,8 +28,8 @@ data class GasStationsUIState(
 
     val contentState: ContentState
         get() = when {
-            selectedProvince == null || isLoading -> ContentState.Loading
             error != null -> ContentState.Error(error.message.orEmpty())
+            selectedProvince == null || isLoading -> ContentState.Loading
             gasStations.isEmpty() -> ContentState.Empty
             else -> ContentState.Success(gasStations)
         }
