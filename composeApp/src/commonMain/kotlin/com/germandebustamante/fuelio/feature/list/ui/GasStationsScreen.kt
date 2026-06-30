@@ -10,8 +10,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -265,7 +263,6 @@ private fun GasStationsScreen(
                                     isFavorite = station.station.id in state.favorites,
                                     onItemClick = { onItemClick(station.station.id) },
                                     onToggleFavorite = { onToggleFavorite(station.station.id) },
-                                    modifier = Modifier.animateItem(),
                                 )
                             }
                         }
