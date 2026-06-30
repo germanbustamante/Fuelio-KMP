@@ -85,7 +85,8 @@ class GasStationsViewModel(
         when (locationPermissionController.checkCurrentStatus()) {
             LocationPermissionState.Granted -> updateLocationAndProvince()
             LocationPermissionState.NotDetermined,
-            LocationPermissionState.Denied -> {
+            LocationPermissionState.Denied,
+            -> {
                 if (locationPermissionController.requestPermission() == LocationPermissionState.Granted) {
                     updateLocationAndProvince()
                 }

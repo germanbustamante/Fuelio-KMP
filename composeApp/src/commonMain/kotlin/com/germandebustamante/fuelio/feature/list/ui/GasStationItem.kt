@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,7 +51,24 @@ import fuelio.composeapp.generated.resources.fuel_filter_diesel_premium
 import fuelio.composeapp.generated.resources.fuel_filter_gasoline_95
 import fuelio.composeapp.generated.resources.fuel_filter_gasoline_98
 import fuelio.composeapp.generated.resources.gas_station_ic
+import fuelio.composeapp.generated.resources.logo_alcampo
+import fuelio.composeapp.generated.resources.logo_ballenoil
+import fuelio.composeapp.generated.resources.logo_bp
+import fuelio.composeapp.generated.resources.logo_carrefour
+import fuelio.composeapp.generated.resources.logo_cepsa
+import fuelio.composeapp.generated.resources.logo_costco
+import fuelio.composeapp.generated.resources.logo_gacosur
+import fuelio.composeapp.generated.resources.logo_galp
+import fuelio.composeapp.generated.resources.logo_moeve
+import fuelio.composeapp.generated.resources.logo_naturgy
+import fuelio.composeapp.generated.resources.logo_petronor
+import fuelio.composeapp.generated.resources.logo_petroprix
+import fuelio.composeapp.generated.resources.logo_plenergy
+import fuelio.composeapp.generated.resources.logo_q8
+import fuelio.composeapp.generated.resources.logo_repsol
+import fuelio.composeapp.generated.resources.logo_shell
 import fuelio.composeapp.generated.resources.open
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -69,7 +87,8 @@ fun GasStationItem(
     val fuelLabel = gasStation.fuelFilterLabel()
     val priceLabel = gasStation.getCurrentFuelPrice()?.formatAsEuros() ?: "N/A"
     val cheapestLabel = if (gasStation.isCheapest) ", ${stringResource(Res.string.cheapest_station)}" else ""
-    val a11yDesc = "$stationName, $address, $openLabel${ if (distanceLabel.isNotEmpty()) ", $distanceLabel" else ""}, $fuelLabel a $priceLabel$cheapestLabel"
+    val a11yDesc =
+        "$stationName, $address, $openLabel${if (distanceLabel.isNotEmpty()) ", $distanceLabel" else ""}, $fuelLabel a $priceLabel$cheapestLabel"
 
     FuelioCard(
         onClick = onItemClick,
@@ -85,15 +104,14 @@ fun GasStationItem(
                 horizontalArrangement = Arrangement.spacedBy(FuelioSpacing.md),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(
-                    painter = painterResource(Res.drawable.gas_station_ic),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.secondary,
+                GasStationBrandLogo(
+                    stationName = gasStation.station.name,
                     modifier = Modifier
                         .clip(MaterialTheme.shapes.small)
                         .background(MaterialTheme.colorScheme.secondaryContainer)
                         .border(1.dp, MaterialTheme.colorScheme.secondary, MaterialTheme.shapes.small)
-                        .padding(FuelioSpacing.sm),
+                        .padding(FuelioSpacing.sm)
+                        .size(20.dp),
                 )
 
                 Column(
@@ -161,9 +179,45 @@ fun GasStationItem(
             }
 
             if (gasStation.isCheapest) {
-                CheapestBadge(modifier = Modifier.align(Alignment.TopEnd).padding(top = FuelioSpacing.xs, end = FuelioSpacing.xs))
+                CheapestBadge(
+                    modifier = Modifier.align(Alignment.TopEnd).padding(top = FuelioSpacing.xs, end = FuelioSpacing.xs)
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun GasStationBrandLogo(stationName: String, modifier: Modifier = Modifier) {
+    val logoPainter = gasStationBrandLogo(stationName)
+    Icon(
+        painter = painterResource(logoPainter ?: Res.drawable.gas_station_ic),
+        contentDescription = null,
+        tint = if (logoPainter != null) androidx.compose.ui.graphics.Color.Unspecified else LocalContentColor.current,
+        modifier = modifier,
+    )
+}
+
+internal fun gasStationBrandLogo(name: String): DrawableResource? {
+    val upper = name.uppercase()
+    return when {
+        "REPSOL" in upper -> Res.drawable.logo_repsol
+        "CEPSA" in upper -> Res.drawable.logo_cepsa
+        "BP" in upper -> Res.drawable.logo_bp
+        "SHELL" in upper -> Res.drawable.logo_shell
+        "GALP" in upper -> Res.drawable.logo_galp
+        "ALCAMPO" in upper -> Res.drawable.logo_alcampo
+        "PETRONOR" in upper -> Res.drawable.logo_petronor
+        "PETROPRIX" in upper -> Res.drawable.logo_petroprix
+        "Q8" in upper -> Res.drawable.logo_q8
+        "BALLENOIL" in upper -> Res.drawable.logo_ballenoil
+        "MOEVE" in upper -> Res.drawable.logo_moeve
+        "NATURGY" in upper -> Res.drawable.logo_naturgy
+        "CARREFOUR" in upper -> Res.drawable.logo_carrefour
+        "COSTCO" in upper -> Res.drawable.logo_costco
+        "PLENERGY" in upper -> Res.drawable.logo_plenergy
+        "GACOSUR" in upper -> Res.drawable.logo_gacosur
+        else -> null
     }
 }
 
