@@ -20,7 +20,7 @@ class ProvinceRepositoryImplTest {
     private val sut = ProvinceRepositoryImpl(remoteDataSource)
 
     @Test
-    fun `GIVEN remote data source succeeds WHEN getProvinces THEN emit success with mapped province`() = runTest {
+    fun given_remote_data_source_succeeds_when_getProvinces_then_emit_success_with_mapped_province() = runTest {
         val expectedDto = ProvinceDTOMother.provinceDTO()
         everySuspend { remoteDataSource.getProvinces() } returns listOf(expectedDto)
 
@@ -37,7 +37,7 @@ class ProvinceRepositoryImplTest {
     }
 
     @Test
-    fun `GIVEN remote data source returns multiple provinces WHEN getProvinces THEN emit all mapped provinces`() = runTest {
+    fun given_remote_data_source_returns_multiple_provinces_when_getProvinces_then_emit_all_mapped_provinces() = runTest {
         val dtos = ProvinceDTOMother.provinceDTOList()
         everySuspend { remoteDataSource.getProvinces() } returns dtos
 
@@ -54,7 +54,7 @@ class ProvinceRepositoryImplTest {
     }
 
     @Test
-    fun `GIVEN remote data source returns empty list WHEN getProvinces THEN emit success with empty list`() = runTest {
+    fun given_remote_data_source_returns_empty_list_when_getProvinces_then_emit_success_with_empty_list() = runTest {
         everySuspend { remoteDataSource.getProvinces() } returns emptyList()
 
         sut.getProvinces().test {
@@ -66,7 +66,7 @@ class ProvinceRepositoryImplTest {
     }
 
     @Test
-    fun `GIVEN remote data source throws exception WHEN getProvinces THEN emit failure`() = runTest {
+    fun given_remote_data_source_throws_exception_when_getProvinces_then_emit_failure() = runTest {
         val expectedException = Exception(ERROR_MESSAGE)
         everySuspend { remoteDataSource.getProvinces() } throws expectedException
 
