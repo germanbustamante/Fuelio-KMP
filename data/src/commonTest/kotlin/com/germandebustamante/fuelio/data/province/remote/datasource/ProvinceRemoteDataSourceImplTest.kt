@@ -16,7 +16,7 @@ class ProvinceRemoteDataSourceImplTest : BaseRemoteDataSourceTest() {
         ProvinceRemoteDataSourceImpl(createHttpClient(engine), BASE_URL)
 
     @Test
-    fun `GIVEN remote server returns provinces WHEN getProvinces THEN return provinces`() = runTest {
+    fun given_remote_server_returns_provinces_when_getProvinces_then_return_provinces() = runTest {
         // GIVEN
         val expectedDtos = ProvinceDTOMother.provinceDTOList()
         val sut = createSut(mockEngineWithJson(json.encodeToString(expectedDtos)))
@@ -29,7 +29,7 @@ class ProvinceRemoteDataSourceImplTest : BaseRemoteDataSourceTest() {
     }
 
     @Test
-    fun `GIVEN remote server returns empty list WHEN getProvinces THEN return empty list`() = runTest {
+    fun given_remote_server_returns_empty_list_when_getProvinces_then_return_empty_list() = runTest {
         // GIVEN
         val sut = createSut(mockEngineWithJson(json.encodeToString(emptyList<Nothing>())))
 
@@ -41,7 +41,7 @@ class ProvinceRemoteDataSourceImplTest : BaseRemoteDataSourceTest() {
     }
 
     @Test
-    fun `GIVEN remote server returns error WHEN getProvinces THEN throw DomainError ServerError`() = runTest {
+    fun given_remote_server_returns_error_when_getProvinces_then_throw_DomainError_ServerError() = runTest {
         // GIVEN
         val sut = createSut(mockEngineWithError(HttpStatusCode.InternalServerError))
 
@@ -52,7 +52,7 @@ class ProvinceRemoteDataSourceImplTest : BaseRemoteDataSourceTest() {
     }
 
     @Test
-    fun `GIVEN remote server returns malformed JSON WHEN getProvinces THEN throw DomainError Unknown`() = runTest {
+    fun given_remote_server_returns_malformed_JSON_when_getProvinces_then_throw_DomainError_Unknown() = runTest {
         // GIVEN
         val sut = createSut(mockEngineWithJson("not valid json"))
 
