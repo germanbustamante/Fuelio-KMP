@@ -8,6 +8,8 @@ import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStatio
 import com.germandebustamante.fuelio.core.domain.province.testing.ProvinceBOMother
 import com.germandebustamante.fuelio.core.domain.province.usecase.GetProvincesUseCase
 import com.germandebustamante.fuelio.core.domain.province.usecase.ResolveProvinceByLocationUseCase
+import com.germandebustamante.fuelio.core.navigation.action.Navigator
+import com.germandebustamante.fuelio.core.navigation.destination.Destination
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionState
 import dev.mokkery.answering.returns
@@ -54,6 +56,10 @@ class GasStationsViewModelTest {
     }
 
     private val resolveProvinceByLocationUseCase = ResolveProvinceByLocationUseCase()
+
+    private val navigator: Navigator = mock {
+        everySuspend { navigate(any()) } returns Unit
+    }
 
     private lateinit var sut: GasStationsViewModel
 
@@ -1113,6 +1119,22 @@ class GasStationsViewModelTest {
 
     //endregion
 
+    //region Navigation
+    @Test
+    fun `onItemClick - GIVEN valid gas station id WHEN item clicked THEN navigate to gas station detail with correct parameters`() = runTest {
+        //GIVEN
+        val gasStationId = STATION_ID_1
+        createSut()
+
+        //WHEN
+        sut.onItemClick(gasStationId)
+        advanceUntilIdle()
+
+        //THEN
+        verifySuspend { navigator.navigate(Destination.GasStationDetails(gasStationId)) }
+    }
+    //endregion
+
     //region Stubs
 
     private fun stubLocationGrantedWithProvince(province: String) {
@@ -1167,6 +1189,7 @@ class GasStationsViewModelTest {
             getProvincesUseCase = getProvincesUseCase,
             locationPermissionController = locationPermissionController,
             resolveProvinceByLocationUseCase = resolveProvinceByLocationUseCase,
+            navigator = navigator,
             defaultDispatcher = testDispatcher,
         )
     }
