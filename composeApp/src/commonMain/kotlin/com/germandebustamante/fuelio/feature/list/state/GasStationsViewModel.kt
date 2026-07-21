@@ -9,6 +9,8 @@ import com.germandebustamante.fuelio.core.domain.location.distanceBetween
 import com.germandebustamante.fuelio.core.domain.province.model.ProvinceBO
 import com.germandebustamante.fuelio.core.domain.province.usecase.GetProvincesUseCase
 import com.germandebustamante.fuelio.core.domain.province.usecase.ResolveProvinceByLocationUseCase
+import com.germandebustamante.fuelio.core.navigation.action.Navigator
+import com.germandebustamante.fuelio.core.navigation.destination.Destination
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionState
 import kotlinx.coroutines.CoroutineDispatcher
@@ -37,6 +39,7 @@ class GasStationsViewModel(
     private val getProvincesUseCase: GetProvincesUseCase,
     private val locationPermissionController: LocationPermissionController,
     private val resolveProvinceByLocationUseCase: ResolveProvinceByLocationUseCase,
+    private val navigator: Navigator,
     private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
 
@@ -272,7 +275,9 @@ class GasStationsViewModel(
     }
 
     fun onItemClick(stationId: String) {
-        // TODO: Navigate to detail screen
+        viewModelScope.launch {
+            navigator.navigate(Destination.GasStationDetails(stationId))
+        }
     }
 
     fun onToggleFavorite(stationId: String) {

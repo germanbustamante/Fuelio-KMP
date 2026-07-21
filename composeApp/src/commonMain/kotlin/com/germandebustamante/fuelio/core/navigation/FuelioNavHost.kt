@@ -1,0 +1,62 @@
+package com.germandebustamante.fuelio.core.navigation
+
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
+import androidx.savedstate.serialization.SavedStateConfiguration
+import com.germandebustamante.fuelio.core.flow.ObserveAsEvent
+import com.germandebustamante.fuelio.core.navigation.action.NavigationAction
+import com.germandebustamante.fuelio.core.navigation.action.Navigator
+import com.germandebustamante.fuelio.core.navigation.destination.Destination
+import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
+import com.germandebustamante.fuelio.feature.detail.ui.GasStationDetail
+import com.germandebustamante.fuelio.feature.list.ui.GasStationsScreen
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import org.koin.compose.koinInject
+
+@Composable
+fun FuelioNavHost(locationPermissionController: LocationPermissionController) {
+    val navigator = koinInject<Navigator>()
+    val backStack = rememberNavBackStack(navBackStackConfig, Destination.GasStations)
+
+    ObserveAsEvent(flow = navigator.navigationActions) { action ->
+        when (action) {
+            is NavigationAction.Navigate -> backStack.add(action.destination)
+            is NavigationAction.Back -> backStack.removeLastOrNull()
+        }
+    }
+
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        entryDecorators = listOf(
+            rememberSaveableStateHolderNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator()
+        ),
+        entryProvider = entryProvider {
+            entry<Destination.GasStations> {
+                GasStationsScreen(locationPermissionController, modifier = Modifier.fillMaxSize())
+            }
+            entry<Destination.GasStationDetails> {
+                GasStationDetail(it)
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalSerializationApi::class)
+private val navBackStackConfig = SavedStateConfiguration {
+    serializersModule = SerializersModule {
+        polymorphic(NavKey::class) {
+            subclassesOfSealed<Destination>()
+        }
+    }
+}

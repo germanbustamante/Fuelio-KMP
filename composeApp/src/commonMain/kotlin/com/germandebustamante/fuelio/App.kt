@@ -1,21 +1,16 @@
 package com.germandebustamante.fuelio
 
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.germandebustamante.fuelio.core.navigation.FuelioNavHost
 import com.germandebustamante.fuelio.core.ui.theme.FuelioTheme
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionState
-import com.germandebustamante.fuelio.feature.list.ui.GasStationsScreen
 
 @Composable
 fun App(locationPermissionController: LocationPermissionController) {
     FuelioTheme {
-        GasStationsScreen(
-            locationPermissionController = locationPermissionController,
-            modifier = Modifier.fillMaxSize()
-        )
+        FuelioNavHost(locationPermissionController)
     }
 }
 

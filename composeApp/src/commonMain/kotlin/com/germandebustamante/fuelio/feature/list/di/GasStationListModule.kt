@@ -12,6 +12,7 @@ val gasStationListModule = module {
             getProvincesUseCase = get(),
             locationPermissionController = permissionController,
             resolveProvinceByLocationUseCase = get(),
+            navigator = get(),
         )
     }
 }
