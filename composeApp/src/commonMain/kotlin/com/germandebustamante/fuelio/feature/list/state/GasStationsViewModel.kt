@@ -30,6 +30,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
 
 class GasStationsViewModel(
     private val getGasStationByLocationUseCase: GetGasStationsByLocationUseCase,
@@ -52,6 +53,10 @@ class GasStationsViewModel(
 
     //endregion
 
+    private fun updateState(transform: (GasStationsUIState) -> GasStationsUIState) {
+        _state.update(transform)
+    }
+
     //region Init
 
     init {
@@ -68,7 +73,7 @@ class GasStationsViewModel(
     @OptIn(FlowPreview::class)
     private suspend fun observeSearchQuery() {
         _searchQueryFlow
-            .debounce(SEARCH_DEBOUNCE_MS)
+            .debounce(SEARCH_DEBOUNCE_MS.milliseconds)
             .collect { query ->
                 val currentState = _state.value
                 val stations = withContext(defaultDispatcher) {
@@ -77,7 +82,7 @@ class GasStationsViewModel(
                         .applySearchQuery(query)
                         .markCheapest()
                 }
-                _state.update { it.withSearchQuery(query, stations) }
+                updateState { it.withSearchQuery(query, stations) }
             }
     }
 
@@ -103,19 +108,19 @@ class GasStationsViewModel(
         viewModelScope.launch {
             when (locationPermissionController.requestPermission()) {
                 LocationPermissionState.Granted -> updateLocationAndProvince()
-                LocationPermissionState.DeniedAlways -> _state.update { it.withPermissionDeniedPermanently() }
+                LocationPermissionState.DeniedAlways -> updateState { it.withPermissionDeniedPermanently() }
                 else -> Unit
             }
         }
     }
 
     fun onDismissPermissionSnackbar() {
-        _state.update { it.withPermissionSnackbarDismissed() }
+        updateState { it.withPermissionSnackbarDismissed() }
     }
 
     fun onOpenAppSettings() {
         locationPermissionController.openAppSettings()
-        _state.update { it.withPermissionSnackbarDismissed() }
+        updateState { it.withPermissionSnackbarDismissed() }
     }
 
     private suspend fun updateLocationAndProvince() {
@@ -134,7 +139,7 @@ class GasStationsViewModel(
             .map { it.withFuelFilter(currentState.selectedFuelFilter) }
             .applySearchQuery(currentState.searchQuery)
         allGasStations = built
-        _state.update { it.withSearchQuery(currentState.searchQuery, filtered) }
+        updateState { it.withSearchQuery(currentState.searchQuery, filtered) }
     }
 
     //endregion
@@ -142,7 +147,7 @@ class GasStationsViewModel(
     //region Province
 
     fun onFilterProvinceToggle(showFilterProvince: Boolean) {
-        _state.update { it.withProvinceFilterVisible(showFilterProvince) }
+        updateState { it.withProvinceFilterVisible(showFilterProvince) }
     }
 
     fun onProvinceSelected(province: ProvinceBO) {
@@ -162,13 +167,13 @@ class GasStationsViewModel(
                     .applySearchQuery(currentState.searchQuery)
                     .markCheapest()
             }
-            _state.update { it.withFuelFilter(filter, stations) }
+            updateState { it.withFuelFilter(filter, stations) }
         }
     }
 
     fun onSearchQueryChanged(query: String) {
         // Update the text field immediately; filtering is debounced in observeSearchQuery
-        _state.update { it.copy(searchQuery = query) }
+        updateState { it.copy(searchQuery = query) }
         _searchQueryFlow.value = query
     }
 
@@ -180,7 +185,7 @@ class GasStationsViewModel(
         getProvincesUseCase().collect { result ->
             result.fold(
                 onSuccess = { provinces ->
-                    _state.update { it.withProvinces(provinces) }
+                    updateState { it.withProvinces(provinces) }
                     _selectedProvince.update { resolveProvinceByLocationUseCase(provinces, null) }
                 },
                 onFailure = ::notifyError,
@@ -192,7 +197,7 @@ class GasStationsViewModel(
     private suspend fun fetchProvinceGasStations() {
         _selectedProvince
             .filterNotNull()
-            .onEach { province -> _state.update { it.withLoadingProvince(province) } }
+            .onEach { province -> updateState { it.withLoadingProvince(province) } }
             .flatMapLatest { province -> getGasStationByLocationUseCase(province.id) }
             .collect { result ->
                 var successStations: List<GasStationBO>? = null
@@ -205,7 +210,7 @@ class GasStationsViewModel(
                     val now = Clock.System.now().toLocalDateTime(SPAIN_TIMEZONE)
                     val built = buildGasStationItems(gasStations, now, _state.value.selectedFuelFilter)
                     allGasStations = built
-                    _state.update { it.withStationsLoaded(built) }
+                    updateState { it.withStationsLoaded(built) }
                 }
             }
     }
@@ -235,12 +240,12 @@ class GasStationsViewModel(
     //region Helpers
 
     fun onDismissError() {
-        _state.update { it.withErrorCleared() }
+        updateState { it.withErrorCleared() }
     }
 
     fun onRefresh() {
         viewModelScope.launch {
-            _state.update { it.withRefreshing() }
+            updateState { it.withRefreshing() }
             _selectedProvince.value?.let { province ->
                 getGasStationByLocationUseCase(province.id).collect { result ->
                     var successStations: List<GasStationBO>? = null
@@ -252,7 +257,7 @@ class GasStationsViewModel(
                         val now = Clock.System.now().toLocalDateTime(SPAIN_TIMEZONE)
                         val built = buildGasStationItems(gasStations, now, _state.value.selectedFuelFilter)
                         allGasStations = built
-                        _state.update { it.withStationsLoaded(built) }
+                        updateState { it.withStationsLoaded(built) }
                     }
                 }
             }
@@ -260,7 +265,7 @@ class GasStationsViewModel(
     }
 
     fun onRetry() {
-        _state.update { it.withErrorCleared() }
+        updateState { it.withErrorCleared() }
         _selectedProvince.value?.let {
             _selectedProvince.update { it }
         }
@@ -271,11 +276,11 @@ class GasStationsViewModel(
     }
 
     fun onToggleFavorite(stationId: String) {
-        _state.update { it.withFavoriteToggled(stationId) }
+        updateState { it.withFavoriteToggled(stationId) }
     }
 
     private fun notifyError(error: Throwable) {
-        _state.update { it.withError(error.toDomainError()) }
+        updateState { it.withError(error.toDomainError()) }
     }
 
     private fun List<GasStationItemVO>.markCheapest(): List<GasStationItemVO> {
