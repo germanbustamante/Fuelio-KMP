@@ -1,16 +1,20 @@
 package com.germandebustamante.fuelio.feature.list.state
 
+import androidx.compose.runtime.Immutable
 import com.germandebustamante.fuelio.core.domain.error.DomainError
 import com.germandebustamante.fuelio.core.domain.province.model.ProvinceBO
 
 sealed interface ContentState {
     data object Initial : ContentState
     data object Loading : ContentState
+
+    @Immutable
     data class Success(val stations: List<GasStationItemVO>) : ContentState
     data object Empty : ContentState
     data class Error(val message: String) : ContentState
 }
 
+@Immutable
 data class GasStationsUIState(
     val gasStations: List<GasStationItemVO> = emptyList(),
     val provinces: List<ProvinceBO> = emptyList(),
@@ -36,9 +40,10 @@ data class GasStationsUIState(
 
     fun withProvinces(provinces: List<ProvinceBO>) = copy(provinces = provinces)
 
-    fun withLoadingProvince(province: ProvinceBO) = copy(isLoading = true, selectedProvince = province)
+    fun withLoadingProvince(province: ProvinceBO) = copy(isLoading = true, selectedProvince = province, error = null)
 
-    fun withStationsLoaded(stations: List<GasStationItemVO>) = copy(gasStations = stations, isLoading = false, isRefreshing = false)
+    fun withStationsLoaded(stations: List<GasStationItemVO>) =
+        copy(gasStations = stations, isLoading = false, isRefreshing = false, error = null)
 
     fun withFuelFilter(filter: FuelFilter, stations: List<GasStationItemVO>) = copy(selectedFuelFilter = filter, gasStations = stations)
 

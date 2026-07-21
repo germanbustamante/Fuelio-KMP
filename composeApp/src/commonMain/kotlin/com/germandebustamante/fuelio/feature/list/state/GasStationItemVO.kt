@@ -1,7 +1,9 @@
 package com.germandebustamante.fuelio.feature.list.state
 
+import androidx.compose.runtime.Immutable
 import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationBO
 
+@Immutable
 data class GasStationItemVO(
     val station: GasStationBO,
     val fuelFilter: FuelFilter = FuelFilter.Gasoline95,

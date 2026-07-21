@@ -32,6 +32,7 @@ koin_plugin = "1.0.1"
 mokkery = "3.4.2"
 turbine = "1.2.1"
 playServicesLocation = "21.4.0"
+anrWatchdog = "1.4.0"
 
 [libraries]
 # AndroidX
@@ -86,6 +87,7 @@ koin-compose = { module = "io.insert-koin:koin-compose" }
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel" }
 koin-test = { module = "io.insert-koin:koin-test" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
+anr-watchdog = { module = "com.github.anrwatchdog:anrwatchdog", version.ref = "anrWatchdog" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

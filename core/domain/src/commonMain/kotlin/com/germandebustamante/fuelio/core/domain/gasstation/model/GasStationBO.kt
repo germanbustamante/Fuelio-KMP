@@ -18,6 +18,8 @@ data class GasStationBO(
     val dieselPrice: Double?,
     val dieselPremiumPrice: Double?,
 ) {
+     val brand: GasStationBrand? by lazy(LazyThreadSafetyMode.NONE) { GasStationBrand.fromName(name) }
+
     fun getFullDirection() = "$address, $zipCode $municipality"
 
     fun isOpen(now: LocalDateTime): Boolean {

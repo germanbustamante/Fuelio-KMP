@@ -32,6 +32,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.android)
             implementation(libs.koin.android)
             implementation(libs.play.services.location)
+            implementation(libs.anr.watchdog)
         }
         commonMain.dependencies {
             implementation(libs.runtime)

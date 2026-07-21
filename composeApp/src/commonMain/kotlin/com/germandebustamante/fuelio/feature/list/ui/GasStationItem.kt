@@ -14,13 +14,13 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconToggleButton
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.capitalize
@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.AndroidUiModes
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationBrand
 import com.germandebustamante.fuelio.core.fake.fakeGasStations
 import com.germandebustamante.fuelio.core.ui.theme.FuelioSpacing
 import com.germandebustamante.fuelio.core.ui.theme.FuelioTheme
@@ -105,7 +106,7 @@ fun GasStationItem(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 GasStationBrandLogo(
-                    stationName = gasStation.station.name,
+                    brand = gasStation.station.brand,
                     modifier = Modifier
                         .clip(MaterialTheme.shapes.small)
                         .background(MaterialTheme.colorScheme.secondaryContainer)
@@ -188,37 +189,33 @@ fun GasStationItem(
 }
 
 @Composable
-private fun GasStationBrandLogo(stationName: String, modifier: Modifier = Modifier) {
-    val logoPainter = gasStationBrandLogo(stationName)
+private fun GasStationBrandLogo(brand: GasStationBrand?, modifier: Modifier = Modifier) {
+    val logoPainter = brand?.toDrawableResource()
     Icon(
         painter = painterResource(logoPainter ?: Res.drawable.gas_station_ic),
         contentDescription = null,
-        tint = if (logoPainter != null) androidx.compose.ui.graphics.Color.Unspecified else LocalContentColor.current,
+        tint = if (logoPainter != null) Color.Unspecified else MaterialTheme.colorScheme.secondary,
         modifier = modifier,
     )
 }
 
-internal fun gasStationBrandLogo(name: String): DrawableResource? {
-    val upper = name.uppercase()
-    return when {
-        "REPSOL" in upper -> Res.drawable.logo_repsol
-        "CEPSA" in upper -> Res.drawable.logo_cepsa
-        "BP" in upper -> Res.drawable.logo_bp
-        "SHELL" in upper -> Res.drawable.logo_shell
-        "GALP" in upper -> Res.drawable.logo_galp
-        "ALCAMPO" in upper -> Res.drawable.logo_alcampo
-        "PETRONOR" in upper -> Res.drawable.logo_petronor
-        "PETROPRIX" in upper -> Res.drawable.logo_petroprix
-        "Q8" in upper -> Res.drawable.logo_q8
-        "BALLENOIL" in upper -> Res.drawable.logo_ballenoil
-        "MOEVE" in upper -> Res.drawable.logo_moeve
-        "NATURGY" in upper -> Res.drawable.logo_naturgy
-        "CARREFOUR" in upper -> Res.drawable.logo_carrefour
-        "COSTCO" in upper -> Res.drawable.logo_costco
-        "PLENERGY" in upper -> Res.drawable.logo_plenergy
-        "GACOSUR" in upper -> Res.drawable.logo_gacosur
-        else -> null
-    }
+internal fun GasStationBrand.toDrawableResource(): DrawableResource = when (this) {
+    GasStationBrand.REPSOL -> Res.drawable.logo_repsol
+    GasStationBrand.CEPSA -> Res.drawable.logo_cepsa
+    GasStationBrand.BP -> Res.drawable.logo_bp
+    GasStationBrand.SHELL -> Res.drawable.logo_shell
+    GasStationBrand.GALP -> Res.drawable.logo_galp
+    GasStationBrand.ALCAMPO -> Res.drawable.logo_alcampo
+    GasStationBrand.PETRONOR -> Res.drawable.logo_petronor
+    GasStationBrand.PETROPRIX -> Res.drawable.logo_petroprix
+    GasStationBrand.Q8 -> Res.drawable.logo_q8
+    GasStationBrand.BALLENOIL -> Res.drawable.logo_ballenoil
+    GasStationBrand.MOEVE -> Res.drawable.logo_moeve
+    GasStationBrand.NATURGY -> Res.drawable.logo_naturgy
+    GasStationBrand.CARREFOUR -> Res.drawable.logo_carrefour
+    GasStationBrand.COSTCO -> Res.drawable.logo_costco
+    GasStationBrand.PLENERGY -> Res.drawable.logo_plenergy
+    GasStationBrand.GACOSUR -> Res.drawable.logo_gacosur
 }
 
 @Composable

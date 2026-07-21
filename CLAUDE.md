@@ -58,6 +58,15 @@ View objects (VO suffix) live in the feature's `state/` package and contain disp
 
 ## Key Versions
 
-- Kotlin: 2.3.0, Compose Multiplatform: 1.10.0
-- Koin BOM: 4.2.0, Ktor: 3.4.1
-- Android minSdk: 26, compileSdk/targetSdk: 36
+- AGP: 9.2.1, Kotlin: 2.4.0, Compose Multiplatform: 1.11.1
+- Koin BOM: 4.2.2, Ktor: 3.5.1
+- Android minSdk: 26, compileSdk/targetSdk: 37
+
+## R8 / Release Builds
+
+`composeApp`'s `release` build type has `isMinifyEnabled` and `isShrinkResources` enabled, using `proguard-android-optimize.txt` plus `composeApp/proguard-rules.pro`. Verify `:composeApp:assembleRelease` after adding libraries that rely on reflection (Koin, kotlinx.serialization) — add narrow, specific keep rules to `proguard-rules.pro` only if R8 reports missing rules, rather than broad library-wide rules.
+
+## Debug Tooling
+
+- `AppLogger` (`expect`/`actual` in `core/logger`, per source set) wraps platform logging (`android.util.Log` on Android). Prefer it over direct platform log calls in shared code; avoid calling it from `Composable` getters or other code paths Compose may invoke multiple times per frame.
+- ANR-WatchDog (`androidMain`, `AndroidApplication.onCreate`) is active only when `FLAG_DEBUGGABLE` is set, with `setIgnoreDebugger(true)` so it still fires while running under the Android Studio debugger. On detection it logs the full multi-thread stack trace via `AppLogger.e("ANRWatchDog", ...)` — filter Logcat by that tag to inspect.

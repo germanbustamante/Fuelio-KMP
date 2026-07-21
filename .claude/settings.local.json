@@ -31,7 +31,21 @@
       "Bash(git commit:*)",
       "Bash(git checkout:*)",
       "Bash(nmap --script ssl-enum-ciphers -p 443 sedeaplicaciones.minetur.gob.es)",
-      "Bash(openssl s_client -connect sedeaplicaciones.minetur.gob.es:443 -tls1_2)"
+      "Bash(openssl s_client -connect sedeaplicaciones.minetur.gob.es:443 -tls1_2)",
+      "Bash(./gradlew :composeApp:compileCommonMainKotlinMetadata --quiet)",
+      "Bash(./gradlew :core:domain:test :composeApp:testDebugUnitTest --quiet)",
+      "Bash(./gradlew :core:domain:tasks --group=verification --quiet)",
+      "Bash(./gradlew :core:domain:allTests :composeApp:testDebugUnitTest --quiet)",
+      "Bash(./gradlew :composeApp:testDebugUnitTest --quiet)",
+      "Bash(./gradlew :composeApp:testDebugUnitTest)",
+      "Bash(./gradlew :composeApp:testDebugUnitTest --tests \"*.GasStationsViewModelTest.onOpenAppSettings*\" --info)",
+      "Bash(./gradlew :composeApp:compileDebugKotlin)",
+      "Bash(adb devices *)",
+      "Bash(sysctl -n machdep.cpu.brand_string)",
+      "Bash(system_profiler SPHardwareDataType)",
+      "Bash(mkdir -p composeApp/src/commonMain/kotlin/com/germandebustamante/fuelio/core/logger)",
+      "Bash(mkdir -p composeApp/src/androidMain/kotlin/com/germandebustamante/fuelio/core/logger)",
+      "Bash(mkdir -p composeApp/src/iosMain/kotlin/com/germandebustamante/fuelio/core/logger)"
     ]
   }
 }
