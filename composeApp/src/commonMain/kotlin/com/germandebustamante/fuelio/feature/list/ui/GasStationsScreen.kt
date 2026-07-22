@@ -88,6 +88,7 @@ import fuelio.composeapp.generated.resources.my_location_ic
 import fuelio.composeapp.generated.resources.province_search_placeholder
 import fuelio.composeapp.generated.resources.scroll_to_top
 import fuelio.composeapp.generated.resources.select_province
+import fuelio.composeapp.generated.resources.stale_data_snackbar_message
 import fuelio.composeapp.generated.resources.top_bar_subtitle_change_province
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -113,6 +114,7 @@ fun GasStationsScreen(
         onDetectLocationTapped = viewModel::onDetectLocationTapped,
         onOpenAppSettings = viewModel::onOpenAppSettings,
         onDismissPermissionSnackbar = viewModel::onDismissPermissionSnackbar,
+        onDismissStaleDataError = viewModel::onDismissStaleDataError,
         onRefresh = viewModel::onRefresh,
         onRetry = viewModel::onRetry,
         onItemClick = viewModel::onItemClick,
@@ -132,6 +134,7 @@ private fun GasStationsScreen(
     onDetectLocationTapped: () -> Unit,
     onOpenAppSettings: () -> Unit,
     onDismissPermissionSnackbar: () -> Unit,
+    onDismissStaleDataError: () -> Unit,
     onRefresh: () -> Unit,
     onRetry: () -> Unit,
     onItemClick: (String) -> Unit,
@@ -302,6 +305,17 @@ private fun GasStationsScreen(
         }
     }
 
+    val staleDataSnackbarMessage = stringResource(Res.string.stale_data_snackbar_message)
+    LaunchedEffect(state.staleDataError) {
+        if (state.staleDataError != null) {
+            snackbarHostState.showSnackbar(
+                message = staleDataSnackbarMessage,
+                duration = SnackbarDuration.Short,
+            )
+            onDismissStaleDataError()
+        }
+    }
+
     ProvinceBottomSheetDialog(
         provinces = state.provinces,
         onProvinceSelected = onProvinceSelected,
@@ -423,6 +437,7 @@ private fun GasStationsScreenPreview() {
             onDetectLocationTapped = {},
             onOpenAppSettings = {},
             onDismissPermissionSnackbar = {},
+            onDismissStaleDataError = {},
             onRefresh = {},
             onRetry = {},
             onItemClick = {},
@@ -445,6 +460,7 @@ private fun GasStationWithProvincesModalOpenedPreview() {
             onDetectLocationTapped = {},
             onOpenAppSettings = {},
             onDismissPermissionSnackbar = {},
+            onDismissStaleDataError = {},
             onRefresh = {},
             onRetry = {},
             onItemClick = {},
@@ -467,6 +483,7 @@ private fun GasStationsScreenLoadingPreview() {
             onDetectLocationTapped = {},
             onOpenAppSettings = {},
             onDismissPermissionSnackbar = {},
+            onDismissStaleDataError = {},
             onRefresh = {},
             onRetry = {},
             onItemClick = {},
@@ -489,6 +506,7 @@ private fun GasStationsScreenErrorPreview() {
             onDetectLocationTapped = {},
             onOpenAppSettings = {},
             onDismissPermissionSnackbar = {},
+            onDismissStaleDataError = {},
             onRefresh = {},
             onRetry = {},
             onItemClick = {},
@@ -511,6 +529,7 @@ private fun GasStationsScreenPermissionSnackbarPreview() {
             onDetectLocationTapped = {},
             onOpenAppSettings = {},
             onDismissPermissionSnackbar = {},
+            onDismissStaleDataError = {},
             onRefresh = {},
             onRetry = {},
             onItemClick = {},

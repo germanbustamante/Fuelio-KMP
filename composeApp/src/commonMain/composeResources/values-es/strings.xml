@@ -24,4 +24,5 @@
     <string name="province_search_placeholder">Buscar provincia…</string>
     <string name="favorite_add">Añadir a favoritos</string>
     <string name="favorite_remove">Quitar de favoritos</string>
+    <string name="stale_data_snackbar_message">No se pudo actualizar. Mostrando datos guardados.</string>
 </resources>

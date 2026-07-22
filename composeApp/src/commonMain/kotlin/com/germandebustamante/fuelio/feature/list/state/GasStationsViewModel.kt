@@ -203,18 +203,16 @@ class GasStationsViewModel(
             .onEach { province -> updateState { it.withLoadingProvince(province) } }
             .flatMapLatest { province -> getGasStationByLocationUseCase(province.id) }
             .collect { result ->
-                var successStations: List<GasStationBO>? = null
                 result.fold(
-                    onSuccess = { stations -> successStations = stations },
+                    onSuccess = { (gasStations, isFromCache) ->
+                        rawGasStations = gasStations
+                        val now = Clock.System.now().toLocalDateTime(SPAIN_TIMEZONE)
+                        val built = buildGasStationItems(gasStations, now, _state.value.selectedFuelFilter)
+                        allGasStations = built
+                        updateState { it.withStationsLoaded(built, isFromCache) }
+                    },
                     onFailure = ::notifyError,
                 )
-                successStations?.let { gasStations ->
-                    rawGasStations = gasStations
-                    val now = Clock.System.now().toLocalDateTime(SPAIN_TIMEZONE)
-                    val built = buildGasStationItems(gasStations, now, _state.value.selectedFuelFilter)
-                    allGasStations = built
-                    updateState { it.withStationsLoaded(built) }
-                }
             }
     }
 
@@ -246,22 +244,24 @@ class GasStationsViewModel(
         updateState { it.withErrorCleared() }
     }
 
+    fun onDismissStaleDataError() {
+        updateState { it.withStaleDataErrorDismissed() }
+    }
+
     fun onRefresh() {
         viewModelScope.launch {
             updateState { it.withRefreshing() }
             _selectedProvince.value?.let { province ->
                 getGasStationByLocationUseCase(province.id).collect { result ->
-                    var successStations: List<GasStationBO>? = null
                     result.fold(
-                        onSuccess = { stations -> successStations = stations },
+                        onSuccess = { (gasStations, isFromCache) ->
+                            val now = Clock.System.now().toLocalDateTime(SPAIN_TIMEZONE)
+                            val built = buildGasStationItems(gasStations, now, _state.value.selectedFuelFilter)
+                            allGasStations = built
+                            updateState { it.withStationsLoaded(built, isFromCache) }
+                        },
                         onFailure = ::notifyError,
                     )
-                    successStations?.let { gasStations ->
-                        val now = Clock.System.now().toLocalDateTime(SPAIN_TIMEZONE)
-                        val built = buildGasStationItems(gasStations, now, _state.value.selectedFuelFilter)
-                        allGasStations = built
-                        updateState { it.withStationsLoaded(built) }
-                    }
                 }
             }
         }
@@ -285,7 +285,10 @@ class GasStationsViewModel(
     }
 
     private fun notifyError(error: Throwable) {
-        updateState { it.withError(error.toDomainError()) }
+        val domainError = error.toDomainError()
+        updateState { state ->
+            if (state.gasStations.isNotEmpty()) state.withStaleDataError(domainError) else state.withError(domainError)
+        }
     }
 
     private fun List<GasStationItemVO>.markCheapest(): List<GasStationItemVO> {

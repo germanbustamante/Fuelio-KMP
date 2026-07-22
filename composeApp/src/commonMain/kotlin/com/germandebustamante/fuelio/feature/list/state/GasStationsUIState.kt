@@ -25,6 +25,7 @@ data class GasStationsUIState(
     val isRefreshing: Boolean = false,
     val showFilterProvince: Boolean = false,
     val error: DomainError? = null,
+    val staleDataError: DomainError? = null,
     val showPermissionDeniedPermanentlySnackbar: Boolean = false,
     val favorites: Set<String> = emptySet(),
 ) {
@@ -42,8 +43,8 @@ data class GasStationsUIState(
 
     fun withLoadingProvince(province: ProvinceBO) = copy(isLoading = true, selectedProvince = province, error = null)
 
-    fun withStationsLoaded(stations: List<GasStationItemVO>) =
-        copy(gasStations = stations, isLoading = false, isRefreshing = false, error = null)
+    fun withStationsLoaded(stations: List<GasStationItemVO>, isFromCache: Boolean = false) =
+        copy(gasStations = stations, isLoading = false, isRefreshing = isFromCache, error = null, staleDataError = null)
 
     fun withFuelFilter(filter: FuelFilter, stations: List<GasStationItemVO>) = copy(selectedFuelFilter = filter, gasStations = stations)
 
@@ -58,6 +59,10 @@ data class GasStationsUIState(
     fun withError(error: DomainError) = copy(error = error, isLoading = false, isRefreshing = false)
 
     fun withErrorCleared() = copy(error = null)
+
+    fun withStaleDataError(error: DomainError) = copy(staleDataError = error, isRefreshing = false)
+
+    fun withStaleDataErrorDismissed() = copy(staleDataError = null)
 
     fun withRefreshing() = copy(isRefreshing = true, error = null)
 
