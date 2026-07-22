@@ -3,6 +3,7 @@ package com.germandebustamante.fuelio.feature.list.state
 import app.cash.turbine.test
 import com.germandebustamante.fuelio.core.domain.error.testing.DomainErrorMother
 import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationBO
+import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationsResult
 import com.germandebustamante.fuelio.core.domain.gasstation.testing.GasStationBOMother
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationsByLocationUseCase
 import com.germandebustamante.fuelio.core.domain.province.testing.ProvinceBOMother
@@ -41,7 +42,9 @@ class GasStationsViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private val getGasStationsByLocationUseCase: GetGasStationsByLocationUseCase = mock {
-        every { invoke(any()) } returns flowOf(Result.success(GasStationBOMother.gasStationBOList()))
+        every { invoke(any()) } returns flowOf(
+            Result.success(GasStationsResult(GasStationBOMother.gasStationBOList(), isFromCache = false)),
+        )
     }
 
     private val getProvincesUseCase: GetProvincesUseCase = mock {
@@ -850,12 +853,13 @@ class GasStationsViewModelTest {
         }
 
     @Test
-    fun `onRefresh - GIVEN stations loaded WHEN refresh fails THEN error is notified`() =
+    fun `onRefresh - GIVEN stations loaded WHEN refresh fails THEN stale data error is notified and stations are kept`() =
         runTest {
             // GIVEN
             val error = DomainErrorMother.serverError()
             createSut()
             advanceUntilIdle()
+            val loadedStations = sut.state.value.gasStations
 
             // WHEN
             stubGasStationsFailure(error)
@@ -864,7 +868,10 @@ class GasStationsViewModelTest {
 
             // THEN
             sut.state.test {
-                assertEquals(error, awaitItem().error)
+                val state = awaitItem()
+                assertNull(state.error)
+                assertEquals(error, state.staleDataError)
+                assertEquals(loadedStations, state.gasStations)
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -1171,7 +1178,9 @@ class GasStationsViewModelTest {
     }
 
     private fun stubGasStationsSuccess(stations: List<GasStationBO>) {
-        every { getGasStationsByLocationUseCase(any()) } returns flowOf(Result.success(stations))
+        every { getGasStationsByLocationUseCase(any()) } returns flowOf(
+            Result.success(GasStationsResult(stations, isFromCache = false)),
+        )
     }
 
     private fun stubProvincesFailure(error: Throwable) {

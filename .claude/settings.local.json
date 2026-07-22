@@ -45,7 +45,8 @@
       "Bash(system_profiler SPHardwareDataType)",
       "Bash(mkdir -p composeApp/src/commonMain/kotlin/com/germandebustamante/fuelio/core/logger)",
       "Bash(mkdir -p composeApp/src/androidMain/kotlin/com/germandebustamante/fuelio/core/logger)",
-      "Bash(mkdir -p composeApp/src/iosMain/kotlin/com/germandebustamante/fuelio/core/logger)"
+      "Bash(mkdir -p composeApp/src/iosMain/kotlin/com/germandebustamante/fuelio/core/logger)",
+      "Bash(rtk proxy *)"
     ]
   }
 }

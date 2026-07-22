@@ -10,4 +10,6 @@ plugins {
     alias(libs.plugins.androidLint) apply false
     alias(libs.plugins.jetbrainsKotlinJvm) apply false
     alias(libs.plugins.koin.compiler) apply false
+    alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.androidx.room) apply false
 }
