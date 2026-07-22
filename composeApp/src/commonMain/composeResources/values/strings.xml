@@ -26,4 +26,5 @@
     <string name="favorite_remove">Remove from favorites</string>
     <string name="at_distance">at {distance}</string>
     <string name="cheapest_station">cheapest station</string>
+    <string name="stale_data_snackbar_message">Couldn\'t refresh. Showing saved data.</string>
 </resources>
