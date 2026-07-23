@@ -4,8 +4,8 @@ import com.germandebustamante.fuelio.data.gasstation.local.model.GasStationEntit
 import kotlinx.coroutines.flow.Flow
 
 class GasStationLocalDataSourceImpl(private val gasStationDAO: GasStationDAO) : GasStationLocalDataSource {
-    override suspend fun insertGasStations(gasStations: List<GasStationEntity>) {
-        gasStationDAO.insertGasStations(gasStations)
+    override suspend fun replaceGasStationsByProvince(provinceId: String, gasStations: List<GasStationEntity>) {
+        gasStationDAO.replaceGasStationsByProvince(provinceId, gasStations)
     }
 
     override suspend fun getGasStationsByProvince(provinceId: String): List<GasStationEntity> =

@@ -4,7 +4,7 @@ import com.germandebustamante.fuelio.data.gasstation.local.model.GasStationEntit
 import kotlinx.coroutines.flow.Flow
 
 interface GasStationLocalDataSource {
-    suspend fun insertGasStations(gasStations: List<GasStationEntity>)
+    suspend fun replaceGasStationsByProvince(provinceId: String, gasStations: List<GasStationEntity>)
     suspend fun getGasStationsByProvince(provinceId: String): List<GasStationEntity>
     fun getGasStationById(id: String): Flow<GasStationEntity?>
 }

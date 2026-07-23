@@ -11,12 +11,14 @@ import com.germandebustamante.fuelio.core.domain.province.usecase.GetProvincesUs
 import com.germandebustamante.fuelio.core.domain.province.usecase.ResolveProvinceByLocationUseCase
 import com.germandebustamante.fuelio.core.navigation.action.Navigator
 import com.germandebustamante.fuelio.core.navigation.destination.Destination
+import com.germandebustamante.fuelio.core.util.SPAIN_TIMEZONE
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionState
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,12 +26,14 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
@@ -48,6 +52,7 @@ class GasStationsViewModel(
     private val _selectedProvince: MutableStateFlow<ProvinceBO?> = MutableStateFlow(null)
     private val _userLocation: MutableStateFlow<LocationPermissionController.Location?> = MutableStateFlow(null)
     private val _searchQueryFlow: MutableStateFlow<String> = MutableStateFlow("")
+    private val _refreshTrigger = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     private var rawGasStations: List<GasStationBO> = emptyList()
     private var allGasStations: List<GasStationItemVO> = emptyList()
 
@@ -200,8 +205,19 @@ class GasStationsViewModel(
     private suspend fun fetchProvinceGasStations() {
         _selectedProvince
             .filterNotNull()
-            .onEach { province -> updateState { it.withLoadingProvince(province) } }
-            .flatMapLatest { province -> getGasStationByLocationUseCase(province.id) }
+            .flatMapLatest { province ->
+                merge(flowOf(FetchTrigger.ProvinceSelected), _refreshTrigger.map { FetchTrigger.ManualRefresh })
+                    .map { trigger -> province to trigger }
+            }
+            .onEach { (province, trigger) ->
+                updateState {
+                    when (trigger) {
+                        FetchTrigger.ProvinceSelected -> it.withLoadingProvince(province)
+                        FetchTrigger.ManualRefresh -> it.withRefreshing()
+                    }
+                }
+            }
+            .flatMapLatest { (province, _) -> getGasStationByLocationUseCase(province.id) }
             .collect { result ->
                 result.fold(
                     onSuccess = { (gasStations, isFromCache) ->
@@ -215,6 +231,8 @@ class GasStationsViewModel(
                 )
             }
     }
+
+    private enum class FetchTrigger { ProvinceSelected, ManualRefresh }
 
     private suspend fun buildGasStationItems(
         gasStations: List<GasStationBO>,
@@ -249,22 +267,7 @@ class GasStationsViewModel(
     }
 
     fun onRefresh() {
-        viewModelScope.launch {
-            updateState { it.withRefreshing() }
-            _selectedProvince.value?.let { province ->
-                getGasStationByLocationUseCase(province.id).collect { result ->
-                    result.fold(
-                        onSuccess = { (gasStations, isFromCache) ->
-                            val now = Clock.System.now().toLocalDateTime(SPAIN_TIMEZONE)
-                            val built = buildGasStationItems(gasStations, now, _state.value.selectedFuelFilter)
-                            allGasStations = built
-                            updateState { it.withStationsLoaded(built, isFromCache) }
-                        },
-                        onFailure = ::notifyError,
-                    )
-                }
-            }
-        }
+        viewModelScope.launch { _refreshTrigger.emit(Unit) }
     }
 
     fun onRetry() {
@@ -305,7 +308,6 @@ class GasStationsViewModel(
     //endregion
 
     companion object {
-        private val SPAIN_TIMEZONE = TimeZone.of("Europe/Madrid")
         const val SEARCH_DEBOUNCE_MS = 300L
     }
 }
