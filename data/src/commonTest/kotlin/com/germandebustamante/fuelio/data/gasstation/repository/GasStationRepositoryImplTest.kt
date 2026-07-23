@@ -118,7 +118,7 @@ class GasStationRepositoryImplTest {
     }
 
     @Test
-    fun `getGasStationsByLocation - GIVEN remote succeeds WHEN called THEN local cache is updated with stations mapped to the requested province`() = runTest {
+    fun `getGasStationsByLocation - GIVEN remote succeeds WHEN called THEN local cache is replaced with stations mapped to the requested province`() = runTest {
         //GIVEN
         givenLocalGasStationsEmpty()
         givenRemoteGetGasStationsByLocationSuccess()
@@ -131,7 +131,7 @@ class GasStationRepositoryImplTest {
         }
 
         //THEN
-        verifySuspend { localDataSource.insertGasStations(expectedEntities) }
+        verifySuspend { localDataSource.replaceGasStationsByProvince(PROVINCE_ID, expectedEntities) }
     }
     //region Stubs
     private fun givenLocalGasStationsEmpty() {
@@ -144,7 +144,7 @@ class GasStationRepositoryImplTest {
 
     private fun givenRemoteGetGasStationsByLocationSuccess() {
         everySuspend { remoteDataSource.getGasStationsByLocation(any()) } returns listOf(GasStationDTOMother.gasStationDTO())
-        everySuspend { localDataSource.insertGasStations(any()) } returns Unit
+        everySuspend { localDataSource.replaceGasStationsByProvince(any(), any()) } returns Unit
     }
 
     private fun givenRemoteGetGasStationsByLocationFailure() {
