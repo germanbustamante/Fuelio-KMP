@@ -5,13 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationUseCase
 import com.germandebustamante.fuelio.core.navigation.action.Navigator
 import com.germandebustamante.fuelio.core.navigation.destination.Destination
+import com.germandebustamante.fuelio.core.util.SPAIN_TIMEZONE
 import kotlin.time.Clock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
 class GasStationDetailViewModel(
@@ -26,7 +26,7 @@ class GasStationDetailViewModel(
     init {
         viewModelScope.launch {
             getGasStation(route.gasStationId).collect { gasStation ->
-                val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).dayOfWeek
+                val today = Clock.System.now().toLocalDateTime(SPAIN_TIMEZONE).dayOfWeek
                 _state.update { it.withGasStationLoaded(gasStation, today) }
             }
         }
