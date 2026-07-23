@@ -1,56 +1,53 @@
 package com.germandebustamante.fuelio.feature.list.ui
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.dp
 import com.germandebustamante.fuelio.core.ui.theme.FuelioTheme
 import com.germandebustamante.fuelio.designsystem.button.FuelioTextButton
 import com.germandebustamante.fuelio.designsystem.button.config.text.TextButtonConfig
 import com.germandebustamante.fuelio.designsystem.button.config.text.TextButtonSize
 import com.germandebustamante.fuelio.designsystem.emptystate.FuelioEmptyState
 import fuelio.composeapp.generated.resources.Res
-import fuelio.composeapp.generated.resources.empty_state_change_filters
-import fuelio.composeapp.generated.resources.empty_state_subtitle
-import fuelio.composeapp.generated.resources.empty_state_title
-import fuelio.composeapp.generated.resources.top_bar_subtitle_change_province
+import fuelio.composeapp.generated.resources.empty_state_search_subtitle
+import fuelio.composeapp.generated.resources.empty_state_search_title
+import fuelio.composeapp.generated.resources.search_clear
 import org.jetbrains.compose.resources.stringResource
 
+/**
+ * Provinces come from the backend and always have stations, and the fuel-type filter
+ * never empties the list (it only swaps which price is shown per station) — so this
+ * state is only reachable via a search with no name/address match.
+ */
 @Composable
 fun GasStationsEmptyState(
-    onChangeProvince: (() -> Unit)? = null,
-    onChangeFilters: (() -> Unit)? = null,
+    onChangeFilters: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     FuelioEmptyState(
-        title = stringResource(Res.string.empty_state_title),
-        subtitle = stringResource(Res.string.empty_state_subtitle),
+        title = stringResource(Res.string.empty_state_search_title),
+        subtitle = stringResource(Res.string.empty_state_search_subtitle),
         icon = {
-            Text(text = "⛽", fontSize = 56.sp)
+            Icon(
+                imageVector = Icons.Filled.Search,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(40.dp),
+            )
         },
-        action = when {
-            onChangeFilters != null -> {
-                {
-                    FuelioTextButton(
-                        text = stringResource(Res.string.empty_state_change_filters),
-                        onClick = onChangeFilters,
-                        config = TextButtonConfig(size = TextButtonSize.MEDIUM),
-                    )
-                }
-            }
-            onChangeProvince != null -> {
-                {
-                    FuelioTextButton(
-                        text = stringResource(Res.string.top_bar_subtitle_change_province),
-                        onClick = onChangeProvince,
-                        config = TextButtonConfig(size = TextButtonSize.MEDIUM),
-                    )
-                }
-            }
-            else -> null
+        action = {
+            FuelioTextButton(
+                text = stringResource(Res.string.search_clear),
+                onClick = onChangeFilters,
+                config = TextButtonConfig(size = TextButtonSize.MEDIUM),
+            )
         },
         modifier = modifier,
     )

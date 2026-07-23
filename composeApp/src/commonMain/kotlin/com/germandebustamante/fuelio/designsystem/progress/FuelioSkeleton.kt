@@ -6,6 +6,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,6 +30,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.germandebustamante.fuelio.core.ui.theme.FuelioSpacing
 import com.germandebustamante.fuelio.core.ui.theme.FuelioTheme
+import com.germandebustamante.fuelio.designsystem.card.FuelioCard
 
 @Composable
 fun Modifier.fuelioSkeleton(shape: androidx.compose.ui.graphics.Shape = MaterialTheme.shapes.small): Modifier {
@@ -68,32 +71,47 @@ fun SkeletonBox(
     Box(modifier = boxModifier.fuelioSkeleton(shape))
 }
 
+/**
+ * Mirrors [com.germandebustamante.fuelio.feature.list.ui.GasStationItem]'s layout
+ * (price+status row, avatar+name row, address+distance row) so the skeleton-to-content
+ * transition doesn't jump.
+ */
 @Composable
 fun FuelioGasStationItemSkeleton(modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = FuelioSpacing.md, vertical = FuelioSpacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
+    FuelioCard(modifier = modifier.fillMaxWidth()) {
+        Column(
             modifier = Modifier
-                .size(52.dp)
-                .fuelioSkeleton(MaterialTheme.shapes.small),
-        )
-        Spacer(Modifier.width(FuelioSpacing.md))
-        Column(modifier = Modifier.weight(1f)) {
-            SkeletonBox(height = 16.dp, width = 160.dp, shape = MaterialTheme.shapes.extraSmall)
-            Spacer(Modifier.height(FuelioSpacing.xs))
-            SkeletonBox(height = 12.dp, width = 120.dp, shape = MaterialTheme.shapes.extraSmall)
-            Spacer(Modifier.height(FuelioSpacing.xs))
-            SkeletonBox(height = 12.dp, width = 80.dp, shape = MaterialTheme.shapes.extraSmall)
-        }
-        Spacer(Modifier.width(FuelioSpacing.md))
-        Column(horizontalAlignment = Alignment.End) {
-            SkeletonBox(height = 20.dp, width = 60.dp, shape = MaterialTheme.shapes.extraSmall)
-            Spacer(Modifier.height(FuelioSpacing.xs))
-            SkeletonBox(height = 12.dp, width = 48.dp, shape = MaterialTheme.shapes.extraSmall)
+                .fillMaxWidth()
+                .padding(FuelioSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(FuelioSpacing.sm),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                SkeletonBox(height = 30.dp, width = 96.dp, shape = MaterialTheme.shapes.small)
+                SkeletonBox(height = 24.dp, width = 88.dp, shape = MaterialTheme.shapes.small)
+            }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(FuelioSpacing.sm),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .fuelioSkeleton(CircleShape),
+                )
+                SkeletonBox(height = 16.dp, width = 140.dp, shape = MaterialTheme.shapes.extraSmall)
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                SkeletonBox(height = 13.dp, width = 170.dp, shape = MaterialTheme.shapes.extraSmall)
+                SkeletonBox(height = 13.dp, width = 40.dp, shape = MaterialTheme.shapes.extraSmall)
+            }
         }
     }
 }

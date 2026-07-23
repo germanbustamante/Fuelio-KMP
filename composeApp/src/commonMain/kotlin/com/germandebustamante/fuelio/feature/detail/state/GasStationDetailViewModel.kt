@@ -3,26 +3,36 @@ package com.germandebustamante.fuelio.feature.detail.state
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationUseCase
+import com.germandebustamante.fuelio.core.navigation.action.Navigator
 import com.germandebustamante.fuelio.core.navigation.destination.Destination
+import kotlin.time.Clock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 class GasStationDetailViewModel(
     private val route: Destination.GasStationDetails,
     private val getGasStation: GetGasStationUseCase,
+    private val navigator: Navigator,
 ) : ViewModel() {
 
-    private val _state: MutableStateFlow<GasStationDetailUIState?> = MutableStateFlow(null)
-    val state: StateFlow<GasStationDetailUIState?> = _state.asStateFlow()
+    private val _state: MutableStateFlow<GasStationDetailUIState> = MutableStateFlow(GasStationDetailUIState())
+    val state: StateFlow<GasStationDetailUIState> = _state.asStateFlow()
 
     init {
         viewModelScope.launch {
             getGasStation(route.gasStationId).collect { gasStation ->
-                _state.update { gasStation?.let { GasStationDetailUIState(it) } }
+                val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).dayOfWeek
+                _state.update { it.withGasStationLoaded(gasStation, today) }
             }
         }
+    }
+
+    fun onBackClick() {
+        viewModelScope.launch { navigator.navigateUp() }
     }
 }

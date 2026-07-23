@@ -1,7 +1,6 @@
 package com.germandebustamante.fuelio.feature.list.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
@@ -97,73 +97,36 @@ fun GasStationItem(
             .fillMaxWidth()
             .semantics(mergeDescendants = true) { contentDescription = a11yDesc },
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(FuelioSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(FuelioSpacing.sm),
+        ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(FuelioSpacing.md),
-                horizontalArrangement = Arrangement.spacedBy(FuelioSpacing.md),
-                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top,
             ) {
-                GasStationBrandLogo(
-                    brand = gasStation.station.brand,
-                    modifier = Modifier
-                        .clip(MaterialTheme.shapes.small)
-                        .background(MaterialTheme.colorScheme.secondaryContainer)
-                        .border(1.dp, MaterialTheme.colorScheme.secondary, MaterialTheme.shapes.small)
-                        .padding(FuelioSpacing.sm)
-                        .size(20.dp),
-                )
-
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(FuelioSpacing.xxs),
-                ) {
-                    Text(
-                        text = stationName,
-                        style = MaterialTheme.typography.bodyLarge,
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 1,
-                    )
-                    Text(
-                        text = address,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 1,
-                    )
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(FuelioSpacing.xs),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        OpenClosedBadge(isOpen = gasStation.isOpen)
-                        if (gasStation.distanceInKilometers != null) {
-                            Icon(
-                                painter = painterResource(Res.drawable.distance_km_ic),
-                                contentDescription = null,
-                                modifier = Modifier.size(12.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            Text(
-                                text = gasStation.distanceInKilometers.formatAsKilometers(),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                }
-
-                Column(horizontalAlignment = Alignment.End) {
+                Row(verticalAlignment = Alignment.Bottom) {
                     Text(
                         text = priceLabel,
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = if (gasStation.isCheapest) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
-                        text = fuelLabel,
-                        style = MaterialTheme.typography.labelSmall,
+                        text = "/L",
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = FuelioSpacing.xxs, bottom = FuelioSpacing.xxs),
                     )
+                }
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(FuelioSpacing.xs),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    OpenClosedBadge(isOpen = gasStation.isOpen)
                     IconToggleButton(
                         checked = isFavorite,
                         onCheckedChange = { onToggleFavorite() },
@@ -180,9 +143,60 @@ fun GasStationItem(
             }
 
             if (gasStation.isCheapest) {
-                CheapestBadge(
-                    modifier = Modifier.align(Alignment.TopEnd).padding(top = FuelioSpacing.xs, end = FuelioSpacing.xs)
+                CheapestBadge()
+            }
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(FuelioSpacing.sm),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                GasStationBrandLogo(
+                    brand = gasStation.station.brand,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.secondaryContainer)
+                        .padding(FuelioSpacing.xs)
+                        .size(20.dp),
                 )
+                Text(
+                    text = stationName,
+                    style = MaterialTheme.typography.titleSmall,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = address,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                if (gasStation.distanceInKilometers != null) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(FuelioSpacing.xxs),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.distance_km_ic),
+                            contentDescription = null,
+                            modifier = Modifier.size(12.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            text = gasStation.distanceInKilometers.formatAsKilometers(),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             }
         }
     }

@@ -97,6 +97,21 @@ View objects (VO suffix) live in the feature's `state/` package and contain disp
 
 `composeApp`'s `release` build type has `isMinifyEnabled` and `isShrinkResources` enabled, using `proguard-android-optimize.txt` plus `composeApp/proguard-rules.pro`. Verify `:composeApp:assembleRelease` after adding libraries that rely on reflection (Koin, kotlinx.serialization) — add narrow, specific keep rules to `proguard-rules.pro` only if R8 reports missing rules, rather than broad library-wide rules.
 
+## Commit Message Convention
+
+Every commit subject is prefixed with the ticket ID matching the branch (e.g. `FE-1.0.0:`), followed by a Conventional-Commits-style `Type(Scope):` (capitalized type: `Feat`, `Fix`, `Refactor`, `Perf`, `UI`, `Test`, `Build`, `Docs`, `Chore`) and an imperative, capitalized title with no trailing punctuation — e.g. `FE-1.0.0: Feat(UI): Redesign gas station items and implement detail screen`.
+
+Pick the format based on the diff's scope:
+
+- **Simple** (1-3 files, one logical change — a bug fix, a small tweak): subject line only, no body. e.g. `FE-1.0.0: Fix(UI): Correct scroll-to-top FAB arrow direction`.
+- **Complex** (4+ files, multiple layers/components, a feature or refactor): subject line, blank line, then a short paragraph giving the "why" (business/architectural context), blank line, then a bullet list grouping changes logically — each bullet names the specific screen/component/class touched and explains what changed and why, not just what. Use Clean Architecture terms accurately (Repository, UseCase, BO/VO, ViewModel, Composable) and call out DI, navigation, state management, or persistence changes explicitly when present.
+
+Content rules for both formats:
+- Present tense, active voice, imperative mood ("Add", "Fix", "Extract" — not "Added"/"Fixes").
+- Be specific — name the actual screen/class/function; avoid vague terms like "various fixes" or "misc updates".
+- Never include personal info, secrets, internal URLs/hostnames, or bug-tracker IDs unless the ID is already part of the branch name.
+- One logical change per commit message — don't bundle unrelated work into a single bullet list.
+
 ## Debug Tooling
 
 - `AppLogger` (`expect`/`actual` in `core/logger`, per source set) wraps platform logging (`android.util.Log` on Android). Prefer it over direct platform log calls in shared code; avoid calling it from `Composable` getters or other code paths Compose may invoke multiple times per frame.

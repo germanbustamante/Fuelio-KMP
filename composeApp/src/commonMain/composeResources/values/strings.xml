@@ -13,12 +13,11 @@
     <string name="fuel_filter_diesel">Diesel</string>
     <string name="fuel_filter_diesel_premium">Diesel+</string>
     <string name="search_gas_station">Search gas station…</string>
-    <string name="empty_state_title">No gas stations found</string>
-    <string name="empty_state_subtitle">Try a different search or filter</string>
+    <string name="empty_state_search_title">No matches found</string>
+    <string name="empty_state_search_subtitle">No gas station matches that name or address. Try a different search term.</string>
     <string name="top_bar_subtitle_change_province">Change province</string>
     <string name="search_clear">Clear search</string>
     <string name="scroll_to_top">Scroll to top</string>
-    <string name="empty_state_change_filters">Change filters</string>
     <string name="error_state_title">Something went wrong</string>
     <string name="error_state_retry">Retry</string>
     <string name="province_search_placeholder">Search province…</string>
@@ -27,4 +26,21 @@
     <string name="at_distance">at {distance}</string>
     <string name="cheapest_station">cheapest station</string>
     <string name="stale_data_snackbar_message">Couldn\'t refresh. Showing saved data.</string>
+    <string name="navigate_back">Back</string>
+    <string name="detail_directions_button">Get directions</string>
+    <string name="detail_prices_title">Fuel prices</string>
+    <string name="detail_schedule_title">Schedule</string>
+    <string name="detail_schedule_today_suffix"> · today</string>
+    <string name="detail_schedule_closed">Closed</string>
+    <string name="detail_schedule_open_24h">Open 24h</string>
+    <string name="detail_not_found_title">Gas station not available</string>
+    <string name="detail_not_found_subtitle">This station isn\'t cached locally yet. Go back to the list to load it first.</string>
+    <string name="detail_map_placeholder">Map preview coming soon</string>
+    <string name="day_monday">Monday</string>
+    <string name="day_tuesday">Tuesday</string>
+    <string name="day_wednesday">Wednesday</string>
+    <string name="day_thursday">Thursday</string>
+    <string name="day_friday">Friday</string>
+    <string name="day_saturday">Saturday</string>
+    <string name="day_sunday">Sunday</string>
 </resources>

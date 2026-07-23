@@ -33,15 +33,15 @@ fun OpenClosedBadge(
         )
     } else {
         Triple(
-            MaterialTheme.colorScheme.errorContainer,
-            MaterialTheme.colorScheme.onErrorContainer,
+            MaterialTheme.colorScheme.surfaceVariant,
+            MaterialTheme.colorScheme.onSurfaceVariant,
             Res.string.closed,
         )
     }
 
     Row(
         modifier = modifier
-            .clip(MaterialTheme.shapes.extraSmall)
+            .clip(MaterialTheme.shapes.small)
             .background(bgColor)
             .padding(horizontal = FuelioSpacing.xs, vertical = FuelioSpacing.xxs),
         horizontalArrangement = Arrangement.spacedBy(FuelioSpacing.xs),
