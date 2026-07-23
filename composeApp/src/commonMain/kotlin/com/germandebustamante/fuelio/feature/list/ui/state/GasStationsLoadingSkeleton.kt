@@ -1,6 +1,7 @@
 package com.germandebustamante.fuelio.feature.list.ui.state
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -11,7 +12,13 @@ import com.germandebustamante.fuelio.designsystem.progress.FuelioGasStationItemS
 fun GasStationsLoadingSkeleton(modifier: Modifier = Modifier) {
     LazyColumn(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(FuelioSpacing.xs),
+        contentPadding = PaddingValues(
+            start = FuelioSpacing.md,
+            end = FuelioSpacing.md,
+            top = FuelioSpacing.sm,
+            bottom = FuelioSpacing.md,
+        ),
+        verticalArrangement = Arrangement.spacedBy(FuelioSpacing.sm),
         userScrollEnabled = false,
     ) {
         items(6) {

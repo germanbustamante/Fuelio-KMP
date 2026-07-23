@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -172,7 +173,8 @@ private fun GasStationsScreen(
                             )
                             state.selectedProvince?.let { province ->
                                 Row(
-                                    modifier = Modifier.clickable { onFilterProvinceToggle(true) },
+                                    modifier = Modifier.clickable { onFilterProvinceToggle(true) }
+                                        .padding(horizontal = 4.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(FuelioSpacing.xxs),
                                 ) {
@@ -211,7 +213,7 @@ private fun GasStationsScreen(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.KeyboardArrowDown,
+                        imageVector = Icons.Outlined.KeyboardArrowUp,
                         contentDescription = stringResource(Res.string.scroll_to_top),
                         modifier = Modifier.padding(FuelioSpacing.xxs),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -271,10 +273,7 @@ private fun GasStationsScreen(
                         }
 
                         ContentState.Empty -> GasStationsEmptyState(
-                            onChangeProvince = { onFilterProvinceToggle(true) },
-                            onChangeFilters = if (state.searchQuery.isNotEmpty()) {
-                                { onSearchQueryChanged("") }
-                            } else null,
+                            onChangeFilters = { onSearchQueryChanged("") },
                             modifier = Modifier.fillMaxSize(),
                         )
 

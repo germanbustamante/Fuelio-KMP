@@ -17,6 +17,7 @@ internal val DeepOrange600 = Color(0xFFF4511E)
 internal val DeepOrange700 = Color(0xFFE64A19)
 internal val DeepOrange800 = Color(0xFFD84315)
 internal val DeepOrange900 = Color(0xFFBF360C)
+internal val DeepOrange950 = Color(0xFF8A2607)
 
 // Secondary - Blue Grey (Trust/Technology)
 internal val BlueGrey50 = Color(0xFFECEFF1)
@@ -38,6 +39,7 @@ internal val Green600 = Color(0xFF43A047)
 internal val Green700 = Color(0xFF388E3C)
 internal val Green50 = Color(0xFFE8F5E9)
 internal val Green100 = Color(0xFFC8E6C9)
+internal val Green950 = Color(0xFF1B4620)
 
 // Error - Red
 internal val Red500 = Color(0xFFF44336)
@@ -67,7 +69,7 @@ internal val LightColorScheme = lightColorScheme(
     primary = DeepOrange600,
     onPrimary = Color.White,
     primaryContainer = DeepOrange100,
-    onPrimaryContainer = DeepOrange900,
+    onPrimaryContainer = DeepOrange950,
 
     // Secondary
     secondary = BlueGrey600,
@@ -79,7 +81,7 @@ internal val LightColorScheme = lightColorScheme(
     tertiary = Green500,
     onTertiary = Color.White,
     tertiaryContainer = Green100,
-    onTertiaryContainer = Green700,
+    onTertiaryContainer = Green950,
 
     // Error
     error = Red500,
@@ -117,7 +119,7 @@ internal val DarkColorScheme = darkColorScheme(
     // Primary
     primary = DeepOrange300,
     onPrimary = DeepOrange900,
-    primaryContainer = DeepOrange800,
+    primaryContainer = DeepOrange950,
     onPrimaryContainer = DeepOrange100,
 
     // Secondary
@@ -129,7 +131,7 @@ internal val DarkColorScheme = darkColorScheme(
     // Tertiary
     tertiary = Green400,
     onTertiary = Green700,
-    tertiaryContainer = Green600,
+    tertiaryContainer = Green950,
     onTertiaryContainer = Green100,
 
     // Error
@@ -143,9 +145,9 @@ internal val DarkColorScheme = darkColorScheme(
     onBackground = Gray100,
 
     // Surface
-    surface = Gray900,
+    surface = Gray800,
     onSurface = Gray100,
-    surfaceVariant = Gray800,
+    surfaceVariant = Gray700,
     onSurfaceVariant = Gray300,
 
     // Outline

@@ -26,12 +26,7 @@ data class GasStationBO(
         val today = now.dayOfWeek
         val currentTime = now.time
         return schedule.any { segment ->
-            val inDayRange = if (segment.startDay.ordinal <= segment.endDay.ordinal) {
-                today.ordinal in segment.startDay.ordinal..segment.endDay.ordinal
-            } else {
-                today.ordinal >= segment.startDay.ordinal || today.ordinal <= segment.endDay.ordinal
-            }
-            if (!inDayRange) return@any false
+            if (!segment.coversDay(today)) return@any false
             val start = segment.startTime ?: return@any true
             val end = segment.endTime ?: return@any true
             if (start <= end) currentTime in start..end else currentTime >= start || currentTime <= end
