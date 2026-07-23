@@ -10,4 +10,10 @@ data class ScheduleSegmentBO(
     val endTime: LocalTime?,
 ) {
     val isAlwaysOpen: Boolean = startTime == null && endTime == null
+
+    fun coversDay(day: DayOfWeek): Boolean = if (startDay.ordinal <= endDay.ordinal) {
+        day.ordinal in startDay.ordinal..endDay.ordinal
+    } else {
+        day.ordinal >= startDay.ordinal || day.ordinal <= endDay.ordinal
+    }
 }

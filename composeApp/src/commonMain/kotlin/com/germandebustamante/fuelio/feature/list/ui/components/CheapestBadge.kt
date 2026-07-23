@@ -19,7 +19,7 @@ fun CheapestBadge(modifier: Modifier = Modifier) {
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onPrimaryContainer,
         modifier = modifier
-            .clip(MaterialTheme.shapes.extraSmall)
+            .clip(MaterialTheme.shapes.small)
             .background(MaterialTheme.colorScheme.primaryContainer)
             .padding(horizontal = FuelioSpacing.xs, vertical = FuelioSpacing.xxs),
     )
