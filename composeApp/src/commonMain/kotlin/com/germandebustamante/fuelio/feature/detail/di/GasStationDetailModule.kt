@@ -7,6 +7,6 @@ import org.koin.dsl.module
 
 val gasStationDetailModule = module {
     viewModel { (route: Destination.GasStationDetails) ->
-        GasStationDetailViewModel(route, get(), get())
+        GasStationDetailViewModel(route, get(), get(), get())
     }
 }
