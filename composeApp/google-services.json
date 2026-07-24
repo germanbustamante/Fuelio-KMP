@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "381815299183",
+    "project_id": "inadraft-kmp",
+    "storage_bucket": "inadraft-kmp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:381815299183:android:3c8feacf48496ceea3c19a",
+        "android_client_info": {
+          "package_name": "com.germandebustamante.fuelio"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZgUi2veUpHBDv3OR0xvVrDc5EVXlPOho"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:381815299183:android:170be8e3001e1a34a3c19a",
+        "android_client_info": {
+          "package_name": "com.germandebustamante.fuelio.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZgUi2veUpHBDv3OR0xvVrDc5EVXlPOho"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

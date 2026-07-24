@@ -37,6 +37,11 @@ turbine = "1.2.1"
 playServicesLocation = "21.4.0"
 anrWatchdog = "1.4.0"
 
+#Firebase
+googleServices = "4.5.0"
+firebaseBom = "34.16.0"
+firebaseCrashlyticsPlugin = "3.0.7"
+
 #Room
 room = "2.8.4"
 sqlite = "2.7.0"
@@ -100,6 +105,11 @@ koin-test = { module = "io.insert-koin:koin-test" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 anr-watchdog = { module = "com.github.anrwatchdog:anrwatchdog", version.ref = "anrWatchdog" }
 
+#Firebase
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+
 #Room
 androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
@@ -120,3 +130,5 @@ koin-compiler = { id = "io.insert-koin.compiler.plugin", version.ref = "koin_plu
 mokkery = { id = "dev.mokkery", version.ref = "mokkery" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 androidx-room = { id = "androidx.room", version.ref = "room" }
+googleServices = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+firebaseCrashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlyticsPlugin" }
