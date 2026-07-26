@@ -25,6 +25,10 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
+            // core.analytics's iOS bridge functions/types (registerNativeFirebaseTracker,
+            // registerNativePostHogTracker, PostHogSecrets) are called directly from Swift,
+            // so they must be re-exported through this umbrella framework's header.
+            export(projects.core.analytics)
         }
     }
 
@@ -37,7 +41,6 @@ kotlin {
             implementation(libs.play.services.location)
             implementation(libs.anr.watchdog)
             implementation(project.dependencies.platform(libs.firebase.bom))
-            implementation(libs.firebase.analytics)
             implementation(libs.firebase.crashlytics)
         }
         commonMain.dependencies {
@@ -53,6 +56,7 @@ kotlin {
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.coroutines.core)
             implementation(projects.core.domain)
+            api(projects.core.analytics)
             implementation(projects.data)
             implementation(project.dependencies.platform(libs.koin.bom))
             implementation(libs.koin.core)

@@ -1,5 +1,6 @@
 package com.germandebustamante.fuelio.di
 
+import com.germandebustamante.fuelio.core.analytics.di.analyticsModule
 import com.germandebustamante.fuelio.core.di.coreModule
 import com.germandebustamante.fuelio.core.domain.di.domainModule
 import com.germandebustamante.fuelio.data.di.dataModule
@@ -17,6 +18,7 @@ fun initKoin(config: KoinAppDeclaration? = null): KoinApplication = startKoin {
         dataModule,
         gasStationListModule,
         gasStationDetailModule,
+        analyticsModule,
         coreModule,
     )
 }
