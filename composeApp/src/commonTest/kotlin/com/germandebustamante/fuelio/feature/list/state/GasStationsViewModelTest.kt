@@ -1,6 +1,8 @@
 package com.germandebustamante.fuelio.feature.list.state
 
 import app.cash.turbine.test
+import com.germandebustamante.fuelio.core.analytics.AnalyticsTracking
+import com.germandebustamante.fuelio.core.analytics.Trace
 import com.germandebustamante.fuelio.core.domain.error.testing.DomainErrorMother
 import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationBO
 import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationsResult
@@ -11,12 +13,23 @@ import com.germandebustamante.fuelio.core.domain.province.usecase.GetProvincesUs
 import com.germandebustamante.fuelio.core.domain.province.usecase.ResolveProvinceByLocationUseCase
 import com.germandebustamante.fuelio.core.navigation.action.Navigator
 import com.germandebustamante.fuelio.core.navigation.destination.Destination
+import com.germandebustamante.fuelio.feature.common.analytics.ApiCallFailed
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionState
+import com.germandebustamante.fuelio.feature.list.analytics.GasStationSelected
+import com.germandebustamante.fuelio.feature.list.analytics.GasStationsScreenViewed
+import com.germandebustamante.fuelio.feature.list.analytics.LocationPermissionEvent
+import com.germandebustamante.fuelio.feature.list.analytics.LocationPermissionOutcome
+import com.germandebustamante.fuelio.feature.list.analytics.ProvinceChanged
 import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
+import dev.mokkery.matcher.capture.Capture
+import dev.mokkery.matcher.capture.ContainerCapture
+import dev.mokkery.matcher.capture.SlotCapture
+import dev.mokkery.matcher.capture.capture
+import dev.mokkery.matcher.capture.get
 import dev.mokkery.mock
 import dev.mokkery.verify
 import dev.mokkery.verifySuspend
@@ -62,6 +75,10 @@ class GasStationsViewModelTest {
 
     private val navigator: Navigator = mock {
         everySuspend { navigate(any()) } returns Unit
+    }
+
+    private val analyticsManager: AnalyticsTracking = mock {
+        everySuspend { track(any()) } returns Unit
     }
 
     private lateinit var sut: GasStationsViewModel
@@ -1142,7 +1159,156 @@ class GasStationsViewModelTest {
     }
     //endregion
 
+    //region Analytics
+
+    @Test
+    fun `init - WHEN ViewModel initialized THEN screen viewed event is tracked`() = runTest {
+        // GIVEN
+        val trackedTrace = captureLastTrackedTrace<GasStationsScreenViewed>()
+
+        // WHEN
+        createSut()
+        advanceUntilIdle()
+
+        // THEN
+        assertEquals(GasStationsScreenViewed.SCREEN_NAME, trackedTrace.get().screenName)
+    }
+
+    @Test
+    fun `onItemClick - WHEN item clicked THEN gas station selected event is tracked with the station id`() = runTest {
+        // GIVEN
+        val trackedTrace = captureLastTrackedTrace<GasStationSelected>()
+        createSut()
+        advanceUntilIdle()
+
+        // WHEN
+        sut.onItemClick(STATION_ID_1)
+        advanceUntilIdle()
+
+        // THEN
+        val event = trackedTrace.get()
+        assertEquals(GasStationSelected.EVENT_NAME, event.eventName)
+        assertEquals(STATION_ID_1, event.params?.get(GasStationSelected.PARAM_GAS_STATION_ID))
+    }
+
+    @Test
+    fun `onProvinceSelected - WHEN province selected THEN province changed event is tracked with the province id and name`() = runTest {
+        // GIVEN
+        val trackedTrace = captureLastTrackedTrace<ProvinceChanged>()
+        val secondProvince = ProvinceBOMother.provinceBOList()[SECOND_PROVINCE_INDEX]
+        createSut()
+        advanceUntilIdle()
+
+        // WHEN
+        sut.onProvinceSelected(secondProvince)
+        advanceUntilIdle()
+
+        // THEN
+        val event = trackedTrace.get()
+        assertEquals(ProvinceChanged.EVENT_NAME, event.eventName)
+        assertEquals(secondProvince.id, event.params?.get(ProvinceChanged.PARAM_PROVINCE_ID))
+        assertEquals(secondProvince.name, event.params?.get(ProvinceChanged.PARAM_PROVINCE_NAME))
+    }
+
+    @Test
+    fun `onDetectLocationTapped - GIVEN permission granted WHEN tapped THEN requested and granted events are tracked`() = runTest {
+        // GIVEN - a single slot only keeps the last value, and this action tracks two events, so capture them all
+        val trackedTraces = captureAllTrackedTraces()
+        stubPermissionRequestResult(LocationPermissionState.Granted)
+        createSut()
+        advanceUntilIdle()
+
+        // WHEN
+        sut.onDetectLocationTapped()
+        advanceUntilIdle()
+
+        // THEN
+        val events = trackedTraces.values.filterIsInstance<LocationPermissionEvent>()
+        assertEquals(1, events.count { it.outcome == LocationPermissionOutcome.REQUESTED })
+        assertEquals(1, events.count { it.outcome == LocationPermissionOutcome.GRANTED })
+    }
+
+    @Test
+    fun `onDetectLocationTapped - GIVEN permission denied always WHEN tapped THEN denied event is tracked as permanent`() = runTest {
+        // GIVEN
+        val trackedTraces = captureAllTrackedTraces()
+        stubPermissionRequestResult(LocationPermissionState.DeniedAlways)
+        createSut()
+        advanceUntilIdle()
+
+        // WHEN
+        sut.onDetectLocationTapped()
+        advanceUntilIdle()
+
+        // THEN
+        val events = trackedTraces.values.filterIsInstance<LocationPermissionEvent>()
+        assertEquals(1, events.count { it.outcome == LocationPermissionOutcome.DENIED_PERMANENTLY })
+    }
+
+    @Test
+    fun `onDetectLocationTapped - GIVEN permission denied WHEN tapped THEN denied event is tracked as not permanent`() = runTest {
+        // GIVEN
+        val trackedTraces = captureAllTrackedTraces()
+        stubPermissionRequestResult(LocationPermissionState.Denied)
+        createSut()
+        advanceUntilIdle()
+
+        // WHEN
+        sut.onDetectLocationTapped()
+        advanceUntilIdle()
+
+        // THEN
+        val events = trackedTraces.values.filterIsInstance<LocationPermissionEvent>()
+        assertEquals(1, events.count { it.outcome == LocationPermissionOutcome.DENIED })
+    }
+
+    @Test
+    fun `init - GIVEN provinces returns error THEN api call failed event is tracked with the provinces operation`() = runTest {
+        // GIVEN
+        val trackedTrace = captureLastTrackedTrace<ApiCallFailed>()
+        stubProvincesFailure(DomainErrorMother.serverError())
+
+        // WHEN
+        createSut()
+        advanceUntilIdle()
+
+        // THEN
+        val event = trackedTrace.get()
+        assertEquals("${GasStationsScreenViewed.SCREEN_NAME}_fetch_provinces_failed", event.eventName)
+        assertEquals("ServerError", event.params?.get(ApiCallFailed.PARAM_ERROR_TYPE))
+    }
+
+    @Test
+    fun `init - GIVEN gas stations returns error THEN api call failed event is tracked with the stations operation`() = runTest {
+        // GIVEN
+        val trackedTrace = captureLastTrackedTrace<ApiCallFailed>()
+        stubGasStationsFailure(DomainErrorMother.networkUnavailable())
+
+        // WHEN
+        createSut()
+        advanceUntilIdle()
+
+        // THEN
+        val event = trackedTrace.get()
+        assertEquals("${GasStationsScreenViewed.SCREEN_NAME}_fetch_stations_failed", event.eventName)
+        assertEquals("NetworkUnavailable", event.params?.get(ApiCallFailed.PARAM_ERROR_TYPE))
+    }
+
+    //endregion
+
     //region Stubs
+
+    private fun <T : Trace> captureLastTrackedTrace(): SlotCapture<T> {
+        val slot = Capture.slot<T>()
+        everySuspend { analyticsManager.track(capture(slot)) } returns Unit
+        return slot
+    }
+
+    private fun captureAllTrackedTraces(): ContainerCapture<Trace> {
+        val container = Capture.container<Trace>()
+        everySuspend { analyticsManager.track(capture(container)) } returns Unit
+        return container
+    }
 
     private fun stubLocationGrantedWithProvince(province: String) {
         everySuspend { locationPermissionController.checkCurrentStatus() } returns LocationPermissionState.Granted
@@ -1199,6 +1365,7 @@ class GasStationsViewModelTest {
             locationPermissionController = locationPermissionController,
             resolveProvinceByLocationUseCase = resolveProvinceByLocationUseCase,
             navigator = navigator,
+            analyticsManager = analyticsManager,
             defaultDispatcher = testDispatcher,
         )
     }
