@@ -10,9 +10,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ./gradlew :composeApp:installDebug         # Install on connected device
 
 # Tests
-./gradlew test                             # composeApp unit tests (Android host tests aren't enabled for :data/:core:domain, so this only runs composeApp)
-./gradlew :core:domain:iosSimulatorArm64Test  # Domain module tests (KMP-only module, no JVM/Android test task)
-./gradlew :data:iosSimulatorArm64Test         # Data module tests (same — runs via the iOS simulator target)
+./gradlew test                             # composeApp unit tests (Android host tests aren't enabled for :data/:core:domain/:core:analytics, so this only runs composeApp)
+./gradlew :core:domain:iosSimulatorArm64Test    # Domain module tests (KMP-only module, no JVM/Android test task)
+./gradlew :data:iosSimulatorArm64Test           # Data module tests (same — runs via the iOS simulator target)
+./gradlew :core:analytics:iosSimulatorArm64Test # Analytics module tests (same — also covers the iosTest bridge tests)
 ./gradlew connectedAndroidTest             # Android instrumentation tests
 
 # iOS
@@ -21,15 +22,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Module Architecture
 
-Three Gradle modules with strict Clean Architecture layering:
+Gradle modules with strict Clean Architecture layering:
 
 ```
-:core:domain   →  Business logic only (no platform deps)
-:data          →  Repository implementations, Ktor HTTP client, Room local persistence
-:composeApp    →  Compose Multiplatform UI, ViewModels, Navigation3, DI wiring
+:core:domain    →  Business logic only (no platform deps)
+:core:analytics →  Analytics tracking abstraction (Trace/Trackable/AnalyticsManager) + Firebase/PostHog implementations
+:data           →  Repository implementations, Ktor HTTP client, Room local persistence
+:composeApp     →  Compose Multiplatform UI, ViewModels, Navigation3, DI wiring
 ```
 
-Dependencies flow one way: `composeApp → data → core:domain`. The domain module has zero platform or framework dependencies.
+Dependencies flow one way: `composeApp → data → core:domain`. The domain module has zero platform or framework dependencies. `:core:analytics` is a separate branch consumed directly by `composeApp` (`api(projects.core.analytics)`, not `implementation`, since it exposes `Trace`/`AnalyticsTracking` types to feature code) — it has no dependency on `:core:domain` or `:data`.
 
 ## Kotlin Multiplatform Targets
 
@@ -39,7 +41,7 @@ Dependencies flow one way: `composeApp → data → core:domain`. The domain mod
 
 Platform-specific HTTP engine selection uses `expect`/`actual` in `data/src/*/kotlin/.../engine/HttpClientEngineProvider.kt`.
 
-`:data` and `:core:domain` only target `iosArm64`/`iosSimulatorArm64` (no `iosX64`) — Google stopped publishing `iosX64` variants for recent AndroidX KMP libraries (Room/SQLite included) since Apple dropped Intel Mac support. `composeApp` already only had those two targets; keep all three modules aligned or KSP/Room builds break with an unresolved-dependency error for `iosX64`.
+`:data`, `:core:domain`, and `:core:analytics` only target `iosArm64`/`iosSimulatorArm64` (no `iosX64`) — Google stopped publishing `iosX64` variants for recent AndroidX KMP libraries (Room/SQLite included) since Apple dropped Intel Mac support. `composeApp` already only had those two targets; keep all modules aligned or KSP/Room builds break with an unresolved-dependency error for `iosX64`.
 
 ## Navigation (Navigation3)
 
@@ -85,6 +87,28 @@ View objects (VO suffix) live in the feature's `state/` package and contain disp
 
 - `getGasStationsByLocation(provinceId)` returns `Flow<Result<GasStationsResult>>` (`GasStationsResult(stations, isFromCache: Boolean)`, in `core/domain`) and can emit **twice**: cached rows first (`isFromCache = true`) if any exist, then the network result (`isFromCache = false`) after writing it back to Room. `Result` here models genuine network failure — `GasStationsResult`/`isFromCache` is business state, not part of the error channel. In the ViewModel, `notifyError` picks a "hard" error (`withError`, blocks the whole screen) only if `gasStations` is currently empty; if there's already content on screen (from cache or a prior load), a failed refresh goes to `withStaleDataError` instead, which keeps the list and just triggers a transient snackbar — never let a background refresh failure blank out data the user can already see.
 - `getGasStationById(id)` returns a plain `Flow<GasStationBO?>` (no `Result`) sourced directly from a Room `Flow<GasStationEntity?>` query — it's a pure local read with no network path (the upstream MINETUR API has no fetch-by-station-id endpoint, only list-by-province/municipality/CCAA), so `null` is an expected business value ("not cached yet"), not a failure to wrap in `Result`. Being backed by Room's own `Flow` also makes it reactive: if the list screen refreshes that station's row in the background, an open detail screen updates without re-querying.
+
+## Analytics Tracking (`:core:analytics`)
+
+- `Trace` (`Event`/`Screen`/`Error`) is an `open class`, not `data class` — features define a typed subclass per event/screen instead of instantiating `Trace.Screen(...)` inline with raw string keys, e.g. `GasStationDetailScreenViewed` in `feature/detail/analytics/`. `equals`/`hashCode`/`toString` are implemented manually (structural, matching by field), since `open class` can't be a `data class`.
+- Concrete `Trace` subclasses live in the consuming feature module's `analytics/` package (`feature/list/analytics/`, `feature/detail/analytics/`), one file per event — never in `:core:analytics` itself. `:core:analytics` only holds generic, reusable abstractions (`Trace`, `Trackable`, `AnalyticsManager`, `AnalyticsProviderType`); promote a concrete event type there only once a second, independent module actually needs the same one.
+- Each event is a `data object` (no params, e.g. `GasStationsScreenViewed`, `LocationPermissionRequested`) or a `data class` (has params, e.g. `GasStationSelected(gasStationId)`), never a plain `class`. `data object`s can't reference their own `EVENT_NAME`/`SCREEN_NAME` from inside the `super(...)` call (Kotlin: "Cannot access before initialized") and can't nest a `companion object` — inline the string literal in `super(...)` and duplicate it in the public `const val`, unlike `data class`es where the `companion object` constant can be referenced directly in `super(...)`.
+- Event/screen name naming convention (`EVENT_NAME`/`SCREEN_NAME` constants, snake_case): `<origin_screen>_<category>_<action>` — prefixed by the screen/feature it originates from so events group together in analytics dashboards, middle segment names the category (`location_permission`, `province`, `station`), suffix is the action in past tense (`_selected`, `_changed`, `_requested`, `_granted`, `_denied`). Screen names (`Trace.Screen.screenName`) are just the `<origin_screen>` slug with no category/action suffix (e.g. `gas_stations_list`, `gas_station_detail`) since the `Trace.Screen` type already disambiguates it as a screen view. Examples: `gas_stations_list_station_selected`, `gas_stations_list_province_changed`, `gas_stations_list_location_permission_denied`. Param keys (`PARAM_*` constants) are plain snake_case with no prefix (`gas_station_id`, `province_id`) since they're already scoped by their event.
+- `Trace.Error` is the one exception to "one bespoke class per event": errors are homogeneous (screen + operation + error type/message), so instead of one class per screen/operation there's a single reusable `ApiCallFailed(screenName, operation, errorType, errorMessage)` in `composeApp/.../feature/common/analytics/` (shared across features within `composeApp`, not promoted to `:core:analytics` since only `composeApp` needs it). Its `eventName` is built as `"${screenName}_${operation}_failed"`, keeping the same naming convention without hardcoding a string per screen — this scales to many screens/call sites without new files, at the cost of losing compile-time type-per-error (tests filter on `eventName`/params instead of a distinct type). `operation` is a free-form string constant per call site (e.g. `"fetch_provinces"`, `"fetch_stations"`); `errorType` is typically `domainError::class.simpleName`.
+- Tracking failed API calls is done from the ViewModel (where `AnalyticsTracking` is wired), not from the Repository or `:data`/network layer — `:core:analytics` is only a dependency of `composeApp` (see above), and only the ViewModel knows the screen/operation context the naming convention needs, plus the business distinction between a hard error and a stale-data/background-refresh error. Each ViewModel centralizes this in a private `trackApiCallFailed(operation, domainError)` helper called from its single error-handling function (e.g. `GasStationsViewModel.notifyError`), rather than duplicating the tracking call at every `onFailure` site — see `GasStationsViewModel` for the reference implementation.
+- Second exception to "one class per event": when several events are really just different outcomes of the *same* flow (e.g. requesting location permission ends in requested/granted/denied/denied-permanently), consolidate them into one `data class` parametrized by an enum discriminant instead of one class per outcome — see `LocationPermissionEvent(outcome: LocationPermissionOutcome)` in `feature/list/analytics/`. `eventName` is built as `"${screen}_location_permission_${outcome.name.lowercase()}"`, so the enum constant names (`REQUESTED`, `GRANTED`, `DENIED`, `DENIED_PERMANENTLY`) double as the naming convention's action suffix — pick enum constant names accordingly. Reserve one-class-per-event for events that are genuinely distinct actions (`GasStationSelected`, `ProvinceChanged`), not different results of the same action.
+- `AnalyticsTracking` is the consumer-facing interface (`suspend fun track(trace: Trace)`) — ViewModels depend on this, not on the concrete `AnalyticsManager` class, so it can be mocked directly in tests (`AnalyticsManager` itself is a plain `class`, not `open`/an interface, so Mokkery can't mock it — mock `AnalyticsTracking` instead).
+- `Trackable`/`Tracker` is the per-provider contract (`FirebaseTracker`, `PostHogTracker`); `track` is `suspend` all the way down (`AnalyticsTracking` → `AnalyticsManager` → `Trackable`), so a provider implementation can call a suspend API later without having to break the interface.
+- `AnalyticsProviderType` enum (`FIREBASE`, `POSTHOG`) plus each `Trace`'s `targets` list decide which registered trackers receive it — `AnalyticsManager.track` matches by `Trackable.type`.
+- `AnalyticsContextProvider` (`expect`/`actual`) + `AnalyticsPlatformModule` reuse the `ContextProvider` pattern from `:data` (below), so `PostHogTracker` gets Android's `Context` without leaking it into `commonMain`.
+- `AnalyticsSecrets.POSTHOG_API_KEY` is generated by BuildKonfig from `thirdparties.properties` (gitignored, not `local.properties`) or the `POSTHOG_API_KEY` env var in CI; blank/missing is a valid state that just keeps PostHog off.
+- iOS native bridge functions (`registerNativeFirebaseTracker`, `registerNativePostHogTracker`) are called directly from Swift in `iOSApp.swift`, so `composeApp`'s iOS framework re-exports `:core:analytics` (`export(projects.core.analytics)`) to make those symbols visible.
+
+### Testing suspend `track` with Mokkery
+
+- Use `everySuspend`/`verifySuspend` (not `every`/`verify`) for anything touching `track`.
+- `Capture.slot<T>()` + the `capture(slot)` matcher must go inside the `every`/`everySuspend` stub that actually intercepts the call — putting `capture(...)` inside a `verify`/`verifySuspend` block instead throws `AbsentValueInSlotException`, since Mokkery only fills the slot when a call is matched live, not on verify replay.
+- If the code under test calls `track(...)` from inside `viewModelScope.launch { }` (as `GasStationDetailViewModel.init` does), the test needs `Dispatchers.setMain(StandardTestDispatcher())` in `@BeforeTest` / `Dispatchers.resetMain()` in `@AfterTest`, plus wrapping the test body in `runTest { ... advanceUntilIdle() }` — otherwise the launched coroutine never actually runs during the test (see `GasStationsViewModelTest` for the reference setup).
 
 ## Key Versions
 
