@@ -3,7 +3,7 @@ package com.germandebustamante.fuelio.feature.detail.analytics
 import com.germandebustamante.fuelio.core.analytics.AnalyticsProviderType
 import com.germandebustamante.fuelio.core.analytics.Trace
 
-class GasStationDetailScreenViewed(gasStationId: String) : Trace.Screen(
+data class GasStationDetailScreenViewed(val gasStationId: String) : Trace.Screen(
     screenName = SCREEN_NAME,
     targets = listOf(AnalyticsProviderType.FIREBASE, AnalyticsProviderType.POSTHOG),
     params = mapOf(PARAM_GAS_STATION_ID to gasStationId),
