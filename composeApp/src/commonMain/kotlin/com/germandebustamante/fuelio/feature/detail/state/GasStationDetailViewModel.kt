@@ -39,8 +39,6 @@ class GasStationDetailViewModel(
         }
     }
 
-
-
     fun onBackClick() {
         viewModelScope.launch { navigator.navigateUp() }
     }
