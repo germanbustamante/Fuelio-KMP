@@ -2,6 +2,8 @@ package com.germandebustamante.fuelio.feature.list.state
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.germandebustamante.fuelio.core.analytics.AnalyticsTracking
+import com.germandebustamante.fuelio.core.domain.error.DomainError
 import com.germandebustamante.fuelio.core.domain.error.toDomainError
 import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationBO
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationsByLocationUseCase
@@ -12,8 +14,14 @@ import com.germandebustamante.fuelio.core.domain.province.usecase.ResolveProvinc
 import com.germandebustamante.fuelio.core.navigation.action.Navigator
 import com.germandebustamante.fuelio.core.navigation.destination.Destination
 import com.germandebustamante.fuelio.core.util.SPAIN_TIMEZONE
+import com.germandebustamante.fuelio.feature.common.analytics.ApiCallFailed
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionState
+import com.germandebustamante.fuelio.feature.list.analytics.GasStationSelected
+import com.germandebustamante.fuelio.feature.list.analytics.GasStationsScreenViewed
+import com.germandebustamante.fuelio.feature.list.analytics.LocationPermissionEvent
+import com.germandebustamante.fuelio.feature.list.analytics.LocationPermissionOutcome
+import com.germandebustamante.fuelio.feature.list.analytics.ProvinceChanged
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -44,6 +52,7 @@ class GasStationsViewModel(
     private val locationPermissionController: LocationPermissionController,
     private val resolveProvinceByLocationUseCase: ResolveProvinceByLocationUseCase,
     private val navigator: Navigator,
+    private val analyticsManager: AnalyticsTracking,
     private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
 
@@ -68,6 +77,7 @@ class GasStationsViewModel(
     //region Init
 
     init {
+        viewModelScope.launch { analyticsManager.track(GasStationsScreenViewed) }
         viewModelScope.launch { fetchProvinces() }
         viewModelScope.launch { fetchProvinceGasStations() }
         viewModelScope.launch {
@@ -114,10 +124,17 @@ class GasStationsViewModel(
 
     fun onDetectLocationTapped() {
         viewModelScope.launch {
+            analyticsManager.track(LocationPermissionEvent(LocationPermissionOutcome.REQUESTED))
             when (locationPermissionController.requestPermission()) {
-                LocationPermissionState.Granted -> updateLocationAndProvince()
-                LocationPermissionState.DeniedAlways -> updateState { it.withPermissionDeniedPermanently() }
-                else -> Unit
+                LocationPermissionState.Granted -> {
+                    analyticsManager.track(LocationPermissionEvent(LocationPermissionOutcome.GRANTED))
+                    updateLocationAndProvince()
+                }
+                LocationPermissionState.DeniedAlways -> {
+                    analyticsManager.track(LocationPermissionEvent(LocationPermissionOutcome.DENIED_PERMANENTLY))
+                    updateState { it.withPermissionDeniedPermanently() }
+                }
+                else -> analyticsManager.track(LocationPermissionEvent(LocationPermissionOutcome.DENIED))
             }
         }
     }
@@ -160,6 +177,7 @@ class GasStationsViewModel(
 
     fun onProvinceSelected(province: ProvinceBO) {
         _selectedProvince.update { province }
+        viewModelScope.launch { analyticsManager.track(ProvinceChanged(province.id, province.name)) }
     }
 
     //endregion
@@ -196,7 +214,7 @@ class GasStationsViewModel(
                     updateState { it.withProvinces(provinces) }
                     _selectedProvince.update { resolveProvinceByLocationUseCase(provinces, null) }
                 },
-                onFailure = ::notifyError,
+                onFailure = { notifyError(OPERATION_FETCH_PROVINCES, it) },
             )
         }
     }
@@ -227,7 +245,7 @@ class GasStationsViewModel(
                         allGasStations = built
                         updateState { it.withStationsLoaded(built, isFromCache) }
                     },
-                    onFailure = ::notifyError,
+                    onFailure = { notifyError(OPERATION_FETCH_STATIONS, it) },
                 )
             }
     }
@@ -279,6 +297,7 @@ class GasStationsViewModel(
 
     fun onItemClick(stationId: String) {
         viewModelScope.launch {
+            analyticsManager.track(GasStationSelected(stationId))
             navigator.navigate(Destination.GasStationDetails(stationId))
         }
     }
@@ -287,10 +306,24 @@ class GasStationsViewModel(
         updateState { it.withFavoriteToggled(stationId) }
     }
 
-    private fun notifyError(error: Throwable) {
+    private fun notifyError(operation: String, error: Throwable) {
         val domainError = error.toDomainError()
+        trackApiCallFailed(operation, domainError)
         updateState { state ->
             if (state.gasStations.isNotEmpty()) state.withStaleDataError(domainError) else state.withError(domainError)
+        }
+    }
+
+    private fun trackApiCallFailed(operation: String, domainError: DomainError) {
+        viewModelScope.launch {
+            analyticsManager.track(
+                ApiCallFailed(
+                    screenName = GasStationsScreenViewed.SCREEN_NAME,
+                    operation = operation,
+                    errorType = domainError::class.simpleName ?: "Unknown",
+                    errorMessage = domainError.message,
+                )
+            )
         }
     }
 
@@ -309,5 +342,7 @@ class GasStationsViewModel(
 
     companion object {
         const val SEARCH_DEBOUNCE_MS = 300L
+        private const val OPERATION_FETCH_PROVINCES = "fetch_provinces"
+        private const val OPERATION_FETCH_STATIONS = "fetch_stations"
     }
 }
