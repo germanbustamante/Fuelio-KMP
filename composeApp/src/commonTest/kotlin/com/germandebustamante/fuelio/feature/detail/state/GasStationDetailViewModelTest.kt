@@ -44,7 +44,7 @@ class GasStationDetailViewModelTest {
         everySuspend { track(any()) } returns Unit
     }
 
-    private lateinit var sut : GasStationDetailViewModel
+    private lateinit var sut: GasStationDetailViewModel
 
     @BeforeTest
     fun setUp() {
