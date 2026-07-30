@@ -7,6 +7,7 @@ import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStatio
 import com.germandebustamante.fuelio.core.navigation.action.Navigator
 import com.germandebustamante.fuelio.core.navigation.destination.Destination
 import com.germandebustamante.fuelio.core.util.SPAIN_TIMEZONE
+import com.germandebustamante.fuelio.feature.common.viewmodel.launchStartupTasks
 import com.germandebustamante.fuelio.feature.detail.analytics.GasStationDetailScreenViewed
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,22 +22,22 @@ class GasStationDetailViewModel(
     private val getGasStation: GetGasStationUseCase,
     private val navigator: Navigator,
     private val analyticsManager: AnalyticsTracking,
+    initialState: GasStationDetailUIState = GasStationDetailUIState(),
 ) : ViewModel() {
 
-    private val _state: MutableStateFlow<GasStationDetailUIState> = MutableStateFlow(GasStationDetailUIState())
+    private val _state: MutableStateFlow<GasStationDetailUIState> = MutableStateFlow(initialState)
     val state: StateFlow<GasStationDetailUIState> = _state.asStateFlow()
 
     init {
-        viewModelScope.launch {
-            analyticsManager.track(GasStationDetailScreenViewed(route.gasStationId))
-        }
-
-        viewModelScope.launch {
-            getGasStation(route.gasStationId).collect { gasStation ->
-                val today = Clock.System.now().toLocalDateTime(SPAIN_TIMEZONE).dayOfWeek
-                _state.update { it.withGasStationLoaded(gasStation, today) }
-            }
-        }
+        launchStartupTasks(
+            { analyticsManager.track(GasStationDetailScreenViewed(route.gasStationId)) },
+            {
+                getGasStation(route.gasStationId).collect { gasStation ->
+                    val today = Clock.System.now().toLocalDateTime(SPAIN_TIMEZONE).dayOfWeek
+                    _state.update { it.withGasStationLoaded(gasStation, today) }
+                }
+            },
+        )
     }
 
     fun onBackClick() {

@@ -1358,7 +1358,7 @@ class GasStationsViewModelTest {
 
     //endregion
 
-    private fun createSut() {
+    private fun createSut(initialState: GasStationsUIState = GasStationsUIState()) {
         sut = GasStationsViewModel(
             getGasStationByLocationUseCase = getGasStationsByLocationUseCase,
             getProvincesUseCase = getProvincesUseCase,
@@ -1367,6 +1367,7 @@ class GasStationsViewModelTest {
             navigator = navigator,
             analyticsManager = analyticsManager,
             defaultDispatcher = testDispatcher,
+            initialState = initialState,
         )
     }
 

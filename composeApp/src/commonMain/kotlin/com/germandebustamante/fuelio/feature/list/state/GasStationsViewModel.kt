@@ -17,6 +17,7 @@ import com.germandebustamante.fuelio.core.util.SPAIN_TIMEZONE
 import com.germandebustamante.fuelio.feature.common.analytics.ApiCallFailed
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionState
+import com.germandebustamante.fuelio.feature.common.viewmodel.launchStartupTasks
 import com.germandebustamante.fuelio.feature.list.analytics.GasStationSelected
 import com.germandebustamante.fuelio.feature.list.analytics.GasStationsScreenViewed
 import com.germandebustamante.fuelio.feature.list.analytics.LocationPermissionEvent
@@ -54,6 +55,7 @@ class GasStationsViewModel(
     private val navigator: Navigator,
     private val analyticsManager: AnalyticsTracking,
     private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    initialState: GasStationsUIState = GasStationsUIState(),
 ) : ViewModel() {
 
     //region State
@@ -65,7 +67,7 @@ class GasStationsViewModel(
     private var rawGasStations: List<GasStationBO> = emptyList()
     private var allGasStations: List<GasStationItemVO> = emptyList()
 
-    private val _state = MutableStateFlow(GasStationsUIState())
+    private val _state = MutableStateFlow(initialState)
     val state: StateFlow<GasStationsUIState> = _state.asStateFlow()
 
     //endregion
@@ -77,15 +79,17 @@ class GasStationsViewModel(
     //region Init
 
     init {
-        viewModelScope.launch { analyticsManager.track(GasStationsScreenViewed) }
-        viewModelScope.launch { fetchProvinces() }
-        viewModelScope.launch { fetchProvinceGasStations() }
-        viewModelScope.launch {
-            // Wait for provinces before resolving location province
-            _state.first { it.provinces.isNotEmpty() }
-            initLocationPermission()
-        }
-        viewModelScope.launch { observeSearchQuery() }
+        launchStartupTasks(
+            { analyticsManager.track(GasStationsScreenViewed) },
+            { fetchProvinces() },
+            { fetchProvinceGasStations() },
+            {
+                // Wait for provinces before resolving location province
+                _state.first { it.provinces.isNotEmpty() }
+                initLocationPermission()
+            },
+            { observeSearchQuery() },
+        )
     }
 
     @OptIn(FlowPreview::class)
