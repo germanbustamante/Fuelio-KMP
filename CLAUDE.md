@@ -71,11 +71,23 @@ When adding a new use case or repository, register it explicitly with a `single 
 
 Any future class needing platform context takes `ContextProvider` as a constructor dependency — don't add another platform module for it.
 
+### App startup tasks (`StartupTask`)
+
+`core/startup/StartupTask.kt` — `fun interface StartupTask { suspend operator fun invoke() }`, a contract for work that must run once at app launch and isn't owned by any single screen (e.g. a future background sync or remote-config fetch). `core/startup/di/StartupModule.kt` exposes `startupModule` with a `single<Set<StartupTask>> { setOf(...) }` — currently **empty**, since as of now every startup concern is already screen-scoped inside its own ViewModel's `init {}` (see "State Management Pattern" below). `KoinInit.kt`'s `initKoin()` resolves that `Set` and runs each task on a `MainScope()`, catching failures per-task via `AppLogger` so one broken task can't crash launch or cancel the others — this runs from shared `commonMain`, so it covers both the Android (`AndroidApplication.onCreate`) and iOS (`doInitKoinIos()`) entry points with no platform-specific plumbing.
+
+Koin has no Hilt-style `@IntoSet` auto-multibinding, so the `Set<StartupTask>` in `StartupModule.kt` is assembled by hand — when a real cross-cutting startup task is needed, implement `StartupTask`, register it with `single<StartupTask> { ... }`, and add it to that `setOf(...)`. Don't invent a `StartupTask` for something a screen's ViewModel already owns (see `launchStartupTasks` below) — this contract is reserved for work with no natural screen owner.
+
 ## State Management Pattern
 
 ViewModels expose a single flat `StateFlow<UIState>` — `UIState` is a `data class` (not a sealed class) with fields like `isLoading`/`isRefreshing`/`error`/data lists, plus `with*` copy-helper functions (`withStationsLoaded(...)`, `withError(...)`, etc.) for every transition. A computed `val contentState: ContentState` property derives a sealed `ContentState` (`Initial`/`Loading`/`Success`/`Empty`/`Error`) from those flat fields for the UI to `when`-branch on — see `GasStationsUIState.kt` for the reference implementation. UI collects via `collectAsStateWithLifecycle()`. Always mutate the backing `MutableStateFlow` with `.update { }`, never `.value = ...` (thread-safety).
 
-`GasStationDetailUIState` still hasn't been migrated to this pattern (currently a bare `data class(val gasStation: GasStationBO)` with `MutableStateFlow<GasStationDetailUIState?>`, `null` standing in for "not loaded yet") — follow the `GasStationsUIState` pattern when fleshing out the detail screen instead of extending the current one.
+`GasStationDetailUIState` now follows the same flat-state pattern as `GasStationsUIState` (non-nullable `MutableStateFlow<GasStationDetailUIState>`, `isLoading`/`gasStation`/`today` fields, computed `contentState`).
+
+A ViewModel's `init {}` block launches its screen's startup work (analytics tracking, initial fetches, observers) via `launchStartupTasks(...)` (`feature/common/viewmodel/StartupTasks.kt`) — a small `vararg` helper that launches each lambda in its own `viewModelScope.launch`, same as writing them out by hand, but keeping the full list of "what this screen kicks off on creation" visible as one block instead of scattered `viewModelScope.launch { ... }` calls. See `GasStationsViewModel`/`GasStationDetailViewModel` for reference usage.
+
+We deliberately did **not** adopt a full MVI/`MviConfig` startup-intent pattern (sealed `Intent`s + `isStateRestored` gating tied to `SavedStateHandle`) here: this project's flat-state + direct-method architecture is intentional, not a candidate for MVI migration, and `SavedStateHandle` isn't used anywhere in the project — there's no restored state for such gating to protect. Test-order flakiness (the other motivation for that pattern) is already handled by `StandardTestDispatcher` + `advanceUntilIdle()` (see "Testing suspend `track` with Mokkery" below).
+
+Both `GasStationsViewModel` and `GasStationDetailViewModel` take an optional trailing `initialState` constructor param (defaulting to `GasStationsUIState()`/`GasStationDetailUIState()`) purely so tests can seed a starting state in one line (`createSut(initialState = ...)`) instead of driving the ViewModel through several actions to reach it — production/Koin call sites never pass it and keep relying on the default.
 
 View objects (VO suffix) live in the feature's `state/` package and contain display-ready data with calculated fields. Business objects (BO suffix) live in `core/domain` and are the source of truth.
 
