@@ -1,5 +1,5 @@
 import PostHog
-import ComposeApp
+import CorePresentation
 
 class PostHogTrackerBridge: NativePostHogTracker {
 

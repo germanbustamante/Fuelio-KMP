@@ -2,22 +2,40 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Product Naming & Repo Scope
+
+This repository (`Fuelio`) is a **public portfolio/showcase project** — it demonstrates KMP + native UI
+architecture (Clean Architecture, SwiftUI/Jetpack Compose, offline-first persistence, analytics, testing)
+for job-hunting purposes, per the roadmap in the "Fuelio · Senior Mobile Roadmap" doc. It keeps the
+`Fuelio` name and is not intended to ship as a commercial product competing with the existing
+`Fuelio` app by Sygic (5M+ downloads) — that naming collision is only a real problem for something
+actually published to app stores at scale.
+
+The **real product** — a separate, private repository with its own backend and resource management, not
+an MVP — will ship under the name **Octana** instead, to avoid trademark/ASO collision with the existing
+Fuelio app and to have a distinct, ownable brand once it's a commercial app in the stores. Don't rename
+this repo's package/branding to Octana; that name belongs to the other, private codebase.
+
 ## Build Commands
 
 ```bash
 # Android
-./gradlew :composeApp:assembleDebug        # Build debug APK
-./gradlew :composeApp:installDebug         # Install on connected device
+./gradlew :androidApp:assembleDebug        # Build debug APK
+./gradlew :androidApp:installDebug         # Install on connected device
 
 # Tests
-./gradlew test                             # composeApp unit tests (Android host tests aren't enabled for :data/:core:domain/:core:analytics, so this only runs composeApp)
+./gradlew :androidApp:testDebugUnitTest         # androidApp unit tests (Compose-dependent code: designsystem, screens)
+./gradlew :core:presentation:testAndroidHostTest      # ViewModel/state/navigation tests on the JVM (Android host)
+./gradlew :core:presentation:iosSimulatorArm64Test    # Same tests, iOS simulator target — this is where the ~40 ViewModel tests actually live
 ./gradlew :core:domain:iosSimulatorArm64Test    # Domain module tests (KMP-only module, no JVM/Android test task)
 ./gradlew :data:iosSimulatorArm64Test           # Data module tests (same — runs via the iOS simulator target)
 ./gradlew :core:analytics:iosSimulatorArm64Test # Analytics module tests (same — also covers the iosTest bridge tests)
 ./gradlew connectedAndroidTest             # Android instrumentation tests
 
 # iOS
-# Open iosApp/iosApp.xcodeproj in Xcode and run from there
+./gradlew :core:presentation:linkDebugFrameworkIosSimulatorArm64  # sanity-build the CorePresentation.framework outside Xcode
+# Open iosApp/iosApp.xcodeproj in Xcode and run from there — the "Compile Kotlin Framework" build
+# phase invokes `:core:presentation:embedAndSignAppleFrameworkForXcode` automatically.
 ```
 
 ## Module Architecture
@@ -25,31 +43,82 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Gradle modules with strict Clean Architecture layering:
 
 ```
-:core:domain    →  Business logic only (no platform deps)
-:core:analytics →  Analytics tracking abstraction (Trace/Trackable/AnalyticsManager) + Firebase/PostHog implementations
-:data           →  Repository implementations, Ktor HTTP client, Room local persistence
-:composeApp     →  Compose Multiplatform UI, ViewModels, Navigation3, DI wiring
+:core:domain        →  Business logic only (no platform deps)
+:core:analytics     →  Analytics tracking abstraction (Trace/Trackable/AnalyticsManager) + Firebase/PostHog implementations
+:data               →  Repository implementations, Ktor HTTP client, Room local persistence
+:core:presentation  →  ViewModels, UIState, Navigator/Destination, DI modules, design tokens — Kotlin only, zero Compose
+:androidApp         →  Jetpack Compose UI (Android-only), consumes :core:presentation
+iosApp (Xcode)      →  SwiftUI UI, consumes the CorePresentation.framework built from :core:presentation
 ```
 
-Dependencies flow one way: `composeApp → data → core:domain`. The domain module has zero platform or framework dependencies. `:core:analytics` is a separate branch consumed directly by `composeApp` (`api(projects.core.analytics)`, not `implementation`, since it exposes `Trace`/`AnalyticsTracking` types to feature code) — it has no dependency on `:core:domain` or `:data`.
+Dependencies flow one way: `androidApp → core:presentation → data → core:domain`. The domain module has
+zero platform or framework dependencies. `:core:analytics` is a separate branch consumed directly by
+`:core:presentation` (`api(projects.core.analytics)`, not `implementation`, since it exposes
+`Trace`/`AnalyticsTracking` types to feature code and iOS's Swift bridges) — it has no dependency on
+`:core:domain` or `:data`.
+
+**`:core:presentation` is the KMP + UI-nativa split point (roadmap phase P1.5, see `docs/adr/0001-*.md`
+and `docs/adr/0002-*.md`).** It holds every presentation-layer type that doesn't touch Compose:
+ViewModels (`GasStationsViewModel`, `GasStationDetailViewModel`), their `UIState`s, `Navigator`/
+`NavigationAction`/`Destination`, the Koin DI modules (`di/KoinInit.kt`, `feature/*/di/*Module.kt`),
+`LocationPermissionController` (interface + Android/iOS `actual`s), the `Trace` analytics subclasses,
+and the shared design tokens (`core/designtokens/`). **Invariant:** nothing under
+`core/presentation/src` may import `androidx.compose.*`, `org.jetbrains.compose.*`, or
+`androidx.navigation3.*` — verify with
+`grep -r "androidx.compose\|org.jetbrains.compose\|navigation3" core/presentation/src`. This is what
+lets the exact same module compile into an Android library *and* export a Kotlin/Native framework
+(`baseName = "CorePresentation"`, `export(projects.core.analytics)`) that Xcode links directly.
+
+`:androidApp` is a **plain Android application module** (`com.android.application`, no Kotlin
+Multiplatform plugin, sources under `src/main/kotlin` — not `src/commonMain`), holding only what's
+Compose-dependent: the design system (`designsystem/`), `feature/*/ui/`, `core/ui/theme/` (the Compose
+adapter over the shared design tokens), `FuelioNavHost`, and the two platform entry points
+(`AndroidApplication`, `MainActivity`). It depends on `:core:presentation` for everything else.
 
 ## Kotlin Multiplatform Targets
 
-- **Android**: `composeApp/src/androidMain/` — OkHttp engine, `AndroidApplication` initializes Koin
-- **iOS**: `composeApp/src/iosMain/` + `iosApp/` (Swift) — Darwin engine, `iOSApp.swift` calls `KoinInitIosKt.doInitKoinIos()`
-- **Common**: `*/src/commonMain/` — platform-agnostic code shared across targets
+- **Android**: `androidApp` (plain Android app, `src/main/`) consumes `core/presentation/src/androidMain/`
+  — OkHttp engine (in `:data`), `AndroidApplication.onCreate` calls `initKoin { androidContext(...) }`.
+- **iOS**: `core/presentation/src/iosMain/` + `iosApp/` (Swift) — Darwin engine (in `:data`),
+  `iOSApp.swift` calls `KoinInitIosKt.doInitKoinIos()` after importing the `CorePresentation` framework.
+  There is no `composeApp`/Compose UI on iOS anymore (see "Module Architecture" above) — `iosApp` is a
+  native SwiftUI app.
+- **Common**: `*/src/commonMain/` — platform-agnostic code shared across targets. `:androidApp` is the
+  one exception: it's Android-only, so its source set is `src/main/`, not `src/commonMain/`.
 
 Platform-specific HTTP engine selection uses `expect`/`actual` in `data/src/*/kotlin/.../engine/HttpClientEngineProvider.kt`.
 
-`:data`, `:core:domain`, and `:core:analytics` only target `iosArm64`/`iosSimulatorArm64` (no `iosX64`) — Google stopped publishing `iosX64` variants for recent AndroidX KMP libraries (Room/SQLite included) since Apple dropped Intel Mac support. `composeApp` already only had those two targets; keep all modules aligned or KSP/Room builds break with an unresolved-dependency error for `iosX64`.
+`:data`, `:core:domain`, `:core:analytics`, and `:core:presentation` only target `iosArm64`/
+`iosSimulatorArm64` (no `iosX64`) — Google stopped publishing `iosX64` variants for recent AndroidX KMP
+libraries (Room/SQLite included) since Apple dropped Intel Mac support. Keep all modules aligned or
+KSP/Room builds break with an unresolved-dependency error for `iosX64`.
 
 ## Navigation (Navigation3)
 
-Uses AndroidX Navigation3 (KMP), not classic Navigation Compose:
+Uses AndroidX Navigation3 (KMP) on Android, not classic Navigation Compose. `Destination` itself lives
+in `:core:presentation` and is **not** a `NavKey` — Navigation3 is a Compose-adjacent library, and
+`:core:presentation` can't depend on it (see "Module Architecture"). The two are bridged in `:androidApp`:
 
-- `core/navigation/destination/Destination.kt` — `@Serializable sealed interface Destination : NavKey`; each screen is a nested `data object`/`data class` (e.g. `Destination.GasStationDetails(val gasStationId: String)`). Keep nav args as plain identifiers (IDs), never pass full domain objects — the back stack is serialized via `rememberNavBackStack`/`SavedStateConfiguration` on every navigation (`FuelioNavHost.kt`), so heavy or stale objects would bloat/duplicate state that a use case can already resolve.
-- `core/navigation/action/Navigator.kt` — `Navigator`/`DefaultNavigator`, a `Channel`-based one-shot event bus so ViewModels can request navigation without depending on Compose (`navigate()`/`navigateUp()`, consumed via `ObserveAsEvent` in `FuelioNavHost`).
-- `FuelioNavHost.kt` — owns the `backStack`, wires `entryProvider { entry<Destination.X> { ... } }`, and applies `rememberViewModelStoreNavEntryDecorator()` so each back-stack entry gets its own `ViewModelStore` (otherwise a ViewModel could be reused across unrelated navigations to the same route).
+- `core/presentation/.../core/navigation/destination/Destination.kt` (in `:core:presentation`) —
+  `@Serializable sealed interface Destination` (no `NavKey`); each screen is a nested `data object`/
+  `data class` (e.g. `Destination.GasStationDetails(val gasStationId: String)`). Keep nav args as plain
+  identifiers (IDs), never pass full domain objects — a use case can already resolve them, and the back
+  stack gets serialized on every navigation.
+- `core/presentation/.../core/navigation/action/Navigator.kt` (in `:core:presentation`) —
+  `Navigator`/`DefaultNavigator`, a `Channel`-based one-shot event bus so ViewModels can request
+  navigation without depending on Compose (`navigate()`/`navigateUp()`, consumed via `ObserveAsEvent` in
+  `FuelioNavHost`).
+- `androidApp/.../core/navigation/destination/DestinationNavKey.kt` (in `:androidApp`) —
+  `@Serializable data class DestinationNavKey(val destination: Destination) : NavKey`. This is the
+  **only** place `Destination` touches `NavKey`; it's what actually goes on the Navigation3 back stack.
+- `FuelioNavHost.kt` (in `:androidApp`) — owns the `backStack` of `DestinationNavKey`, wires a single
+  `entry<DestinationNavKey> { key -> when (key.destination) { ... } }`, and applies
+  `rememberViewModelStoreNavEntryDecorator()` so each back-stack entry gets its own `ViewModelStore`
+  (otherwise a ViewModel could be reused across unrelated navigations to the same route).
+
+iOS has no Navigation3 equivalent yet — SwiftUI screens (as they get ported) will drive navigation
+directly off `Navigator.navigationActions`/`Destination` from Swift, with no `NavKey`-style wrapper
+needed since `NavigationStack` doesn't require one.
 
 ## Dependency Injection (Koin)
 
@@ -57,8 +126,8 @@ Plain Koin DSL (`module { ... }` with explicit `single {}` / `factory {}` / `vie
 
 - `DomainModule` — `core/domain/src/commonMain/.../di/`, one `factory {}` per use case
 - `DataModule` — `data/src/commonMain/.../di/`, repositories/datasources/`FuelioDatabase`; includes `dataPlatformModule` (see below)
-- `GasStationListModule` / `GasStationDetailModule` — in `composeApp`, one per feature, pull in Data + Domain modules
-- `KoinInit.kt` — aggregates all modules for initialization
+- `GasStationListModule` / `GasStationDetailModule` — now in `:core:presentation` (moved from `composeApp` in P1.5), one per feature, pull in Data + Domain modules. `viewModel {}` here comes from `org.koin.core.module.dsl.viewModel` (koin-core), not `koin-compose-viewmodel` — that's what lets these modules live outside `:androidApp`.
+- `KoinInit.kt` — also in `:core:presentation` now, aggregates all modules for initialization. Called from both `AndroidApplication.onCreate` (Android) and `doInitKoinIos()` (iOS) — same entry point, same module set, no platform-specific DI wiring needed beyond `dataPlatformModule`/`analyticsPlatformModule`'s `ContextProvider` seam.
 
 When adding a new use case or repository, register it explicitly with a `single {}`/`factory {}` line in the relevant module — there's no scanning step to rely on.
 
@@ -91,6 +160,14 @@ Both `GasStationsViewModel` and `GasStationDetailViewModel` take an optional tra
 
 View objects (VO suffix) live in the feature's `state/` package and contain display-ready data with calculated fields. Business objects (BO suffix) live in `core/domain` and are the source of truth.
 
+`GasStationsUIState`/`GasStationItemVO`/`ContentState.Success` (and `GasStationDetailUIState`) no longer
+carry `@Immutable` — `:core:presentation`, where they now live, can't depend on Compose. Their stability
+is instead declared in `androidApp/compose_stability.conf` (wired via
+`composeCompiler { stabilityConfigurationFiles.add(...) }` in `androidApp/build.gradle.kts`), which has
+the exact same effect on the Compose compiler's skippability analysis. If you add a new flat `UIState`
+data class with the same "safe to treat as stable" property, add its fully-qualified name to that file
+rather than reaching for an annotation that isn't available.
+
 ## Local Persistence & Offline-First (Room)
 
 `:data` persists gas stations in a Room database (`data/local/database/FuelioDatabase.kt`, KMP via `androidx.sqlite:sqlite-bundled`, entities/DAOs in `data/gasstation/local/`). Room's Gradle plugin manages the schema export to `data/schemas/` — commit that directory (don't gitignore it), it's the diffable history of schema changes.
@@ -103,18 +180,18 @@ View objects (VO suffix) live in the feature's `state/` package and contain disp
 ## Analytics Tracking (`:core:analytics`)
 
 - `Trace` (`Event`/`Screen`/`Error`) is an `open class`, not `data class` — features define a typed subclass per event/screen instead of instantiating `Trace.Screen(...)` inline with raw string keys, e.g. `GasStationDetailScreenViewed` in `feature/detail/analytics/`. `equals`/`hashCode`/`toString` are implemented manually (structural, matching by field), since `open class` can't be a `data class`.
-- Concrete `Trace` subclasses live in the consuming feature module's `analytics/` package (`feature/list/analytics/`, `feature/detail/analytics/`), one file per event — never in `:core:analytics` itself. `:core:analytics` only holds generic, reusable abstractions (`Trace`, `Trackable`, `AnalyticsManager`, `AnalyticsProviderType`); promote a concrete event type there only once a second, independent module actually needs the same one.
+- Concrete `Trace` subclasses live in `:core:presentation`'s `feature/*/analytics/` packages (moved from `composeApp` in P1.5 — they were already Compose-free, since they only depend on `:core:analytics`) — one file per event, never in `:core:analytics` itself. `:core:analytics` only holds generic, reusable abstractions (`Trace`, `Trackable`, `AnalyticsManager`, `AnalyticsProviderType`); promote a concrete event type there only once a second, independent module actually needs the same one.
 - Each event is a `data object` (no params, e.g. `GasStationsScreenViewed`) or a `data class` (has params, e.g. `GasStationSelected(gasStationId)`), never a plain `class`. `data object`s can't reference their own `EVENT_NAME`/`SCREEN_NAME` from inside the `super(...)` call (Kotlin: "Cannot access before initialized") and can't nest a `companion object` — inline the string literal in `super(...)` and duplicate it in the public `const val`, unlike `data class`es where the `companion object` constant can be referenced directly in `super(...)`.
 - Event/screen name naming convention (`EVENT_NAME`/`SCREEN_NAME` constants, snake_case): `<origin_screen>_<category>_<action>` — prefixed by the screen/feature it originates from so events group together in analytics dashboards, middle segment names the category (`location_permission`, `province`, `station`), suffix is the action in past tense (`_selected`, `_changed`, `_requested`, `_granted`, `_denied`). Screen names (`Trace.Screen.screenName`) are just the `<origin_screen>` slug with no category/action suffix (e.g. `gas_stations_list`, `gas_station_detail`) since the `Trace.Screen` type already disambiguates it as a screen view. Examples: `gas_stations_list_station_selected`, `gas_stations_list_province_changed`, `gas_stations_list_location_permission_denied`. Param keys (`PARAM_*` constants) are plain snake_case with no prefix (`gas_station_id`, `province_id`) since they're already scoped by their event.
-- `Trace.Error` is the one exception to "one bespoke class per event": errors are homogeneous (screen + operation + error type/message), so instead of one class per screen/operation there's a single reusable `ApiCallFailed(screenName, operation, errorType, errorMessage)` in `composeApp/.../feature/common/analytics/` (shared across features within `composeApp`, not promoted to `:core:analytics` since only `composeApp` needs it). Its `eventName` is built as `"${screenName}_${operation}_failed"`, keeping the same naming convention without hardcoding a string per screen — this scales to many screens/call sites without new files, at the cost of losing compile-time type-per-error (tests filter on `eventName`/params instead of a distinct type). `operation` is a free-form string constant per call site (e.g. `"fetch_provinces"`, `"fetch_stations"`); `errorType` is typically `domainError::class.simpleName`.
-- Tracking failed API calls is done from the ViewModel (where `AnalyticsTracking` is wired), not from the Repository or `:data`/network layer — `:core:analytics` is only a dependency of `composeApp` (see above), and only the ViewModel knows the screen/operation context the naming convention needs, plus the business distinction between a hard error and a stale-data/background-refresh error. Each ViewModel centralizes this in a private `trackApiCallFailed(operation, domainError)` helper called from its single error-handling function (e.g. `GasStationsViewModel.notifyError`), rather than duplicating the tracking call at every `onFailure` site — see `GasStationsViewModel` for the reference implementation.
+- `Trace.Error` is the one exception to "one bespoke class per event": errors are homogeneous (screen + operation + error type/message), so instead of one class per screen/operation there's a single reusable `ApiCallFailed(screenName, operation, errorType, errorMessage)` in `:core:presentation`'s `feature/common/analytics/` (moved from `composeApp` in P1.5; shared across features within `:core:presentation`, not promoted to `:core:analytics` since only presentation-layer code needs it). Its `eventName` is built as `"${screenName}_${operation}_failed"`, keeping the same naming convention without hardcoding a string per screen — this scales to many screens/call sites without new files, at the cost of losing compile-time type-per-error (tests filter on `eventName`/params instead of a distinct type). `operation` is a free-form string constant per call site (e.g. `"fetch_provinces"`, `"fetch_stations"`); `errorType` is typically `domainError::class.simpleName`.
+- Tracking failed API calls is done from the ViewModel (where `AnalyticsTracking` is wired), not from the Repository or `:data`/network layer — `:core:analytics` is a dependency of `:core:presentation` (see above), and only the ViewModel knows the screen/operation context the naming convention needs, plus the business distinction between a hard error and a stale-data/background-refresh error. Each ViewModel centralizes this in a private `trackApiCallFailed(operation, domainError)` helper called from its single error-handling function (e.g. `GasStationsViewModel.notifyError`), rather than duplicating the tracking call at every `onFailure` site — see `GasStationsViewModel` for the reference implementation.
 - Second exception to "one class per event": when several events are really just different outcomes of the *same* flow (e.g. requesting location permission ends in requested/granted/denied/denied-permanently), consolidate them into one `data class` parametrized by an enum discriminant instead of one class per outcome — see `LocationPermissionEvent(outcome: LocationPermissionOutcome)` in `feature/list/analytics/`. `eventName` is built as `"${screen}_location_permission_${outcome.name.lowercase()}"`, so the enum constant names (`REQUESTED`, `GRANTED`, `DENIED`, `DENIED_PERMANENTLY`) double as the naming convention's action suffix — pick enum constant names accordingly. Reserve one-class-per-event for events that are genuinely distinct actions (`GasStationSelected`, `ProvinceChanged`), not different results of the same action.
 - `AnalyticsTracking` is the consumer-facing interface (`suspend fun track(trace: Trace)`) — ViewModels depend on this, not on the concrete `AnalyticsManager` class, so it can be mocked directly in tests (`AnalyticsManager` itself is a plain `class`, not `open`/an interface, so Mokkery can't mock it — mock `AnalyticsTracking` instead).
 - `Trackable`/`Tracker` is the per-provider contract (`FirebaseTracker`, `PostHogTracker`); `track` is `suspend` all the way down (`AnalyticsTracking` → `AnalyticsManager` → `Trackable`), so a provider implementation can call a suspend API later without having to break the interface.
 - `AnalyticsProviderType` enum (`FIREBASE`, `POSTHOG`) plus each `Trace`'s `targets` list decide which registered trackers receive it — `AnalyticsManager.track` matches by `Trackable.type`.
 - `AnalyticsContextProvider` (`expect`/`actual`) + `AnalyticsPlatformModule` reuse the `ContextProvider` pattern from `:data` (below), so `PostHogTracker` gets Android's `Context` without leaking it into `commonMain`.
 - `AnalyticsSecrets.POSTHOG_API_KEY` is generated by BuildKonfig from `thirdparties.properties` (gitignored, not `local.properties`) or the `POSTHOG_API_KEY` env var in CI; blank/missing is a valid state that just keeps PostHog off.
-- iOS native bridge functions (`registerNativeFirebaseTracker`, `registerNativePostHogTracker`) are called directly from Swift in `iOSApp.swift`, so `composeApp`'s iOS framework re-exports `:core:analytics` (`export(projects.core.analytics)`) to make those symbols visible.
+- iOS native bridge functions (`registerNativeFirebaseTracker`, `registerNativePostHogTracker`) are called directly from Swift in `iOSApp.swift`, so `:core:presentation`'s `CorePresentation.framework` re-exports `:core:analytics` (`export(projects.core.analytics)`) to make those symbols visible.
 
 ### Testing suspend `track` with Mokkery
 
@@ -131,7 +208,36 @@ View objects (VO suffix) live in the feature's `state/` package and contain disp
 
 ## R8 / Release Builds
 
-`composeApp`'s `release` build type has `isMinifyEnabled` and `isShrinkResources` enabled, using `proguard-android-optimize.txt` plus `composeApp/proguard-rules.pro`. Verify `:composeApp:assembleRelease` after adding libraries that rely on reflection (Koin, kotlinx.serialization) — add narrow, specific keep rules to `proguard-rules.pro` only if R8 reports missing rules, rather than broad library-wide rules.
+`androidApp`'s `release` build type has `isMinifyEnabled` and `isShrinkResources` enabled, using `proguard-android-optimize.txt` plus `androidApp/proguard-rules.pro`. Verify `:androidApp:assembleRelease` after adding libraries that rely on reflection (Koin, kotlinx.serialization) — add narrow, specific keep rules to `proguard-rules.pro` only if R8 reports missing rules, rather than broad library-wide rules.
+
+## Design System — shared tokens, two native UIs
+
+"One design system, two native implementations," not one shared UI. Components are **never** shared:
+`androidApp/.../designsystem/` (`FuelioCard`, `FuelioChip`, `FuelioSearchBar`, `FuelioTopBar`, …) is
+Jetpack Compose only; iOS screens use native SwiftUI components (`List`, `NavigationStack`,
+`.searchable`, `Button`) directly. What *is* shared is the underlying **values** — colors, spacing,
+radii, type scale — so both platforms render the same brand off one source of truth, verifiable at
+compile time instead of by convention:
+
+- `core/presentation/src/commonMain/.../core/designtokens/` (`FuelioColorTokens`, `FuelioSpacingTokens`,
+  `FuelioRadiusTokens`, `FuelioTypeTokens`) — `object`s of `const val` primitives (ARGB `Long`s for
+  color, `Double` points for spacing/radius/type size). `const val` is what makes Kotlin/Native export
+  them as plain static constants Swift can read directly (`FuelioColorTokens.shared.ACCENT_LIGHT`).
+- `androidApp/.../core/ui/theme/` — the Compose adapter. `Color.kt`/`Spacing.kt`/`Shape.kt`/
+  `Typography.kt` keep their existing public API (`FuelioSpacing.md`, `LightColorScheme`,
+  `FuelioTypography`, …) unchanged; only the literals inside now read from the tokens
+  (`Color(FuelioColorTokens.DEEP_ORANGE_600)`). `Elevation.kt` is intentionally **not** token-backed —
+  Material's tonal elevation has no iOS equivalent.
+- `iosApp/iosApp/DesignSystem/` — the SwiftUI adapter (`FuelioColors`, `FuelioSpacing`, `FuelioRadius`,
+  `Font.fuelio(...)`, `.fuelioTheme()`). Deliberately **not** a 1:1 port of Material: only brand +
+  semantic color roles cross over (no `primaryContainer`/`onSurfaceVariant`/`surfaceTint`-style Material
+  roles — use system colors/materials for those), and typography maps token sizes onto iOS's Dynamic
+  Type text styles (`Font.custom(_:size:relativeTo:)`) instead of Material's 15 fixed sizes, so iOS text
+  still respects the user's system text-size setting.
+
+**Rule:** a new token value is added to `core/designtokens/` first, never hardcoded directly in either
+platform adapter. See `docs/adr/0003-shared-design-tokens-in-kotlin.md` for the alternatives
+considered (hand duplication, Style Dictionary codegen) and why this approach won.
 
 ## Commit Message Convention
 
