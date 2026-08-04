@@ -1,34 +1,57 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+# Fuelio
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
+A gas-station finder built with Kotlin Multiplatform: shared domain/data/presentation logic in
+Kotlin, **native UI on each platform** — Jetpack Compose on Android, SwiftUI on iOS. See
+[`docs/adr/`](./docs/adr) for the architectural decisions behind that split, and `CLAUDE.md` for the
+full module-by-module reference.
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+## Modules
 
-### Build and Run Android Application
+```
+:core:domain        →  Business logic only (no platform deps)
+:core:analytics      →  Analytics tracking abstraction (Trace/Trackable/AnalyticsManager) + Firebase/PostHog
+:data                →  Repository implementations, Ktor HTTP client, Room local persistence
+:core:presentation   →  ViewModels, UIState, Navigator/Destination, DI modules, shared design tokens — no Compose
+:androidApp          →  Jetpack Compose UI (Android-only application module)
+iosApp (Xcode)       →  SwiftUI UI, consumes the CorePresentation.framework built from :core:presentation
+```
 
-To build and run the development version of the Android app, use the run configuration from the run widget
-in your IDE’s toolbar or build it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:assembleDebug
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:assembleDebug
-  ```
+`:core:presentation` is the module that gets exported as a Kotlin/Native framework
+(`CorePresentation.framework`) for Xcode to link — it has zero Compose/Navigation3 dependencies by
+design (see [ADR 0002](./docs/adr/0002-core-presentation-module-without-compose.md)).
 
-### Build and Run iOS Application
+## Build and run — Android
 
-To build and run the development version of the iOS app, use the run configuration from the run widget
-in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+```shell
+./gradlew :androidApp:assembleDebug
+./gradlew :androidApp:installDebug
+```
+
+Or use the run configuration from the IDE's toolbar.
+
+## Build and run — iOS
+
+Open [`iosApp/iosApp.xcodeproj`](./iosApp/iosApp.xcodeproj) in Xcode and run from there. The
+"Compile Kotlin Framework" build phase invokes
+`./gradlew :core:presentation:embedAndSignAppleFrameworkForXcode` automatically, so no manual Gradle
+step is needed first.
+
+To sanity-check the framework outside Xcode:
+
+```shell
+./gradlew :core:presentation:linkDebugFrameworkIosSimulatorArm64
+```
+
+## Tests
+
+```shell
+./gradlew :androidApp:testDebugUnitTest              # Compose-dependent code (designsystem, screens)
+./gradlew :core:presentation:testAndroidHostTest      # ViewModel/state/navigation tests, JVM
+./gradlew :core:presentation:iosSimulatorArm64Test    # Same tests, iOS simulator target
+./gradlew :core:domain:iosSimulatorArm64Test
+./gradlew :data:iosSimulatorArm64Test
+./gradlew :core:analytics:iosSimulatorArm64Test
+```
 
 ---
 

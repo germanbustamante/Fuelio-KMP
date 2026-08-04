@@ -5,6 +5,13 @@
         <key>CADisableMinimumFrameDurationOnPhone</key>
         <true/>
 
+        <!-- Inter font, shared with Android (androidApp/src/main/composeResources/font/) -->
+        <key>UIAppFonts</key>
+        <array>
+            <string>inter_variable.ttf</string>
+            <string>inter_italic.ttf</string>
+        </array>
+
         <!-- Location permission -->
         <key>NSLocationWhenInUseUsageDescription</key>
         <string>Fuelio uses your location to find nearby fuel stations and log refuels automatically.</string>

@@ -1,5 +1,5 @@
 import FirebaseAnalytics
-import ComposeApp
+import CorePresentation
 
 class FirebaseTrackerBridge: NativeFirebaseTracker {
 
