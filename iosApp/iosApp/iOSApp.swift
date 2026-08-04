@@ -1,7 +1,7 @@
 import SwiftUI
 import FirebaseCore
 import PostHog
-import ComposeApp
+import CorePresentation
 
 @main
 struct iOSApp: App {
