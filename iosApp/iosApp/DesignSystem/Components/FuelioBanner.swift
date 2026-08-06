@@ -34,12 +34,14 @@ extension View {
         isPresented: Bool,
         message: LocalizedStringKey,
         systemImage: String = "wifi.exclamationmark",
+        identifier: String? = nil,
         duration: Duration = .seconds(4),
         onDismiss: @escaping () -> Void
     ) -> some View {
         overlay(alignment: .bottom) {
             if isPresented {
                 FuelioBanner(message: message, systemImage: systemImage)
+                    .accessibilityIdentifier(identifier ?? "")
                     .task {
                         try? await Task.sleep(for: duration)
                         onDismiss()

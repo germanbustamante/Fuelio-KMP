@@ -3,11 +3,20 @@ import XCTest
 /// Accessibility identifiers and launch flags used by the UI tests.
 ///
 /// The XCUITest target runs out of process and does not link the app module, so these values are
-/// mirrored from `A11yID`/`LaunchArguments` rather than imported. `AccessibilityIdentifierParityTests`
-/// in `iosAppTests` fails if the two ever diverge.
+/// mirrored from `A11yID`/`LaunchArguments` rather than imported.
+/// `AccessibilityIdentifierContractTests` in `iosAppTests` pins the app side against this same table,
+/// so a rename on either side fails clearly instead of as "element not found".
 enum UITestSupport {
 
     static let uiTestMode = "-UITestMode"
+    static let uiTestFailureMode = "-UITestFailure"
+
+    /// First entries of `core/fake/FakeGasStations.kt` and `feature/list/state/GasStationsFakes.kt`,
+    /// which the UI-test Koin overrides serve.
+    static let repsolStationID = "7153"
+    static let ballenoilStationName = "Ballenoil"
+    static let madridProvinceID = "2"
+    static let stationCount = 16
 
     static let stationsList = "gas_stations_list"
     static let searchField = "station_search_field"
@@ -38,6 +47,25 @@ enum UITestSupport {
     static let permissionAlertSettings = "permission_alert_settings"
 }
 
+extension XCTestCase {
+
+    /// Waits for `element` to satisfy `format`.
+    ///
+    /// Used instead of a fixed sleep because most of what these tests wait on is produced by Kotlin
+    /// coroutines (the 300 ms search debounce, a dispatcher hop), so any fixed delay is either flaky
+    /// or needlessly slow.
+    func wait(
+        _ element: XCUIElement,
+        satisfies format: String,
+        _ arguments: CVarArg...,
+        timeout: TimeInterval
+    ) -> Bool {
+        let predicate = NSPredicate(format: format, argumentArray: arguments)
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
+        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
+    }
+}
+
 extension XCUIApplication {
 
     /// Looks an element up by identifier regardless of the element *type* SwiftUI ends up exposing.
@@ -54,12 +82,22 @@ extension XCUIApplication {
     /// when the UI tests start; SpringBoard then rejects the launch with "Application failed
     /// preflight checks". Terminating first makes the launch deterministic.
     @discardableResult
-    func launchForUITests() -> XCUIApplication {
+    func launchForUITests(simulateFailure: Bool = false) -> XCUIApplication {
         if state != .notRunning {
             terminate()
         }
-        launchArguments = [UITestSupport.uiTestMode]
+        launchArguments = simulateFailure
+            ? [UITestSupport.uiTestMode, UITestSupport.uiTestFailureMode]
+            : [UITestSupport.uiTestMode]
         launch()
         return self
+    }
+
+    /// Waits for the station list to finish loading.
+    @discardableResult
+    func waitForStationList(file: StaticString = #filePath, line: UInt = #line) -> XCUIElement {
+        let list = element(id: UITestSupport.stationsList)
+        XCTAssertTrue(list.waitForExistence(timeout: 20), "the station list never appeared", file: file, line: line)
+        return list
     }
 }

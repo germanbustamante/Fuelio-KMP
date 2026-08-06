@@ -17,6 +17,9 @@ enum LaunchArguments {
 
     static let uiTestMode = "-UITestMode"
 
+    /// Makes the gas station repository fail so an XCUITest can reach the blocking error state.
+    static let uiTestFailureMode = "-UITestFailure"
+
     static var usesDeterministicData: Bool {
         #if DEBUG
         let processInfo = ProcessInfo.processInfo
@@ -24,6 +27,14 @@ enum LaunchArguments {
             || processInfo.environment["XCTestConfigurationFilePath"] != nil
         #else
         return false
+        #endif
+    }
+
+    static var simulatesStationFailure: Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains(uiTestFailureMode)
+        #else
+        false
         #endif
     }
 }
