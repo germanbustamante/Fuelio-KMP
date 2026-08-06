@@ -7,11 +7,29 @@ struct GasStationsScreen: View {
 
     var body: some View {
         content
+            .safeAreaInset(edge: .top, spacing: 0) {
+                FuelFilterPicker(selection: fuelBinding)
+            }
             .navigationTitle("Fuelio")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbar }
             .searchable(text: searchBinding, prompt: Text("Search gas station…"))
             .refreshable { store.refresh() }
+            .sheet(isPresented: provinceSheetBinding) {
+                ProvincePickerSheet(
+                    provinces: store.provinces,
+                    selected: store.selectedProvince,
+                    onSelect: { store.selectProvince($0) },
+                    onDismiss: { store.dismissProvincePicker() }
+                )
+            }
+            // A failed background refresh must never blank out data the user can already see, so it
+            // surfaces as a transient banner instead of the blocking error state.
+            .fuelioBanner(
+                isPresented: store.hasStaleDataError,
+                message: "Couldn't refresh. Showing saved data.",
+                onDismiss: { store.dismissStaleDataError() }
+            )
             .task { store.activate() }
     }
 
@@ -53,14 +71,29 @@ struct GasStationsScreen: View {
     private func stationList(_ stations: [GasStationItemVO]) -> some View {
         List {
             ForEach(stations, id: \.station.id) { item in
+                let isFavorite = store.isFavorite(item.station.id)
                 GasStationRow(
                     item: item,
-                    isFavorite: store.isFavorite(item.station.id),
+                    isFavorite: isFavorite,
                     onToggleFavorite: { store.toggleFavorite(id: item.station.id) }
                 )
                 .contentShape(.rect)
                 .onTapGesture { store.openStation(id: item.station.id) }
                 .accessibilityAddTraits(.isButton)
+                .accessibilityAction(named: isFavorite ? "Remove from favorites" : "Add to favorites") {
+                    store.toggleFavorite(id: item.station.id)
+                }
+                .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                    Button {
+                        store.toggleFavorite(id: item.station.id)
+                    } label: {
+                        Label(
+                            isFavorite ? "Remove from favorites" : "Add to favorites",
+                            systemImage: isFavorite ? "star.slash" : "star"
+                        )
+                    }
+                    .tint(FuelioColors.accent)
+                }
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets(
@@ -81,6 +114,13 @@ struct GasStationsScreen: View {
 
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
+        ToolbarItem(placement: .principal) {
+            ProvinceTitleButton(
+                province: store.selectedProvince,
+                onTap: { store.presentProvincePicker() }
+            )
+        }
+
         ToolbarItem(placement: .topBarTrailing) {
             Button {
                 store.detectLocation()
@@ -99,6 +139,24 @@ struct GasStationsScreen: View {
         Binding(
             get: { store.searchQuery },
             set: { store.search($0) }
+        )
+    }
+
+    private var fuelBinding: Binding<FuelKind> {
+        Binding(
+            get: { store.selectedFuel },
+            set: { store.selectFuel($0) }
+        )
+    }
+
+    /// One-way in practice: the ViewModel owns `showFilterProvince`, so the setter only forwards the
+    /// dismissal (swipe-down included) back to it.
+    private var provinceSheetBinding: Binding<Bool> {
+        Binding(
+            get: { store.isProvincePickerPresented },
+            set: { isPresented in
+                if !isPresented { store.dismissProvincePicker() }
+            }
         )
     }
 }
