@@ -11,6 +11,7 @@ struct GasStationDetailScreen: View {
 
     var body: some View {
         content
+            .animation(.smooth(duration: 0.25), value: contentKind)
             .background(FuelioColors.background)
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden()
@@ -25,6 +26,16 @@ struct GasStationDetailScreen: View {
                 }
             }
             .task { store.activate() }
+    }
+
+    private enum ContentKind: Hashable { case loading, loaded, notFound }
+
+    private var contentKind: ContentKind {
+        switch store.content {
+        case .loading: .loading
+        case .success: .loaded
+        case .notFound: .notFound
+        }
     }
 
     @ViewBuilder
@@ -88,4 +99,11 @@ struct GasStationDetailScreen: View {
         GasStationDetailScreen(gasStationId: FakeGasStationsKt.fakeGasStations[0].id)
     }
     .preferredColorScheme(.dark)
+}
+
+#Preview("Accessibility XXXL") {
+    NavigationStack {
+        GasStationDetailScreen(gasStationId: FakeGasStationsKt.fakeGasStations[0].id)
+    }
+    .dynamicTypeSize(.accessibility3)
 }
