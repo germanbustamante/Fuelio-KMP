@@ -13,7 +13,26 @@
 		47BB1A343013CB8000CADAEB /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 47BB1A333013CB8000CADAEB /* FirebaseCrashlytics */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		A5E0927F80281FEF38B5389C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DAE65050F68120B722FED656 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 193D2D4386D2952162DFF360;
+			remoteInfo = iosApp;
+		};
+		CCC911878D69FCB6F6056DD8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DAE65050F68120B722FED656 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 193D2D4386D2952162DFF360;
+			remoteInfo = iosApp;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		4CF9082E96DB5A5BA0AB3103 /* iosAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iosAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		5E1EF5289678A5A71130EC48 /* iosAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iosAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7E4421B3E7D84DDC420D8B56 /* Fuelio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Fuelio.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -28,9 +47,25 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		00A9932B5902C28EE9CAD21A /* iosAppTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			path = iosAppTests;
+			sourceTree = "<group>";
+		};
 		1EB5F73297B234C95D711FEF /* Configuration */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = Configuration;
+			sourceTree = "<group>";
+		};
+		7047BC43D692933F5CC70FF4 /* iosAppUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			path = iosAppUITests;
 			sourceTree = "<group>";
 		};
 		BEC74FD4F0EAB9B2CC3C3461 /* iosApp */ = {
@@ -55,6 +90,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		72A8B28E46A0CCC6EC70E74B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E460131270E171AC6B9CE750 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -62,6 +111,8 @@
 			isa = PBXGroup;
 			children = (
 				7E4421B3E7D84DDC420D8B56 /* Fuelio.app */,
+				5E1EF5289678A5A71130EC48 /* iosAppTests.xctest */,
+				4CF9082E96DB5A5BA0AB3103 /* iosAppUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -72,6 +123,8 @@
 				1EB5F73297B234C95D711FEF /* Configuration */,
 				BEC74FD4F0EAB9B2CC3C3461 /* iosApp */,
 				9004AC90BB2A845989AA4859 /* Products */,
+				00A9932B5902C28EE9CAD21A /* iosAppTests */,
+				7047BC43D692933F5CC70FF4 /* iosAppUITests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -104,6 +157,48 @@
 			productName = iosApp;
 			productReference = 7E4421B3E7D84DDC420D8B56 /* Fuelio.app */;
 			productType = "com.apple.product-type.application";
+		};
+		1EB5391B4D101291FA749C46 /* iosAppTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8B04C9A4C400E470FEF84FFA /* Build configuration list for PBXNativeTarget "iosAppTests" */;
+			buildPhases = (
+				0DDF9E2E5BB84A66A9A6CFC0 /* Sources */,
+				E460131270E171AC6B9CE750 /* Frameworks */,
+				B8688E7571F41106F24240F4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F04BC4F30A74BACDF2E2E1E5 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				00A9932B5902C28EE9CAD21A /* iosAppTests */,
+			);
+			name = iosAppTests;
+			productName = iosAppTests;
+			productReference = 5E1EF5289678A5A71130EC48 /* iosAppTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		BA1A6EC245FB71FD12B1D95E /* iosAppUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AAE879744A63C6792DE36095 /* Build configuration list for PBXNativeTarget "iosAppUITests" */;
+			buildPhases = (
+				22614DFCECC60CF8620A9AF5 /* Sources */,
+				72A8B28E46A0CCC6EC70E74B /* Frameworks */,
+				AFA2CF61B2B8E834C8C1D8F4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D58F494349EF5B7925F9142F /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				7047BC43D692933F5CC70FF4 /* iosAppUITests */,
+			);
+			name = iosAppUITests;
+			productName = iosAppUITests;
+			productReference = 4CF9082E96DB5A5BA0AB3103 /* iosAppUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
@@ -139,12 +234,28 @@
 			projectRoot = "";
 			targets = (
 				193D2D4386D2952162DFF360 /* iosApp */,
+				1EB5391B4D101291FA749C46 /* iosAppTests */,
+				BA1A6EC245FB71FD12B1D95E /* iosAppUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		24F08915AB775EE459432611 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AFA2CF61B2B8E834C8C1D8F4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B8688E7571F41106F24240F4 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -176,6 +287,20 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		0DDF9E2E5BB84A66A9A6CFC0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		22614DFCECC60CF8620A9AF5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F4FCBA41C8C44CA9CC878FC7 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -185,7 +310,42 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		D58F494349EF5B7925F9142F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = iosApp;
+			target = 193D2D4386D2952162DFF360 /* iosApp */;
+			targetProxy = A5E0927F80281FEF38B5389C /* PBXContainerItemProxy */;
+		};
+		F04BC4F30A74BACDF2E2E1E5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = iosApp;
+			target = 193D2D4386D2952162DFF360 /* iosApp */;
+			targetProxy = CCC911878D69FCB6F6056DD8 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		0DE1AC428EE6297633F17F66 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "${TEAM_ID}";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.germandebustamante.fuelio.Fuelio.iosAppUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = iosApp;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		1D49014043198456710C2271 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -268,6 +428,46 @@
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		50DE4C6B59E8BA8280C456E2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "${TEAM_ID}";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.germandebustamante.fuelio.Fuelio.iosAppUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = iosApp;
+			};
+			name = Debug;
+		};
+		5868F1012FF2E07C94E01A06 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "${TEAM_ID}";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.germandebustamante.fuelio.Fuelio.iosAppTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Fuelio.app/Fuelio";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -365,6 +565,26 @@
 			};
 			name = Release;
 		};
+		F037397D24A7E1E819F7A28D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "${TEAM_ID}";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.germandebustamante.fuelio.Fuelio.iosAppTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Fuelio.app/Fuelio";
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -373,6 +593,24 @@
 			buildConfigurations = (
 				660DF3845F430784FE254213 /* Debug */,
 				1ED397977AE89EF4A8C1A3DD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8B04C9A4C400E470FEF84FFA /* Build configuration list for PBXNativeTarget "iosAppTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5868F1012FF2E07C94E01A06 /* Release */,
+				F037397D24A7E1E819F7A28D /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AAE879744A63C6792DE36095 /* Build configuration list for PBXNativeTarget "iosAppUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0DE1AC428EE6297633F17F66 /* Release */,
+				50DE4C6B59E8BA8280C456E2 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
