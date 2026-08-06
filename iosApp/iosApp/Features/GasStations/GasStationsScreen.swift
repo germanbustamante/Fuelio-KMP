@@ -23,6 +23,16 @@ struct GasStationsScreen: View {
                     onDismiss: { store.dismissProvincePicker() }
                 )
             }
+            // Android shows a Snackbar with an action here. iOS has no Snackbar, and unlike the
+            // stale-data notice this one needs a decision from the user, so an alert is the right
+            // native equivalent.
+            .alert("Location access needed", isPresented: permissionAlertBinding) {
+                Button("Open Settings") { store.openAppSettings() }
+                    .accessibilityIdentifier(A11yID.permissionAlertSettings)
+                Button("Cancel", role: .cancel) { store.dismissPermissionAlert() }
+            } message: {
+                Text("Location access permanently denied. Enable it in Settings to see nearby stations.")
+            }
             // A failed background refresh must never blank out data the user can already see, so it
             // surfaces as a transient banner instead of the blocking error state.
             .fuelioBanner(
@@ -146,6 +156,17 @@ struct GasStationsScreen: View {
         Binding(
             get: { store.selectedFuel },
             set: { store.selectFuel($0) }
+        )
+    }
+
+    /// Dismissing without choosing (`Cancel`, or a system dismissal) still has to tell the ViewModel,
+    /// or `showPermissionDeniedPermanentlySnackbar` would stay true and the alert would reappear.
+    private var permissionAlertBinding: Binding<Bool> {
+        Binding(
+            get: { store.isPermissionAlertPresented },
+            set: { isPresented in
+                if !isPresented { store.dismissPermissionAlert() }
+            }
         )
     }
 
