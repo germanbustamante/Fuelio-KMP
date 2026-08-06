@@ -248,11 +248,23 @@ considered (hand duplication, Style Dictionary codegen) and why this approach wo
 
 ## iOS app architecture (`iosApp/`)
 
-Native SwiftUI over `CorePresentation.framework`. The bridge is **hand-rolled**, in `iosMain` — see
-`docs/adr/0004-hand-rolled-kotlin-swift-state-bridge.md` for why SKIE and KMP-NativeCoroutines were
-rejected. Deployment target **iOS 18.2**, **Swift 5 language mode** (Swift 6 strict concurrency is not
-viable: nothing the Kotlin/Native exporter emits is `Sendable`, so it would produce a wall of
-warnings that cannot be fixed from Swift; `@MainActor` discipline is used instead).
+Native SwiftUI over `CorePresentation.framework`, using three interop libraries that each cover a
+different exporter limitation — see `docs/adr/0004-kotlin-swift-interop-libraries.md`:
+
+| Library | Version | Covers |
+|---|---|---|
+| KMP-ObservableViewModel | 1.0.5 | ViewModel base class + lifetime (`@StateViewModel` on the Swift side) |
+| KMP-NativeCoroutines | 1.0.4 | `StateFlow`/`Flow` and `suspend` across the bridge, with real cancellation |
+| SKIE | 0.10.14 | `sealed` → exhaustive Swift enums (`onEnum(of:)`), Kotlin enums → Swift enums |
+
+**SKIE and KMP-NativeCoroutines overlap on flows/suspend** — they are alternatives for that, not
+complements. KMP-NativeCoroutines owns flows here; SKIE is kept only for the sealed/enum rows.
+All three are pinned to the builds made for **Kotlin 2.4.0**; the next releases target 2.4.10 and will
+not link, so a Kotlin bump must move all of them together.
+
+Deployment target **iOS 18.2**, **Swift 5 language mode** (Swift 6 strict concurrency is not viable:
+nothing the Kotlin/Native exporter emits is `Sendable`, so it would produce a wall of warnings that
+cannot be fixed from Swift; `@MainActor` discipline is used instead).
 
 ### Layout
 
@@ -261,45 +273,53 @@ iosApp/iosApp/
   App/            iOSApp (entry point), RootView, AppRouter, LaunchArguments
   Navigation/     Route (Destination → SwiftUI route), RouterAction
   Features/
-    GasStations/  GasStationsScreen, GasStationsStore, GasStationsBackend, Components/
-    Detail/       GasStationDetailScreen, GasStationDetailStore, GasStationDetailBackend, Components/
+    GasStations/  GasStationsScreen, Components/
+    Detail/       GasStationDetailScreen, Components/
   DesignSystem/   token adapters (FuelioColors/Spacing/Radius/Typography) + Components/
-  Support/        KotlinSealed, LazyStore, StateSubscription, BrandLogo, formatting, A11yID
+  Support/        KotlinSealed, KMPObservableViewModel, LazyStore, BrandLogo, formatting, A11yID
   Debug/          DesignTokensStorybook (preview-only, kept per ADR 0003)
   Resources/      Localizable.xcstrings, InfoPlist.xcstrings, Fonts/
-iosApp/iosAppTests/     Swift Testing — stores, mappings, design tokens, localization, bridge integration
+iosApp/iosAppTests/     Swift Testing — mappings, design tokens, localization, interop integration
 iosApp/iosAppUITests/   XCTest — XCUITest flows (Swift Testing does not host UI automation)
 ```
 
-### The Kotlin bridge (`core/presentation/src/iosMain/.../core/interop/`)
+Screens hold the Kotlin ViewModel directly; there is no Swift `Store` or `Backend` layer.
 
-- `FlowSubscription` + `Flow<T>.subscribe(context, onEach)` — collection on `Dispatchers.Main.immediate`
-  with an explicit cancellable handle. Swift never sees a `Flow`.
-- `IosViewModelHandle` — one `androidx.lifecycle.ViewModelStore` per screen; `close()` clears it,
-  which is the only supported way to reach `onCleared()`/cancel `viewModelScope` from outside the
-  lifecycle library. **Forgetting it means a ViewModel still doing work after its screen is gone.**
-- `IosGasStationsBinding` / `IosGasStationDetailBinding` — typed ViewModel, a synchronous
-  `currentState` (so the first SwiftUI frame is not blank) and `observeState`.
-- `IosNavigationBinding` — the *only* consumer of `Navigator.navigationActions`, which is `Channel`
-  backed: a second subscriber steals events and navigation drops silently.
-- `IosBindingFactory` (`object`, reached as `IosBindingFactory.shared` from Swift) — does the Koin
-  `parametersOf` work on the Kotlin side so Swift passes plain values.
-- `UiTestModule.kt` + `initKoinIosForUiTests(simulateStationFailure:)` — test-only Koin overrides.
+### The Kotlin side (`core/presentation/src/iosMain/.../core/interop/`)
+
+- `IosViewModelFactory` (`object`, reached as `IosViewModelFactory.shared` from Swift) — the **only**
+  hand-written interop left. Both ViewModels are registered in Koin with resolution parameters
+  (`LocationPermissionController` for the list, `Destination.GasStationDetails` for the detail) and no
+  library resolves those, so the `parametersOf` work happens here and Swift passes plain values. Also
+  exposes the shared `Navigator` plus an `isolatedNavigator()` for tests — `navigationActions` is
+  `Channel`-backed and single-consumer, so a test subscribing to the shared one would steal the running
+  app's events.
+- `UiTestModule.kt` + `initKoinIosForUiTests(simulateStationFailure:)` — test-only Koin overrides,
+  replacing only the outermost boundary (repositories, permission prompt).
+
+ViewModel lifetime and state observation are **not** hand-written: `@StateViewModel` clears the
+ViewModel (cancelling `viewModelScope`) when the view goes away, and `@NativeCoroutinesState` makes
+the exporter emit a plain typed `state` property instead of an erased `StateFlow`.
 
 ### Rules for adding a screen
 
-1. Add the ViewModel/UIState to `:core:presentation` (never to `iosApp`).
-2. Add an `Ios<Feature>Binding` and a factory function to `IosBindingFactory`. Keep the exported
-   surface **flat and non-generic** — that is what survives the Objective-C exporter.
-3. Add a `<Feature>Backend` protocol plus its `Kotlin<Feature>Backend`. The exported ViewModels are
-   `objc_subclassing_restricted` and cannot be spied on, so this protocol is the only unit-test seam.
-4. Add a `@MainActor @Observable <Feature>Store` that owns the binding, publishes the Kotlin `UIState`
-   **as-is** (never re-mapped into a parallel Swift struct) and uses `isolated deinit` to `close()`.
-5. Hold the store with `@LazyStore`, never plain `@State`: `@State` evaluates its initial value on
-   every `View` struct init, which would resolve a ViewModel from Koin and fire a screen-view event on
-   every re-render.
-6. Map any new Kotlin sealed type in `Support/KotlinSealed.swift` — **only there** — and cover every
-   variant in `KotlinSealedMappingTests`.
+1. Add the ViewModel/UIState to `:core:presentation` (never to `iosApp`). The ViewModel must extend
+   `com.rickclephas.kmp.observableviewmodel.ViewModel` and build its state with
+   `MutableStateFlow(viewModelScope, …)` — the plain kotlinx builder repaints Android but never iOS.
+2. Annotate the public state `@NativeCoroutinesState`. Keep private/internal flows as plain kotlinx
+   flows: they are plumbing Swift never observes and must not pay the notification cost.
+3. Add a factory function to `IosViewModelFactory` if the Koin definition takes parameters.
+4. Hold it in the view with `@StateViewModel`, never plain `@State`: `@State` evaluates its initial
+   value on every `View` struct init, which would resolve a ViewModel from Koin and fire a screen-view
+   event on every re-render. Read `viewModel.state` directly and call the ViewModel's own methods —
+   do **not** re-map the Kotlin `UIState` into a parallel Swift struct.
+5. Map any new Kotlin sealed type in `Support/KotlinSealed.swift` — **only there** — with
+   `onEnum(of:)`, and cover every variant in `KotlinSealedMappingTests`. Because SKIE makes that
+   `switch` exhaustive, a variant added in Kotlin is a compile error rather than a silent `default`.
+6. Do **not** annotate `suspend` functions with `@NativeCoroutines` unless Swift actually calls them:
+   the annotation replaces the exported `async` form with a closure that must be invoked via
+   `asyncFunction(for:)`, and calling it as `try await` compiles with only a warning while doing
+   nothing at all.
 7. Add `A11yID` entries and mirror them in `iosAppUITests/UITestSupport.swift`
    (`AccessibilityIdentifierContractTests` fails if the two diverge).
 8. Add every user-facing string to `Resources/Localizable.xcstrings` in EN **and** ES, and to the
