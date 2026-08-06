@@ -19,9 +19,11 @@ struct BrandLogoTests {
 
     @Test("Covers all sixteen brands without a Swift switch, so a new brand needs no change here")
     func coversEveryBrand() {
-        let names = DomainGasStationBrand.entries.compactMap { BrandLogo.assetName(for: $0) }
+        // SKIE bridges Kotlin enums as real Swift enums, so this is `allCases` rather than Kotlin's
+        // `entries` — and a brand added on the Kotlin side shows up here automatically.
+        let names = DomainGasStationBrand.allCases.compactMap { BrandLogo.assetName(for: $0) }
 
-        #expect(names.count == DomainGasStationBrand.entries.count)
+        #expect(names.count == DomainGasStationBrand.allCases.count)
         #expect(Set(names).count == names.count)
         #expect(names.allSatisfy { $0.hasPrefix("logo_") && $0 == $0.lowercased() })
     }

@@ -16,4 +16,5 @@ plugins {
     alias(libs.plugins.googleServices) apply false
     alias(libs.plugins.firebaseCrashlytics) apply false
     alias(libs.plugins.kmpNativeCoroutines) apply false
+    alias(libs.plugins.skie) apply false
 }
