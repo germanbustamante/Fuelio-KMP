@@ -1,7 +1,5 @@
 package com.germandebustamante.fuelio.feature.detail.state
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.germandebustamante.fuelio.core.analytics.AnalyticsTracking
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationUseCase
 import com.germandebustamante.fuelio.core.navigation.action.Navigator
@@ -9,11 +7,14 @@ import com.germandebustamante.fuelio.core.navigation.destination.Destination
 import com.germandebustamante.fuelio.core.util.SPAIN_TIMEZONE
 import com.germandebustamante.fuelio.feature.common.viewmodel.launchStartupTasks
 import com.germandebustamante.fuelio.feature.detail.analytics.GasStationDetailScreenViewed
+import com.rickclephas.kmp.nativecoroutines.NativeCoroutinesState
+import com.rickclephas.kmp.observableviewmodel.MutableStateFlow
+import com.rickclephas.kmp.observableviewmodel.ViewModel
+import com.rickclephas.kmp.observableviewmodel.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 
@@ -25,7 +26,12 @@ class GasStationDetailViewModel(
     initialState: GasStationDetailUIState = GasStationDetailUIState(),
 ) : ViewModel() {
 
-    private val _state: MutableStateFlow<GasStationDetailUIState> = MutableStateFlow(initialState)
+    // MutableStateFlow(viewModelScope, …) is the KMP-ObservableViewModel overload: it is what
+    // notifies SwiftUI on every emission. A plain kotlinx MutableStateFlow would still work on
+    // Android but would never repaint the iOS views.
+    private val _state: MutableStateFlow<GasStationDetailUIState> = MutableStateFlow(viewModelScope, initialState)
+
+    @NativeCoroutinesState
     val state: StateFlow<GasStationDetailUIState> = _state.asStateFlow()
 
     init {
