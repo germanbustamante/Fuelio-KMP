@@ -31,10 +31,19 @@ struct StationScheduleSection: View {
     }
 
     private func row(for day: ScheduleDayVO) -> some View {
-        HStack {
-            Text(dayTitle(for: day))
-            Spacer(minLength: FuelioSpacing.sm)
-            Text(hoursTitle(for: day))
+        // `ViewThatFits` keeps day and hours side by side while they fit and stacks them once the
+        // text grows, without hard-coding a size threshold.
+        ViewThatFits(in: .horizontal) {
+            HStack {
+                Text(dayTitle(for: day))
+                Spacer(minLength: FuelioSpacing.sm)
+                Text(hoursTitle(for: day))
+            }
+            VStack(alignment: .leading, spacing: FuelioSpacing.xxs) {
+                Text(dayTitle(for: day))
+                Text(hoursTitle(for: day))
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .font(day.isToday ? .fuelio(.headline) : .fuelio(.callout))
         .foregroundStyle(day.isToday ? FuelioColors.onSurface : Color.secondary)

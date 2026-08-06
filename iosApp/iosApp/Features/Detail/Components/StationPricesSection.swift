@@ -10,6 +10,8 @@ struct StationPricesSection: View {
 
     let station: DomainGasStationBO
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     private struct Entry: Identifiable {
         let id: String
         let title: LocalizedStringKey
@@ -27,16 +29,20 @@ struct StationPricesSection: View {
 
     private var cheapest: Double? { entries.compactMap(\.price).min() }
 
+    private var columns: [GridItem] {
+        dynamicTypeSize.isAccessibilitySize
+            ? [GridItem(.flexible())]
+            : [GridItem(.flexible(), spacing: FuelioSpacing.sm), GridItem(.flexible())]
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: FuelioSpacing.sm) {
             Text("Fuel prices")
                 .font(.fuelio(.footnote, weight: .medium))
                 .foregroundStyle(.secondary)
 
-            LazyVGrid(
-                columns: [GridItem(.flexible(), spacing: FuelioSpacing.sm), GridItem(.flexible())],
-                spacing: FuelioSpacing.sm
-            ) {
+            // Two columns cannot fit a price at accessibility sizes, so the grid collapses to one.
+            LazyVGrid(columns: columns, spacing: FuelioSpacing.sm) {
                 ForEach(entries) { entry in
                     FuelioCard {
                         VStack(alignment: .leading, spacing: FuelioSpacing.xxs) {
@@ -68,4 +74,12 @@ struct StationPricesSection: View {
     StationPricesSection(station: FakeGasStationsKt.fakeGasStations[9])
         .padding(FuelioSpacing.md)
         .preferredColorScheme(.dark)
+}
+
+#Preview("Accessibility XXXL") {
+    ScrollView {
+        StationPricesSection(station: FakeGasStationsKt.fakeGasStations[9])
+            .padding(FuelioSpacing.md)
+    }
+    .dynamicTypeSize(.accessibility3)
 }

@@ -7,6 +7,10 @@ struct GasStationsScreen: View {
 
     var body: some View {
         content
+            // Crossfade between skeleton / list / empty / error. Animating on a lightweight
+            // discriminant rather than on `content` avoids comparing the whole station array — which
+            // can be a couple of thousand Kotlin objects — on every render.
+            .animation(.smooth(duration: 0.25), value: contentKind)
             .safeAreaInset(edge: .top, spacing: 0) {
                 FuelFilterPicker(selection: fuelBinding)
             }
@@ -45,6 +49,17 @@ struct GasStationsScreen: View {
     }
 
     // MARK: - Content
+
+    private enum ContentKind: Hashable { case loading, list, empty, failure }
+
+    private var contentKind: ContentKind {
+        switch store.content {
+        case .initial, .loading: .loading
+        case .success: .list
+        case .empty: .empty
+        case .failure: .failure
+        }
+    }
 
     @ViewBuilder
     private var content: some View {
@@ -192,4 +207,18 @@ struct GasStationsScreen: View {
     NavigationStack {
         GasStationsScreen()
     }
+}
+
+#Preview("Accessibility XXXL") {
+    NavigationStack {
+        GasStationsScreen()
+    }
+    .dynamicTypeSize(.accessibility3)
+}
+
+#Preview("Dark") {
+    NavigationStack {
+        GasStationsScreen()
+    }
+    .preferredColorScheme(.dark)
 }
