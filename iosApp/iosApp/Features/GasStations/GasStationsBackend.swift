@@ -8,7 +8,7 @@ import CorePresentation
 @MainActor
 protocol GasStationsBackend: AnyObject {
     var currentState: GasStationsUIState { get }
-    func observeState(_ onEach: @escaping (GasStationsUIState) -> Void) -> FlowSubscription
+    func observeState(_ onEach: @escaping (GasStationsUIState) -> Void) -> any StateSubscription
     func close()
 
     func detectLocation()
@@ -38,7 +38,7 @@ final class KotlinGasStationsBackend: GasStationsBackend {
 
     var currentState: GasStationsUIState { binding.currentState }
 
-    func observeState(_ onEach: @escaping (GasStationsUIState) -> Void) -> FlowSubscription {
+    func observeState(_ onEach: @escaping (GasStationsUIState) -> Void) -> any StateSubscription {
         binding.observeState(onEach: onEach)
     }
 

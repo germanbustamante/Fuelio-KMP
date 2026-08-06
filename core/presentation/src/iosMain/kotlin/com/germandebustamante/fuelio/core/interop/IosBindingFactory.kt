@@ -1,5 +1,6 @@
 package com.germandebustamante.fuelio.core.interop
 
+import com.germandebustamante.fuelio.core.navigation.action.DefaultNavigator
 import com.germandebustamante.fuelio.core.navigation.action.Navigator
 import com.germandebustamante.fuelio.core.navigation.destination.Destination
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
@@ -38,4 +39,13 @@ object IosBindingFactory : KoinComponent {
 
     /** One per app, owned by the root — see [IosNavigationBinding]. */
     fun createNavigationBinding(): IosNavigationBinding = IosNavigationBinding(get<Navigator>())
+
+    /**
+     * A binding over a **private** [DefaultNavigator].
+     *
+     * `Navigator.navigationActions` is `Channel`-backed and single-consumer, so a Swift test that
+     * subscribed to the shared navigator would steal events from the running app's router. Tests use
+     * this instead, and drive it with [IosNavigationBinding.requestNavigation].
+     */
+    fun createIsolatedNavigationBinding(): IosNavigationBinding = IosNavigationBinding(DefaultNavigator())
 }
