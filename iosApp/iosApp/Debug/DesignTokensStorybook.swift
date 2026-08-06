@@ -9,7 +9,7 @@ struct DesignTokensStorybook: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: FuelioSpacing.lg) {
-                Text("Fuelio")
+                Text(verbatim: "Fuelio")
                     .font(.fuelio(.largeTitle, weight: .bold))
                     .foregroundStyle(FuelioColors.onSurface)
 
@@ -24,7 +24,7 @@ struct DesignTokensStorybook: View {
 
     private var colorSwatches: some View {
         VStack(alignment: .leading, spacing: FuelioSpacing.sm) {
-            Text("Color").font(.fuelio(.headline))
+            Text(verbatim: "Color").font(.fuelio(.headline))
             HStack(spacing: FuelioSpacing.sm) {
                 swatch("Accent", FuelioColors.accent)
                 swatch("Success", FuelioColors.success)
@@ -39,23 +39,23 @@ struct DesignTokensStorybook: View {
             RoundedRectangle(cornerRadius: FuelioRadius.medium)
                 .fill(color)
                 .frame(width: 48, height: 48)
-            Text(name).font(.fuelio(.caption2))
+            Text(verbatim: name).font(.fuelio(.caption2))
         }
     }
 
     private var typeScale: some View {
         VStack(alignment: .leading, spacing: FuelioSpacing.xs) {
-            Text("Typography").font(.fuelio(.headline))
-            Text("Title Large").font(.fuelio(.title2, weight: .semibold))
-            Text("Title Medium").font(.fuelio(.title3, weight: .medium))
-            Text("Body Large").font(.fuelio(.body))
-            Text("Label Small").font(.fuelio(.caption2, weight: .medium))
+            Text(verbatim: "Typography").font(.fuelio(.headline))
+            Text(verbatim: "Title Large").font(.fuelio(.title2, weight: .semibold))
+            Text(verbatim: "Title Medium").font(.fuelio(.title3, weight: .medium))
+            Text(verbatim: "Body Large").font(.fuelio(.body))
+            Text(verbatim: "Label Small").font(.fuelio(.caption2, weight: .medium))
         }
     }
 
     private var spacingScale: some View {
         VStack(alignment: .leading, spacing: FuelioSpacing.xs) {
-            Text("Spacing").font(.fuelio(.headline))
+            Text(verbatim: "Spacing").font(.fuelio(.headline))
             HStack(spacing: FuelioSpacing.xs) {
                 ForEach([FuelioSpacing.xxs, FuelioSpacing.xs, FuelioSpacing.sm, FuelioSpacing.md, FuelioSpacing.lg, FuelioSpacing.xl], id: \.self) { value in
                     Rectangle()

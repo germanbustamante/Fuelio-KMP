@@ -25,14 +25,14 @@ struct FuelioCard<Content: View>: View {
 
 #Preview("Light") {
     FuelioCard {
-        Text("Card content").padding(FuelioSpacing.md)
+        Text(verbatim: "Card content").padding(FuelioSpacing.md)
     }
     .padding(FuelioSpacing.md)
 }
 
 #Preview("Dark") {
     FuelioCard {
-        Text("Card content").padding(FuelioSpacing.md)
+        Text(verbatim: "Card content").padding(FuelioSpacing.md)
     }
     .padding(FuelioSpacing.md)
     .preferredColorScheme(.dark)
