@@ -7,10 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		05ACD703A0242DECB7207BF2 /* KMPNativeCoroutinesAsync in Frameworks */ = {isa = PBXBuildFile; productRef = 794EDCE6CDD95C906356810F /* KMPNativeCoroutinesAsync */; };
+		308CF25F7B642D1BF9AE0B81 /* KMPObservableViewModelSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = CE0FA6A31A0CF0413B633BAE /* KMPObservableViewModelSwiftUI */; };
 		4712E6E030141C9400E124C3 /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = 4712E6DF30141C9400E124C3 /* PostHog */; };
 		47BB1A303013CB8000CADAEB /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 47BB1A2F3013CB8000CADAEB /* FirebaseAnalytics */; };
 		47BB1A323013CB8000CADAEB /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 47BB1A313013CB8000CADAEB /* FirebaseCore */; };
 		47BB1A343013CB8000CADAEB /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 47BB1A333013CB8000CADAEB /* FirebaseCrashlytics */; };
+		C2D04B0080FC926558C8E8D1 /* KMPObservableViewModelCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3B0C0D0AEC45D3C90BD9A0AD /* KMPObservableViewModelCore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -87,6 +90,9 @@
 				47BB1A323013CB8000CADAEB /* FirebaseCore in Frameworks */,
 				47BB1A303013CB8000CADAEB /* FirebaseAnalytics in Frameworks */,
 				4712E6E030141C9400E124C3 /* PostHog in Frameworks */,
+				C2D04B0080FC926558C8E8D1 /* KMPObservableViewModelCore in Frameworks */,
+				308CF25F7B642D1BF9AE0B81 /* KMPObservableViewModelSwiftUI in Frameworks */,
+				05ACD703A0242DECB7207BF2 /* KMPNativeCoroutinesAsync in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -153,6 +159,9 @@
 				47BB1A313013CB8000CADAEB /* FirebaseCore */,
 				47BB1A333013CB8000CADAEB /* FirebaseCrashlytics */,
 				4712E6DF30141C9400E124C3 /* PostHog */,
+				3B0C0D0AEC45D3C90BD9A0AD /* KMPObservableViewModelCore */,
+				CE0FA6A31A0CF0413B633BAE /* KMPObservableViewModelSwiftUI */,
+				794EDCE6CDD95C906356810F /* KMPNativeCoroutinesAsync */,
 			);
 			productName = iosApp;
 			productReference = 7E4421B3E7D84DDC420D8B56 /* Fuelio.app */;
@@ -228,6 +237,8 @@
 			packageReferences = (
 				47BB1A2C3013C9AB00CADAEB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				4712E6DE30141C9400E124C3 /* XCRemoteSwiftPackageReference "posthog-ios" */,
+				92DC00ECE02CFF24826F9BB3 /* XCRemoteSwiftPackageReference "KMP-ObservableViewModel" */,
+				0702C12814BE6E7252B56EC2 /* XCRemoteSwiftPackageReference "KMP-NativeCoroutines" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9004AC90BB2A845989AA4859 /* Products */;
@@ -628,6 +639,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		0702C12814BE6E7252B56EC2 /* XCRemoteSwiftPackageReference "KMP-NativeCoroutines" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/rickclephas/KMP-NativeCoroutines.git";
+			requirement = {
+				kind = exactVersion;
+				version = 1.0.4;
+			};
+		};
 		4712E6DE30141C9400E124C3 /* XCRemoteSwiftPackageReference "posthog-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/PostHog/posthog-ios.git";
@@ -644,9 +663,22 @@
 				minimumVersion = 12.16.0;
 			};
 		};
+		92DC00ECE02CFF24826F9BB3 /* XCRemoteSwiftPackageReference "KMP-ObservableViewModel" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/rickclephas/KMP-ObservableViewModel.git";
+			requirement = {
+				kind = exactVersion;
+				version = 1.0.5;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		3B0C0D0AEC45D3C90BD9A0AD /* KMPObservableViewModelCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 92DC00ECE02CFF24826F9BB3 /* XCRemoteSwiftPackageReference "KMP-ObservableViewModel" */;
+			productName = KMPObservableViewModelCore;
+		};
 		4712E6DF30141C9400E124C3 /* PostHog */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 4712E6DE30141C9400E124C3 /* XCRemoteSwiftPackageReference "posthog-ios" */;
@@ -666,6 +698,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 47BB1A2C3013C9AB00CADAEB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCrashlytics;
+		};
+		794EDCE6CDD95C906356810F /* KMPNativeCoroutinesAsync */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0702C12814BE6E7252B56EC2 /* XCRemoteSwiftPackageReference "KMP-NativeCoroutines" */;
+			productName = KMPNativeCoroutinesAsync;
+		};
+		CE0FA6A31A0CF0413B633BAE /* KMPObservableViewModelSwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 92DC00ECE02CFF24826F9BB3 /* XCRemoteSwiftPackageReference "KMP-ObservableViewModel" */;
+			productName = KMPObservableViewModelSwiftUI;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
