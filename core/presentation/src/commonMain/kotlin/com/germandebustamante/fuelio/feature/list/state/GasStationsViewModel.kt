@@ -1,7 +1,5 @@
 package com.germandebustamante.fuelio.feature.list.state
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.germandebustamante.fuelio.core.analytics.AnalyticsTracking
 import com.germandebustamante.fuelio.core.domain.error.DomainError
 import com.germandebustamante.fuelio.core.domain.error.toDomainError
@@ -23,6 +21,10 @@ import com.germandebustamante.fuelio.feature.list.analytics.GasStationsScreenVie
 import com.germandebustamante.fuelio.feature.list.analytics.LocationPermissionEvent
 import com.germandebustamante.fuelio.feature.list.analytics.LocationPermissionOutcome
 import com.germandebustamante.fuelio.feature.list.analytics.ProvinceChanged
+import com.rickclephas.kmp.nativecoroutines.NativeCoroutinesState
+import com.rickclephas.kmp.observableviewmodel.MutableStateFlow
+import com.rickclephas.kmp.observableviewmodel.ViewModel
+import com.rickclephas.kmp.observableviewmodel.launch
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -40,7 +42,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.toLocalDateTime
@@ -67,7 +68,12 @@ class GasStationsViewModel(
     private var rawGasStations: List<GasStationBO> = emptyList()
     private var allGasStations: List<GasStationItemVO> = emptyList()
 
-    private val _state = MutableStateFlow(initialState)
+    // MutableStateFlow(viewModelScope, …) is the KMP-ObservableViewModel overload: it is what
+    // notifies SwiftUI on every emission. The private flows above stay plain kotlinx flows — they
+    // are internal plumbing that Swift never observes.
+    private val _state = MutableStateFlow(viewModelScope, initialState)
+
+    @NativeCoroutinesState
     val state: StateFlow<GasStationsUIState> = _state.asStateFlow()
 
     //endregion
