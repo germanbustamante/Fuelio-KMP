@@ -8,10 +8,15 @@ final class LaunchUITests: XCTestCase {
         continueAfterFailure = false
     }
 
-    func testAppLaunches() {
+    func testAppLaunchesAndShowsTheStationList() {
         let app = XCUIApplication()
+        app.launchArguments = [UITestSupport.uiTestMode]
         app.launch()
 
         XCTAssertEqual(app.state, .runningForeground)
+        XCTAssertTrue(
+            app.collectionViews[UITestSupport.stationsList].waitForExistence(timeout: 10),
+            "the gas stations list should appear with the in-memory fake repositories"
+        )
     }
 }
