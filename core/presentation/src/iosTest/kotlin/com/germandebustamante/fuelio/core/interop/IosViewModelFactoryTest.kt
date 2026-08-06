@@ -9,9 +9,7 @@ import com.germandebustamante.fuelio.core.domain.province.testing.ProvinceBOMoth
 import com.germandebustamante.fuelio.core.domain.province.usecase.GetProvincesUseCase
 import com.germandebustamante.fuelio.core.domain.province.usecase.ResolveProvinceByLocationUseCase
 import com.germandebustamante.fuelio.core.navigation.action.DefaultNavigator
-import com.germandebustamante.fuelio.core.navigation.action.NavigationAction
 import com.germandebustamante.fuelio.core.navigation.action.Navigator
-import com.germandebustamante.fuelio.core.navigation.destination.Destination
 import com.germandebustamante.fuelio.di.presentationPlatformModule
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionState
@@ -37,20 +35,24 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertIs
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.assertNotSame
+import kotlin.test.assertNull
+import kotlin.test.assertSame
 
 /**
- * Integration coverage for the DI half of the bridge: the real feature Koin modules resolve both
- * ViewModels through [IosBindingFactory] with their resolution parameters supplied on the Kotlin
- * side, and the bindings emit state to Swift-shaped callbacks.
+ * Coverage for the one piece of interop no library removes: resolving both ViewModels out of the
+ * production feature modules, whose Koin definitions take **resolution parameters**
+ * (`LocationPermissionController` for the list, `Destination.GasStationDetails` for the detail).
+ *
+ * State observation and ViewModel lifetime are KMP-NativeCoroutines' and KMP-ObservableViewModel's
+ * job and are covered from Swift; what has to be asserted here is that the graph wires up at all.
  *
  * The repositories are mocked but the use cases, Koin modules and `Navigator` are the production
  * ones — `:data` (Ktor/Room) deliberately stays out of the graph.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class IosBindingFactoryTest {
+class IosViewModelFactoryTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private val navigator = DefaultNavigator()
@@ -102,46 +104,49 @@ class IosBindingFactoryTest {
         Dispatchers.resetMain()
     }
 
+    /**
+     * Asserts the graph wires up — every use case, the navigator and the analytics tracker resolve,
+     * and the ViewModel's startup tasks actually run — not the full load pipeline.
+     *
+     * The station list deliberately is *not* asserted here: the production Koin definition uses the
+     * default `Dispatchers.Default`, and `buildGasStationItems` hops onto it with `withContext`, which
+     * escapes the test scheduler so `advanceUntilIdle()` cannot wait for it. Loading is covered
+     * end-to-end by `GasStationsViewModelTest`, which injects a test dispatcher, and from Swift by
+     * `BridgeIntegrationTests`, which polls instead of advancing a scheduler.
+     */
     @Test
-    fun `case - GIVEN a started Koin graph WHEN the gas stations binding is created THEN its state reaches the callback`() = runTest(testDispatcher) {
-        val binding = IosBindingFactory.createGasStationsBinding()
-        val received = mutableListOf<Int>()
+    fun `case - GIVEN a started Koin graph WHEN the gas stations view model is created THEN its dependencies resolve and startup runs`() = runTest(testDispatcher) {
+        val viewModel = IosViewModelFactory.gasStations()
 
-        val subscription = binding.observeState { received += it.gasStations.size }
         advanceUntilIdle()
 
-        assertTrue(received.isNotEmpty(), "the binding should deliver at least the current state")
-        assertEquals(binding.currentState.gasStations.size, received.last())
-        subscription.cancel()
-        binding.close()
+        assertEquals(ProvinceBOMother.provinceBOList(), viewModel.state.value.provinces)
+        assertEquals(ProvinceBOMother.provinceBOList().first(), viewModel.state.value.selectedProvince)
+        assertNull(viewModel.state.value.error)
     }
 
     @Test
-    fun `case - GIVEN a station id WHEN the detail binding is created THEN it loads that station`() = runTest(testDispatcher) {
+    fun `case - GIVEN a station id WHEN the detail view model is created THEN it loads that station`() = runTest(testDispatcher) {
         val expected = GasStationBOMother.gasStationBO()
 
-        val binding = IosBindingFactory.createGasStationDetailBinding(expected.id)
+        val viewModel = IosViewModelFactory.gasStationDetail(expected.id)
         advanceUntilIdle()
 
-        assertNotNull(binding.currentState.gasStation)
-        assertEquals(expected.id, binding.currentState.gasStation?.id)
-        binding.close()
+        assertEquals(expected.id, viewModel.state.value.gasStation?.id)
     }
 
     @Test
-    fun `case - GIVEN the navigation binding WHEN the navigator navigates THEN the action reaches the callback`() = runTest(testDispatcher) {
-        val binding = IosBindingFactory.createNavigationBinding()
-        val received = mutableListOf<NavigationAction>()
-        binding.observeNavigation { received += it }
-        advanceUntilIdle()
+    fun `case - GIVEN the shared navigator WHEN requested twice THEN the same single instance is returned`() {
+        assertSame(navigator, IosViewModelFactory.navigator())
+        assertSame(IosViewModelFactory.navigator(), IosViewModelFactory.navigator())
+    }
 
-        navigator.navigate(Destination.GasStationDetails("7153"))
-        advanceUntilIdle()
+    @Test
+    fun `case - GIVEN the isolated navigator WHEN requested THEN it is not the shared single-consumer one`() {
+        val isolated = IosViewModelFactory.isolatedNavigator()
 
-        assertEquals(1, received.size)
-        val action = assertIs<NavigationAction.Navigate>(received.single())
-        assertEquals(Destination.GasStationDetails("7153"), action.destination)
-        binding.close()
+        assertNotSame(navigator, isolated)
+        assertNotSame(isolated, IosViewModelFactory.isolatedNavigator())
     }
 
     @Test
@@ -149,7 +154,7 @@ class IosBindingFactoryTest {
         stopKoin()
         startKoin { modules(presentationPlatformModule) }
 
-        val controller = IosBindingFactory.getKoin().get<LocationPermissionController>()
+        val controller = IosViewModelFactory.getKoin().get<LocationPermissionController>()
 
         assertNotNull(controller)
     }
