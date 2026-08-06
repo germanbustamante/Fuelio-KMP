@@ -33,6 +33,7 @@ struct FuelioErrorState: View {
     let title: LocalizedStringKey
     let message: String
     let retryTitle: LocalizedStringKey
+    var retryIdentifier: String?
     let onRetry: () -> Void
 
     var body: some View {
@@ -45,6 +46,7 @@ struct FuelioErrorState: View {
             Button(retryTitle, action: onRetry)
                 .buttonStyle(.borderedProminent)
                 .tint(FuelioColors.accent)
+                .accessibilityIdentifier(retryIdentifier ?? "")
         }
     }
 }

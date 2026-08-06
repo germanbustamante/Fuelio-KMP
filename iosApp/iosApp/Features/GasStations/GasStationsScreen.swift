@@ -38,6 +38,7 @@ struct GasStationsScreen: View {
             .fuelioBanner(
                 isPresented: store.hasStaleDataError,
                 message: "Couldn't refresh. Showing saved data.",
+                identifier: A11yID.staleDataBanner,
                 onDismiss: { store.dismissStaleDataError() }
             )
             .task { store.activate() }
@@ -65,6 +66,9 @@ struct GasStationsScreen: View {
                 actionTitle: "Clear search",
                 action: { store.search("") }
             )
+            // `ContentUnavailableView` builds its own accessibility container, which swallows a bare
+            // `.accessibilityIdentifier`. Declaring the wrapper as a container makes it queryable.
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier(A11yID.emptyState)
 
         case .failure(let message):
@@ -72,8 +76,10 @@ struct GasStationsScreen: View {
                 title: "Something went wrong",
                 message: message,
                 retryTitle: "Retry",
+                retryIdentifier: A11yID.retryButton,
                 onRetry: { store.retry() }
             )
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier(A11yID.errorState)
         }
     }

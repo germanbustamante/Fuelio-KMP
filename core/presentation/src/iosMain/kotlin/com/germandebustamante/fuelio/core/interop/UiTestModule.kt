@@ -1,5 +1,6 @@
 package com.germandebustamante.fuelio.core.interop
 
+import com.germandebustamante.fuelio.core.domain.error.DomainError
 import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationBO
 import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationsResult
 import com.germandebustamante.fuelio.core.domain.gasstation.repository.GasStationRepository
@@ -22,8 +23,10 @@ import org.koin.dsl.module
  * exercises the real app rather than a mock of it, and does so without the network, without Room and
  * without a system permission dialog blocking the run.
  */
-internal val uiTestModule: Module = module {
-    single<GasStationRepository> { InMemoryGasStationRepository() }
+internal fun uiTestModule(simulateStationFailure: Boolean): Module = module {
+    single<GasStationRepository> {
+        if (simulateStationFailure) FailingGasStationRepository() else InMemoryGasStationRepository()
+    }
     single<ProvinceRepository> { InMemoryProvinceRepository() }
     single<LocationPermissionController> { DeniedLocationPermissionController() }
 }
@@ -35,6 +38,19 @@ private class InMemoryGasStationRepository : GasStationRepository {
 
     override fun getGasStationById(id: String): Flow<GasStationBO?> =
         flowOf(fakeGasStations.firstOrNull { it.id == id })
+}
+
+/**
+ * Stations fail, provinces still load. That is the combination the blocking error state needs: the
+ * ViewModel only shows a hard error when there is nothing on screen yet, and `contentState` stays
+ * `Loading` until a province is selected.
+ */
+private class FailingGasStationRepository : GasStationRepository {
+
+    override fun getGasStationsByLocation(provinceId: String): Flow<Result<GasStationsResult>> =
+        flowOf(Result.failure(DomainError.ServerError(503)))
+
+    override fun getGasStationById(id: String): Flow<GasStationBO?> = flowOf(null)
 }
 
 private class InMemoryProvinceRepository : ProvinceRepository {
