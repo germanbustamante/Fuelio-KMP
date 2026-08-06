@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.mokkery)
     alias(libs.plugins.kmpNativeCoroutines)
+    alias(libs.plugins.skie)
 }
 
 kotlin {
