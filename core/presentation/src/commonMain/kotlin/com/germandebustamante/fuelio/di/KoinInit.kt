@@ -26,6 +26,7 @@ fun initKoin(config: KoinAppDeclaration? = null): KoinApplication = startKoin {
         analyticsModule,
         coreModule,
         startupModule,
+        presentationPlatformModule,
     )
 }.also { app ->
     val startupTasks = app.koin.get<Set<StartupTask>>()
