@@ -1,0 +1,24 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "NSLocationWhenInUseUsageDescription": {
+      "extractionState": "manual",
+      "comment": "Shown by iOS when requesting location access. A missing value terminates the app.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuelio uses your location to find nearby fuel stations and log refuels automatically."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuelio usa tu ubicación para encontrar gasolineras cercanas y registrar repostajes automáticamente."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
