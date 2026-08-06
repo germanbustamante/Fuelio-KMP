@@ -1,10 +1,11 @@
 import SwiftUI
 import CorePresentation
 
-/// Minimal design-token storybook: proves the shared tokens (`:core:presentation`) resolve
-/// correctly on iOS and gives a quick visual diff against the Android app. Replace with real
-/// screens as they get ported (see roadmap phase P1.5).
-struct ContentView: View {
+/// Design-token storybook: proves the shared tokens (`:core:presentation`) resolve correctly on iOS
+/// and gives a quick visual diff against the Android app — ADR 0003 asks for it to stay.
+///
+/// It is no longer the app root (that is `RootView`); it survives as a preview-only reference sheet.
+struct DesignTokensStorybook: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: FuelioSpacing.lg) {
@@ -64,4 +65,13 @@ struct ContentView: View {
             }
         }
     }
+}
+
+#Preview("Light") {
+    DesignTokensStorybook()
+}
+
+#Preview("Dark") {
+    DesignTokensStorybook()
+        .preferredColorScheme(.dark)
 }

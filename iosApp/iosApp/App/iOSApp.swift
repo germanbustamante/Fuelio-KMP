@@ -17,12 +17,16 @@ struct iOSApp: App {
             PostHogTracker_iosKt.registerNativePostHogTracker(tracker: PostHogTrackerBridge())
         }
 
-        KoinInitIosKt.doInitKoinIos()
+        if LaunchArguments.isUITestMode {
+            KoinInitIosKt.doInitKoinIosForUiTests()
+        } else {
+            KoinInitIosKt.doInitKoinIos()
+        }
     }
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
         }
     }
 }
