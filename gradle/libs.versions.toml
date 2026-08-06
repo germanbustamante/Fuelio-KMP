@@ -51,6 +51,11 @@ ksp = "2.3.10"
 posthogAndroid = "3.56.2"
 buildkonfig = "0.22.0"
 
+#Kotlin-Swift interop (iOS). Pinned to the builds made for Kotlin 2.4.0:
+# the 1.0.6/1.0.5 releases target Kotlin 2.4.10 and will not link against 2.4.0.
+kmpObservableViewModel = "1.0.5"
+kmpNativeCoroutines = "1.0.4"
+
 [libraries]
 # AndroidX
 androidx-activity = { module = "androidx.activity:activity", version.ref = "androidx-activity" }
@@ -126,6 +131,9 @@ androidx-room-sqlite-wrapper = { module = "androidx.room:room-sqlite-wrapper", v
 #PostHog
 posthog-android = { module = "com.posthog:posthog-android", version.ref = "posthogAndroid" }
 
+#Kotlin-Swift interop (iOS)
+kmp-observableviewmodel-core = { module = "com.rickclephas.kmp:kmp-observableviewmodel-core", version.ref = "kmpObservableViewModel" }
+
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
@@ -144,3 +152,4 @@ androidx-room = { id = "androidx.room", version.ref = "room" }
 googleServices = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 firebaseCrashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlyticsPlugin" }
 buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }
+kmpNativeCoroutines = { id = "com.rickclephas.kmp.nativecoroutines", version.ref = "kmpNativeCoroutines" }
