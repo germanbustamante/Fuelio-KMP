@@ -22,7 +22,8 @@ struct FuelioPriceLabel: View {
                 Text(String(formatted.dropLast(Self.unitSuffix.count)))
                     .font(.fuelio(.title, weight: .semibold))
                     .foregroundStyle(isHighlighted ? FuelioColors.accent : FuelioColors.onSurface)
-                Text("€/L")
+                // Not localized: the unit symbol is part of the shared `formatAsEuros()` output.
+                Text(verbatim: "€/L")
                     .font(.fuelio(.caption))
                     .foregroundStyle(.secondary)
             } else {
