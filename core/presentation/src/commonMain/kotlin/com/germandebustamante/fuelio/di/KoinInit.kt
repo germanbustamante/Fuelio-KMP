@@ -13,10 +13,20 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
+import org.koin.core.module.Module
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.includes
 
-fun initKoin(config: KoinAppDeclaration? = null): KoinApplication = startKoin {
+/**
+ * @param overrides modules applied last, so their definitions win over the production ones. Used by
+ * the iOS UI-test harness to swap the repositories for in-memory fakes; production call sites pass
+ * nothing. Declared **before** [config] so `initKoin { androidContext(this) }` keeps binding its
+ * trailing lambda to [config].
+ */
+fun initKoin(
+    overrides: List<Module> = emptyList(),
+    config: KoinAppDeclaration? = null,
+): KoinApplication = startKoin {
     includes(config)
     modules(
         domainModule,
@@ -28,6 +38,7 @@ fun initKoin(config: KoinAppDeclaration? = null): KoinApplication = startKoin {
         startupModule,
         presentationPlatformModule,
     )
+    modules(overrides)
 }.also { app ->
     val startupTasks = app.koin.get<Set<StartupTask>>()
     MainScope().launch {
