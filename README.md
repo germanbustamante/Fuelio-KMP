@@ -36,22 +36,54 @@ Open [`iosApp/iosApp.xcodeproj`](./iosApp/iosApp.xcodeproj) in Xcode and run fro
 `./gradlew :core:presentation:embedAndSignAppleFrameworkForXcode` automatically, so no manual Gradle
 step is needed first.
 
-To sanity-check the framework outside Xcode:
+From the command line:
+
+```shell
+xcodebuild build -project iosApp/iosApp.xcodeproj -scheme iosApp \
+  -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest'
+```
+
+To sanity-check the framework outside Xcode — and to regenerate the Objective-C header, which is the
+source of truth for every Kotlin symbol Swift can see:
 
 ```shell
 ./gradlew :core:presentation:linkDebugFrameworkIosSimulatorArm64
+open core/presentation/build/bin/iosSimulatorArm64/debugFramework/CorePresentation.framework/Headers/CorePresentation.h
 ```
 
 ## Tests
 
+### Kotlin
+
 ```shell
 ./gradlew :androidApp:testDebugUnitTest              # Compose-dependent code (designsystem, screens)
 ./gradlew :core:presentation:testAndroidHostTest      # ViewModel/state/navigation tests, JVM
-./gradlew :core:presentation:iosSimulatorArm64Test    # Same tests, iOS simulator target
+./gradlew :core:presentation:iosSimulatorArm64Test    # Same tests + the iOS bridge, simulator target
 ./gradlew :core:domain:iosSimulatorArm64Test
 ./gradlew :data:iosSimulatorArm64Test
 ./gradlew :core:analytics:iosSimulatorArm64Test
 ```
+
+### Swift
+
+```shell
+xcodebuild test -project iosApp/iosApp.xcodeproj -scheme iosApp \
+  -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest'
+
+# One target at a time
+xcodebuild test … -only-testing:iosAppTests      # Swift Testing: stores, mappings, bridge integration
+xcodebuild test … -only-testing:iosAppUITests    # XCUITest: list, detail, error and accessibility flows
+```
+
+**Always pass `OS=latest`.** A `name=iPhone 17` destination alone is ambiguous when more than one iOS
+runtime is installed, and the resulting device contention shows up as
+`Application failed preflight checks` rather than as a useful error.
+
+Both test targets run against a deterministic Koin graph: `initKoinIosForUiTests(…)` swaps only the
+repositories and the location permission prompt for in-memory fakes, so the real ViewModels,
+`Navigator` and analytics are exercised without the network, Room or a system dialog. UI tests opt in
+with the `-UITestMode` launch argument (`-UITestFailure` to reach the error state); unit tests are
+detected automatically, since they are hosted by the app. None of it is compiled into release builds.
 
 ---
 

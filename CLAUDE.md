@@ -36,6 +36,13 @@ this repo's package/branding to Octana; that name belongs to the other, private 
 ./gradlew :core:presentation:linkDebugFrameworkIosSimulatorArm64  # sanity-build the CorePresentation.framework outside Xcode
 # Open iosApp/iosApp.xcodeproj in Xcode and run from there — the "Compile Kotlin Framework" build
 # phase invokes `:core:presentation:embedAndSignAppleFrameworkForXcode` automatically.
+
+xcodebuild build -project iosApp/iosApp.xcodeproj -scheme iosApp \
+  -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest'
+xcodebuild test  -project iosApp/iosApp.xcodeproj -scheme iosApp \
+  -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest'
+# Always pass OS=latest: `name=iPhone 17` alone is ambiguous when several iOS runtimes are installed,
+# and the device contention surfaces as "Application failed preflight checks", not as a clear error.
 ```
 
 ## Module Architecture
@@ -238,6 +245,95 @@ compile time instead of by convention:
 **Rule:** a new token value is added to `core/designtokens/` first, never hardcoded directly in either
 platform adapter. See `docs/adr/0003-shared-design-tokens-in-kotlin.md` for the alternatives
 considered (hand duplication, Style Dictionary codegen) and why this approach won.
+
+## iOS app architecture (`iosApp/`)
+
+Native SwiftUI over `CorePresentation.framework`. The bridge is **hand-rolled**, in `iosMain` — see
+`docs/adr/0004-hand-rolled-kotlin-swift-state-bridge.md` for why SKIE and KMP-NativeCoroutines were
+rejected. Deployment target **iOS 18.2**, **Swift 5 language mode** (Swift 6 strict concurrency is not
+viable: nothing the Kotlin/Native exporter emits is `Sendable`, so it would produce a wall of
+warnings that cannot be fixed from Swift; `@MainActor` discipline is used instead).
+
+### Layout
+
+```
+iosApp/iosApp/
+  App/            iOSApp (entry point), RootView, AppRouter, LaunchArguments
+  Navigation/     Route (Destination → SwiftUI route), RouterAction
+  Features/
+    GasStations/  GasStationsScreen, GasStationsStore, GasStationsBackend, Components/
+    Detail/       GasStationDetailScreen, GasStationDetailStore, GasStationDetailBackend, Components/
+  DesignSystem/   token adapters (FuelioColors/Spacing/Radius/Typography) + Components/
+  Support/        KotlinSealed, LazyStore, StateSubscription, BrandLogo, formatting, A11yID
+  Debug/          DesignTokensStorybook (preview-only, kept per ADR 0003)
+  Resources/      Localizable.xcstrings, InfoPlist.xcstrings, Fonts/
+iosApp/iosAppTests/     Swift Testing — stores, mappings, design tokens, localization, bridge integration
+iosApp/iosAppUITests/   XCTest — XCUITest flows (Swift Testing does not host UI automation)
+```
+
+### The Kotlin bridge (`core/presentation/src/iosMain/.../core/interop/`)
+
+- `FlowSubscription` + `Flow<T>.subscribe(context, onEach)` — collection on `Dispatchers.Main.immediate`
+  with an explicit cancellable handle. Swift never sees a `Flow`.
+- `IosViewModelHandle` — one `androidx.lifecycle.ViewModelStore` per screen; `close()` clears it,
+  which is the only supported way to reach `onCleared()`/cancel `viewModelScope` from outside the
+  lifecycle library. **Forgetting it means a ViewModel still doing work after its screen is gone.**
+- `IosGasStationsBinding` / `IosGasStationDetailBinding` — typed ViewModel, a synchronous
+  `currentState` (so the first SwiftUI frame is not blank) and `observeState`.
+- `IosNavigationBinding` — the *only* consumer of `Navigator.navigationActions`, which is `Channel`
+  backed: a second subscriber steals events and navigation drops silently.
+- `IosBindingFactory` (`object`, reached as `IosBindingFactory.shared` from Swift) — does the Koin
+  `parametersOf` work on the Kotlin side so Swift passes plain values.
+- `UiTestModule.kt` + `initKoinIosForUiTests(simulateStationFailure:)` — test-only Koin overrides.
+
+### Rules for adding a screen
+
+1. Add the ViewModel/UIState to `:core:presentation` (never to `iosApp`).
+2. Add an `Ios<Feature>Binding` and a factory function to `IosBindingFactory`. Keep the exported
+   surface **flat and non-generic** — that is what survives the Objective-C exporter.
+3. Add a `<Feature>Backend` protocol plus its `Kotlin<Feature>Backend`. The exported ViewModels are
+   `objc_subclassing_restricted` and cannot be spied on, so this protocol is the only unit-test seam.
+4. Add a `@MainActor @Observable <Feature>Store` that owns the binding, publishes the Kotlin `UIState`
+   **as-is** (never re-mapped into a parallel Swift struct) and uses `isolated deinit` to `close()`.
+5. Hold the store with `@LazyStore`, never plain `@State`: `@State` evaluates its initial value on
+   every `View` struct init, which would resolve a ViewModel from Koin and fire a screen-view event on
+   every re-render.
+6. Map any new Kotlin sealed type in `Support/KotlinSealed.swift` — **only there** — and cover every
+   variant in `KotlinSealedMappingTests`.
+7. Add `A11yID` entries and mirror them in `iosAppUITests/UITestSupport.swift`
+   (`AccessibilityIdentifierContractTests` fails if the two diverge).
+8. Add every user-facing string to `Resources/Localizable.xcstrings` in EN **and** ES, and to the
+   `uiKeys` table in `LocalizationTests`. Debug-only copy uses `Text(verbatim:)`.
+
+### Invariants
+
+- **Business logic stays in Kotlin.** No recomputing "cheapest", filtering by fuel, sorting by distance
+  or deciding open/closed in Swift. The one exception is the detail screen's "cheapest of these four
+  prices" highlight, which is presentation-only and which Android also does in its Composable.
+- **Navigation goes through the ViewModel**, never by pushing/popping `NavigationStack` directly —
+  otherwise the analytics events attached to those actions never fire.
+- **Formatting comes from Kotlin** (`NumberFormatterKt.formatAsEuros/formatAsKilometers`). Both
+  `format(digits:)` actuals are locale-aware on purpose, so tests assert shape, never a literal.
+- **No hardcoded design values.** New token → `core/designtokens/` first (ADR 0003); `DesignSystemTests`
+  compares the Swift adapter against the Kotlin tokens.
+- **The generated header is the source of truth** for Kotlin symbol names. Regenerate with
+  `:core:presentation:linkDebugFrameworkIosSimulatorArm64` and read
+  `.../CorePresentation.framework/Headers/CorePresentation.h` rather than guessing. Note in particular
+  that the two `ContentState` sealed interfaces collide once Objective-C flattens packages away and
+  are exported as `ContentState` (detail) and `ContentState_` (list) — names that must not appear
+  outside `Support/KotlinSealed.swift`.
+- Kotlin **default arguments and `copy()` do not cross the bridge**. Build Kotlin objects from the
+  exported fakes (`GasStationsFakesKt`, `FakeGasStationsKt`) and mutate state only through ViewModel
+  actions.
+- Optional Kotlin primitives arrive boxed (`KotlinDouble?`); unwrap them in
+  `Support/GasStationFormatting.swift`, not in views.
+
+### Brand assets — pending
+
+`BrandLogo` derives an asset name from the Kotlin enum (`REPSOL` → `logo_repsol`), but **no brand
+artwork exists yet**: Android's logos are XML vector drawables and cannot be reused on iOS. Every
+brand currently renders the `fuelpump.fill` SF Symbol fallback. Dropping correctly named images into
+`Assets.xcassets` is all that is needed — no code change.
 
 ## Commit Message Convention
 
