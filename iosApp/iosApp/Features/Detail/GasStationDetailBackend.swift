@@ -4,7 +4,7 @@ import CorePresentation
 @MainActor
 protocol GasStationDetailBackend: AnyObject {
     var currentState: GasStationDetailUIState { get }
-    func observeState(_ onEach: @escaping (GasStationDetailUIState) -> Void) -> FlowSubscription
+    func observeState(_ onEach: @escaping (GasStationDetailUIState) -> Void) -> any StateSubscription
     func close()
 
     func goBack()
@@ -25,7 +25,7 @@ final class KotlinGasStationDetailBackend: GasStationDetailBackend {
 
     var currentState: GasStationDetailUIState { binding.currentState }
 
-    func observeState(_ onEach: @escaping (GasStationDetailUIState) -> Void) -> FlowSubscription {
+    func observeState(_ onEach: @escaping (GasStationDetailUIState) -> Void) -> any StateSubscription {
         binding.observeState(onEach: onEach)
     }
 

@@ -9,7 +9,7 @@ final class GasStationDetailStore {
     private(set) var state: GasStationDetailUIState
 
     private let backend: GasStationDetailBackend
-    private var subscription: FlowSubscription?
+    private var subscription: (any StateSubscription)?
 
     init(backend: GasStationDetailBackend) {
         self.backend = backend
