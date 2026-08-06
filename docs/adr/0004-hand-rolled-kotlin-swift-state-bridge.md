@@ -100,3 +100,38 @@ into view code, and leave `viewModelScope` uncancelled.
   shows up as a failing test rather than a silent `default` branch.
 - If the shared Kotlin surface grows substantially, revisit SKIE. This ADR is a decision about
   *scale*, not a rejection of the tool.
+
+## What was actually built
+
+The decision held: no new dependency was needed. The implemented bridge is roughly 200 lines of
+Kotlin in `core/presentation/src/iosMain/.../core/interop/`, matching the plan above, plus three
+things the initial write-up did not anticipate:
+
+1. **`IosBindingFactory.createIsolatedNavigationBinding()` and
+   `IosNavigationBinding.requestNavigation(destination:)`.** Because `navigationActions` is
+   single-consumer, a Swift test that subscribed to the shared `Navigator` would steal events from
+   the running app's router. Tests get a binding over a private `DefaultNavigator` instead.
+2. **`uiTestModule` + `initKoinIosForUiTests(simulateStationFailure:)`.** Rather than stubbing the
+   Swift stores for tests, only the outermost boundary is replaced — repositories and the location
+   permission prompt. Everything above it (use cases, ViewModels, `Navigator`, analytics) is the
+   production graph, so an XCUITest exercises the real app.
+3. **`presentationPlatformModule`.** `LocationPermissionController` was registered nowhere; on iOS it
+   is now a Koin `single` (it owns a `CLLocationManager`), following the existing
+   `dataPlatformModule`/`analyticsPlatformModule` seam. Android contributes an empty module, since its
+   implementation needs the hosting Activity.
+
+Two Swift-side pieces turned out to be load-bearing and are worth recording:
+
+- **`isolated deinit` (SE-0371).** A `@MainActor` class's `deinit` is nonisolated and cannot touch
+  isolated state, so the obvious `deinit { binding.close() }` does not compile. Without the isolated
+  form, ViewModel teardown would have had to move into the view lifecycle, and a dropped store would
+  leave `viewModelScope` running. It compiles in Swift 5 language mode and back-deploys to iOS 18.2.
+- **`@LazyStore`.** `@State` evaluates its initial value on *every* `View` struct initialization and
+  discards all but the first. For a store that resolves a ViewModel out of Koin, starts its scope and
+  fires a screen-view analytics event, that meant a full ViewModel built and thrown away on every
+  navigation. The wrapper keeps only a factory in `@State`. (iOS 27 makes `@State` a macro with
+  exactly this behaviour; the wrapper is what provides it on an iOS 18.2 deployment target.)
+
+The costs predicted above showed up as predicted: every screen needs its own binding, and the two
+`ContentState` sealed interfaces are exported as `ContentState` (detail) and `ContentState_` (list),
+a collision the mapping layer has to absorb and hide.
