@@ -1,11 +1,12 @@
 import CorePresentation
 
-// The Objective-C exporter turns Kotlin `sealed interface`s into plain protocols, so Swift gets no
-// exhaustiveness and every `switch` would need a `default` that silently swallows new variants.
+// The Objective-C exporter turns Kotlin `sealed interface`s into plain protocols with no
+// exhaustiveness. SKIE restores it: `onEnum(of:)` yields a real Swift enum with associated values, so
+// **adding a variant on the Kotlin side is now a compile error here** rather than a `default` branch
+// swallowing it at runtime.
 //
-// Every sealed type therefore gets converted to a real Swift enum **here and nowhere else**. Adding a
-// variant on the Kotlin side then breaks exactly one file — this one — plus its tests, instead of
-// disappearing into a `default` branch spread across the view layer.
+// The conversion still happens **here and nowhere else**, so that compile error lands in one file
+// instead of every view that switches on the state.
 //
 // Note the exported names: `feature.list.state.ContentState` and `feature.detail.state.ContentState`
 // collide once Objective-C flattens packages away, and the exporter disambiguates them as
@@ -22,20 +23,12 @@ enum GasStationsContent: Equatable {
     case failure(message: String)
 
     init(_ kotlin: ContentState_) {
-        switch kotlin {
-        case is ContentState_Initial:
-            self = .initial
-        case is ContentState_Loading:
-            self = .loading
-        case let success as ContentState_Success:
-            self = .success(stations: success.stations)
-        case is ContentState_Empty:
-            self = .empty
-        case let failure as ContentState_Error:
-            self = .failure(message: failure.message)
-        default:
-            assertionFailure("Unmapped list ContentState variant: \(type(of: kotlin))")
-            self = .initial
+        switch onEnum(of: kotlin) {
+        case .initial: self = .initial
+        case .loading: self = .loading
+        case .success(let success): self = .success(stations: success.stations)
+        case .empty: self = .empty
+        case .error(let failure): self = .failure(message: failure.message)
         }
     }
 }
@@ -54,16 +47,11 @@ enum GasStationDetailContent: Equatable {
     case notFound
 
     init(_ kotlin: ContentState) {
-        switch kotlin {
-        case is ContentStateLoading:
-            self = .loading
-        case let success as ContentStateSuccess:
+        switch onEnum(of: kotlin) {
+        case .loading: self = .loading
+        case .success(let success):
             self = .success(station: success.gasStation, scheduleDays: success.scheduleDays)
-        case is ContentStateNotFound:
-            self = .notFound
-        default:
-            assertionFailure("Unmapped detail ContentState variant: \(type(of: kotlin))")
-            self = .notFound
+        case .notFound: self = .notFound
         }
     }
 }
@@ -92,14 +80,11 @@ enum FuelKind: String, CaseIterable, Hashable, Identifiable {
     }
 
     init(_ kotlin: FuelFilter) {
-        switch kotlin {
-        case is FuelFilterGasoline95: self = .gasoline95
-        case is FuelFilterGasoline98: self = .gasoline98
-        case is FuelFilterDiesel: self = .diesel
-        case is FuelFilterDieselPremium: self = .dieselPremium
-        default:
-            assertionFailure("Unmapped FuelFilter variant: \(type(of: kotlin))")
-            self = .gasoline95
+        switch onEnum(of: kotlin) {
+        case .gasoline95: self = .gasoline95
+        case .gasoline98: self = .gasoline98
+        case .diesel: self = .diesel
+        case .dieselPremium: self = .dieselPremium
         }
     }
 }
@@ -116,16 +101,10 @@ enum ScheduleStatus: Equatable {
     case hours(start: String, end: String)
 
     init(_ kotlin: ScheduleDayStatus) {
-        switch kotlin {
-        case is ScheduleDayStatusClosed:
-            self = .closed
-        case is ScheduleDayStatusAlwaysOpen:
-            self = .alwaysOpen
-        case let hours as ScheduleDayStatusHours:
-            self = .hours(start: hours.start, end: hours.end)
-        default:
-            assertionFailure("Unmapped ScheduleDayStatus variant: \(type(of: kotlin))")
-            self = .closed
+        switch onEnum(of: kotlin) {
+        case .closed: self = .closed
+        case .alwaysOpen: self = .alwaysOpen
+        case .hours(let hours): self = .hours(start: hours.start, end: hours.end)
         }
     }
 }

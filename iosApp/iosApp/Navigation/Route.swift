@@ -13,13 +13,10 @@ enum Route: Hashable {
     case gasStationDetail(id: String)
 
     init?(_ destination: Destination) {
-        switch destination {
-        case let details as DestinationGasStationDetails:
+        switch onEnum(of: destination) {
+        case .gasStationDetails(let details):
             self = .gasStationDetail(id: details.gasStationId)
-        case is DestinationGasStations:
-            return nil
-        default:
-            assertionFailure("Unmapped Destination variant: \(type(of: destination))")
+        case .gasStations:
             return nil
         }
     }
@@ -32,18 +29,15 @@ enum RouterAction: Equatable {
     case pop
 
     init?(_ action: NavigationAction) {
-        switch action {
-        case is NavigationActionBack:
+        switch onEnum(of: action) {
+        case .back:
             self = .pop
-        case let navigate as NavigationActionNavigate:
+        case .navigate(let navigate):
             if let route = Route(navigate.destination) {
                 self = .push(route)
             } else {
                 self = .popToRoot
             }
-        default:
-            assertionFailure("Unmapped NavigationAction variant: \(type(of: action))")
-            return nil
         }
     }
 }

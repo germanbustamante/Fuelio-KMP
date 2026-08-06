@@ -55,6 +55,7 @@ buildkonfig = "0.22.0"
 # the 1.0.6/1.0.5 releases target Kotlin 2.4.10 and will not link against 2.4.0.
 kmpObservableViewModel = "1.0.5"
 kmpNativeCoroutines = "1.0.4"
+skie = "0.10.14"
 
 [libraries]
 # AndroidX
@@ -153,3 +154,4 @@ googleServices = { id = "com.google.gms.google-services", version.ref = "googleS
 firebaseCrashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlyticsPlugin" }
 buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }
 kmpNativeCoroutines = { id = "com.rickclephas.kmp.nativecoroutines", version.ref = "kmpNativeCoroutines" }
+skie = { id = "co.touchlab.skie", version.ref = "skie" }
