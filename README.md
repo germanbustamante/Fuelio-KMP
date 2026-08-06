@@ -36,6 +36,16 @@ Open [`iosApp/iosApp.xcodeproj`](./iosApp/iosApp.xcodeproj) in Xcode and run fro
 `./gradlew :core:presentation:embedAndSignAppleFrameworkForXcode` automatically, so no manual Gradle
 step is needed first.
 
+Swift dependencies come in via Swift Package Manager (no CocoaPods): Firebase, PostHog, and the Swift
+halves of the two interop libraries — `KMPObservableViewModelSwiftUI` and `KMPNativeCoroutinesAsync`.
+Those two are pinned to the exact versions of their Gradle counterparts; the halves are released in
+lockstep and a mismatch fails at link time. See
+[`docs/adr/0004-kotlin-swift-interop-libraries.md`](./docs/adr/0004-kotlin-swift-interop-libraries.md)
+for what each library covers.
+
+Note that SKIE roughly triples the framework link step, so a cold iOS build is noticeably slower than
+the Kotlin-only tasks suggest.
+
 From the command line:
 
 ```shell
@@ -58,7 +68,7 @@ open core/presentation/build/bin/iosSimulatorArm64/debugFramework/CorePresentati
 ```shell
 ./gradlew :androidApp:testDebugUnitTest              # Compose-dependent code (designsystem, screens)
 ./gradlew :core:presentation:testAndroidHostTest      # ViewModel/state/navigation tests, JVM
-./gradlew :core:presentation:iosSimulatorArm64Test    # Same tests + the iOS bridge, simulator target
+./gradlew :core:presentation:iosSimulatorArm64Test    # Same tests + the iOS DI factory, simulator target
 ./gradlew :core:domain:iosSimulatorArm64Test
 ./gradlew :data:iosSimulatorArm64Test
 ./gradlew :core:analytics:iosSimulatorArm64Test
@@ -71,7 +81,7 @@ xcodebuild test -project iosApp/iosApp.xcodeproj -scheme iosApp \
   -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest'
 
 # One target at a time
-xcodebuild test … -only-testing:iosAppTests      # Swift Testing: stores, mappings, bridge integration
+xcodebuild test … -only-testing:iosAppTests      # Swift Testing: mappings, tokens, interop integration
 xcodebuild test … -only-testing:iosAppUITests    # XCUITest: list, detail, error and accessibility flows
 ```
 
