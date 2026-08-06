@@ -1,12 +1,16 @@
 import SwiftUI
 import CorePresentation
+import KMPObservableViewModelSwiftUI
 
 struct GasStationDetailScreen: View {
 
-    @LazyStore private var store: GasStationDetailStore
+    /// Created once per screen and cleared when the view goes away — see `GasStationsScreen`.
+    @StateViewModel private var viewModel: GasStationDetailViewModel
 
     init(gasStationId: String) {
-        _store = LazyStore { GasStationDetailStore(gasStationId: gasStationId) }
+        _viewModel = StateViewModel(
+            wrappedValue: IosViewModelFactory.shared.gasStationDetail(gasStationId: gasStationId)
+        )
     }
 
     var body: some View {
@@ -17,21 +21,22 @@ struct GasStationDetailScreen: View {
             .navigationBarBackButtonHidden()
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
+                    // Through the ViewModel, never by popping the stack directly, or the analytics
+                    // attached to the action would never fire.
                     Button {
-                        store.goBack()
+                        viewModel.onBackClick()
                     } label: {
                         Label("Back", systemImage: "chevron.backward")
                     }
                     .accessibilityIdentifier(A11yID.detailBackButton)
                 }
             }
-            .task { store.activate() }
     }
 
     private enum ContentKind: Hashable { case loading, loaded, notFound }
 
     private var contentKind: ContentKind {
-        switch store.content {
+        switch viewModel.state.content {
         case .loading: .loading
         case .success: .loaded
         case .notFound: .notFound
@@ -40,7 +45,7 @@ struct GasStationDetailScreen: View {
 
     @ViewBuilder
     private var content: some View {
-        switch store.content {
+        switch viewModel.state.content {
         case .loading:
             ScrollView { FuelioDetailSkeleton() }
 

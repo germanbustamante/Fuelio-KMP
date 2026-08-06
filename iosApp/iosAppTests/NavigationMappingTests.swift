@@ -44,7 +44,7 @@ struct AppRouterTests {
     private func makeRouter() -> AppRouter {
         // An isolated navigator: the shared one is `Channel`-backed and single-consumer, so
         // subscribing to it here would steal events from the app hosting these tests.
-        AppRouter(binding: IosBindingFactory.shared.createIsolatedNavigationBinding())
+        AppRouter(navigator: IosViewModelFactory.shared.isolatedNavigator())
     }
 
     @Test("Pushes and pops the navigation path")
