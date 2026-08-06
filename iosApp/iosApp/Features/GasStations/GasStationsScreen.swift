@@ -1,9 +1,17 @@
 import SwiftUI
 import CorePresentation
+import KMPObservableViewModelSwiftUI
 
 struct GasStationsScreen: View {
 
-    @LazyStore(GasStationsStore.init) private var store
+    /// `@StateViewModel` owns the Kotlin ViewModel's lifetime: it is created once per screen and
+    /// cleared — cancelling `viewModelScope` — when the view goes away. It also observes the state
+    /// annotated `@NativeCoroutinesState`, so there is no subscription to start or tear down here.
+    @StateViewModel private var viewModel = IosViewModelFactory.shared.gasStations()
+
+    /// The Kotlin `GasStationsUIState` is read as-is. Re-mapping it into a parallel Swift struct
+    /// would duplicate the model and invite the two to drift.
+    private var state: GasStationsUIState { viewModel.state }
 
     var body: some View {
         content
@@ -18,34 +26,33 @@ struct GasStationsScreen: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbar }
             .searchable(text: searchBinding, prompt: Text("Search gas station…"))
-            .refreshable { store.refresh() }
+            .refreshable { viewModel.onRefresh() }
             .sheet(isPresented: provinceSheetBinding) {
                 ProvincePickerSheet(
-                    provinces: store.provinces,
-                    selected: store.selectedProvince,
-                    onSelect: { store.selectProvince($0) },
-                    onDismiss: { store.dismissProvincePicker() }
+                    provinces: state.provinces,
+                    selected: state.selectedProvince,
+                    onSelect: { viewModel.onProvinceSelected(province: $0) },
+                    onDismiss: { viewModel.onFilterProvinceToggle(showFilterProvince: false) }
                 )
             }
             // Android shows a Snackbar with an action here. iOS has no Snackbar, and unlike the
             // stale-data notice this one needs a decision from the user, so an alert is the right
             // native equivalent.
             .alert("Location access needed", isPresented: permissionAlertBinding) {
-                Button("Open Settings") { store.openAppSettings() }
+                Button("Open Settings") { viewModel.onOpenAppSettings() }
                     .accessibilityIdentifier(A11yID.permissionAlertSettings)
-                Button("Cancel", role: .cancel) { store.dismissPermissionAlert() }
+                Button("Cancel", role: .cancel) { viewModel.onDismissPermissionSnackbar() }
             } message: {
                 Text("Location access permanently denied. Enable it in Settings to see nearby stations.")
             }
             // A failed background refresh must never blank out data the user can already see, so it
             // surfaces as a transient banner instead of the blocking error state.
             .fuelioBanner(
-                isPresented: store.hasStaleDataError,
+                isPresented: state.staleDataError != nil,
                 message: "Couldn't refresh. Showing saved data.",
                 identifier: A11yID.staleDataBanner,
-                onDismiss: { store.dismissStaleDataError() }
+                onDismiss: { viewModel.onDismissStaleDataError() }
             )
-            .task { store.activate() }
     }
 
     // MARK: - Content
@@ -53,7 +60,7 @@ struct GasStationsScreen: View {
     private enum ContentKind: Hashable { case loading, list, empty, failure }
 
     private var contentKind: ContentKind {
-        switch store.content {
+        switch state.content {
         case .initial, .loading: .loading
         case .success: .list
         case .empty: .empty
@@ -63,7 +70,7 @@ struct GasStationsScreen: View {
 
     @ViewBuilder
     private var content: some View {
-        switch store.content {
+        switch state.content {
         case .initial, .loading:
             ScrollView {
                 FuelioSkeletonList()
@@ -79,7 +86,7 @@ struct GasStationsScreen: View {
                 title: "No matches found",
                 message: "No gas station matches that name or address. Try a different search term.",
                 actionTitle: "Clear search",
-                action: { store.search("") }
+                action: { viewModel.onSearchQueryChanged(query: "") }
             )
             // `ContentUnavailableView` builds its own accessibility container, which swallows a bare
             // `.accessibilityIdentifier`. Declaring the wrapper as a container makes it queryable.
@@ -92,7 +99,7 @@ struct GasStationsScreen: View {
                 message: message,
                 retryTitle: "Retry",
                 retryIdentifier: A11yID.retryButton,
-                onRetry: { store.retry() }
+                onRetry: { viewModel.onRetry() }
             )
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier(A11yID.errorState)
@@ -102,21 +109,26 @@ struct GasStationsScreen: View {
     private func stationList(_ stations: [GasStationItemVO]) -> some View {
         List {
             ForEach(stations, id: \.station.id) { item in
-                let isFavorite = store.isFavorite(item.station.id)
+                // The exported `NSSet<NSString *>` bridges automatically to `Set<String>` here — no
+                // manual conversion needed, since the header exposes it with its generic parameter.
+                let favorites: Set<String> = state.favorites
+                let isFavorite = favorites.contains(item.station.id)
                 GasStationRow(
                     item: item,
                     isFavorite: isFavorite,
-                    onToggleFavorite: { store.toggleFavorite(id: item.station.id) }
+                    onToggleFavorite: { viewModel.onToggleFavorite(stationId: item.station.id) }
                 )
                 .contentShape(.rect)
-                .onTapGesture { store.openStation(id: item.station.id) }
+                // Routed through the ViewModel, not the router, so the selection analytics event
+                // still fires.
+                .onTapGesture { viewModel.onItemClick(stationId: item.station.id) }
                 .accessibilityAddTraits(.isButton)
                 .accessibilityAction(named: isFavorite ? "Remove from favorites" : "Add to favorites") {
-                    store.toggleFavorite(id: item.station.id)
+                    viewModel.onToggleFavorite(stationId: item.station.id)
                 }
                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
                     Button {
-                        store.toggleFavorite(id: item.station.id)
+                        viewModel.onToggleFavorite(stationId: item.station.id)
                     } label: {
                         Label(
                             isFavorite ? "Remove from favorites" : "Add to favorites",
@@ -147,14 +159,14 @@ struct GasStationsScreen: View {
     private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .principal) {
             ProvinceTitleButton(
-                province: store.selectedProvince,
-                onTap: { store.presentProvincePicker() }
+                province: state.selectedProvince,
+                onTap: { viewModel.onFilterProvinceToggle(showFilterProvince: true) }
             )
         }
 
         ToolbarItem(placement: .topBarTrailing) {
             Button {
-                store.detectLocation()
+                viewModel.onDetectLocationTapped()
             } label: {
                 Label("Detect my location", systemImage: "location")
             }
@@ -168,15 +180,15 @@ struct GasStationsScreen: View {
     /// the field feel laggy.
     private var searchBinding: Binding<String> {
         Binding(
-            get: { store.searchQuery },
-            set: { store.search($0) }
+            get: { state.searchQuery },
+            set: { viewModel.onSearchQueryChanged(query: $0) }
         )
     }
 
     private var fuelBinding: Binding<FuelKind> {
         Binding(
-            get: { store.selectedFuel },
-            set: { store.selectFuel($0) }
+            get: { state.fuelKind },
+            set: { viewModel.onFuelFilterSelected(filter: $0.kotlin) }
         )
     }
 
@@ -184,9 +196,9 @@ struct GasStationsScreen: View {
     /// or `showPermissionDeniedPermanentlySnackbar` would stay true and the alert would reappear.
     private var permissionAlertBinding: Binding<Bool> {
         Binding(
-            get: { store.isPermissionAlertPresented },
+            get: { state.showPermissionDeniedPermanentlySnackbar },
             set: { isPresented in
-                if !isPresented { store.dismissPermissionAlert() }
+                if !isPresented { viewModel.onDismissPermissionSnackbar() }
             }
         )
     }
@@ -195,9 +207,9 @@ struct GasStationsScreen: View {
     /// dismissal (swipe-down included) back to it.
     private var provinceSheetBinding: Binding<Bool> {
         Binding(
-            get: { store.isProvincePickerPresented },
+            get: { state.showFilterProvince },
             set: { isPresented in
-                if !isPresented { store.dismissProvincePicker() }
+                if !isPresented { viewModel.onFilterProvinceToggle(showFilterProvince: false) }
             }
         )
     }

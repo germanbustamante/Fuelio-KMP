@@ -14,10 +14,13 @@ interface Navigator {
     @NativeCoroutines
     val navigationActions: Flow<NavigationAction>
 
-    @NativeCoroutines
+    // Deliberately *not* annotated. `@NativeCoroutines` replaces the exported `async` function with a
+    // closure that must be invoked through `asyncFunction(for:)`; calling it as `try await` still
+    // compiles (with only a warning) but silently does nothing. Swift never navigates directly —
+    // screens call a ViewModel action — so the plain export is both safer and closer to the
+    // invariant.
     suspend fun navigate(destination: Destination)
 
-    @NativeCoroutines
     suspend fun navigateUp()
 }
 

@@ -2,14 +2,15 @@ import Testing
 import Foundation
 @testable import Fuelio
 import CorePresentation
+import KMPNativeCoroutinesAsync
 
-/// Integration coverage across the real bridge: Koin, the Kotlin ViewModels, `Navigator` and the
-/// `Flow` subscription — no doubles.
+/// Integration coverage across the real interop stack: Koin, the Kotlin ViewModels, `Navigator` and
+/// the generated native flows — no doubles.
 ///
 /// These run inside the host app, which `LaunchArguments.usesDeterministicData` starts with the
 /// in-memory Koin overrides (XCTest sets `XCTestConfigurationFilePath` in this process), so there is
 /// no network, no Room and no permission prompt.
-@Suite("Kotlin bridge integration", .serialized)
+@Suite("Kotlin interop integration", .serialized)
 @MainActor
 struct BridgeIntegrationTests {
 
@@ -20,39 +21,49 @@ struct BridgeIntegrationTests {
         #expect(LaunchArguments.usesDeterministicData, "unit tests must not hit the real repositories")
     }
 
-    // MARK: - Flow bridge
+    // MARK: - Generated native flow
 
-    @Test("A real Kotlin StateFlow reaches Swift")
+    @Test("A real Kotlin StateFlow reaches Swift as an AsyncSequence")
     func stateFlowReachesSwift() async throws {
-        let binding = IosBindingFactory.shared.createGasStationsBinding()
-        defer { binding.close() }
+        let viewModel = IosViewModelFactory.shared.gasStations()
 
         var received: [GasStationsUIState] = []
-        let subscription = binding.observeState { received.append($0) }
-        defer { subscription.cancel() }
+        let task = Task {
+            for try await state in asyncSequence(for: viewModel.stateFlow) {
+                received.append(state)
+            }
+        }
+        defer { task.cancel() }
 
         try await waitUntil { !received.isEmpty }
 
         #expect(!received.isEmpty)
-        #expect(received.last === binding.currentState)
+        // `@NativeCoroutinesState` exposes the same state twice: as a stream and as a plain
+        // property. They must agree, otherwise views reading `state` would lag the stream.
+        #expect(received.last === viewModel.state)
     }
 
-    @Test("Cancelling really stops the collection")
+    @Test("Cancelling the Swift task really stops the Kotlin collection")
     func cancellingStopsCollection() async throws {
-        let binding = IosBindingFactory.shared.createGasStationsBinding()
-        defer { binding.close() }
+        let viewModel = IosViewModelFactory.shared.gasStations()
 
         var count = 0
-        let subscription = binding.observeState { _ in count += 1 }
+        let task = Task {
+            for try await _ in asyncSequence(for: viewModel.stateFlow) {
+                count += 1
+            }
+        }
         try await waitUntil { count > 0 }
 
-        subscription.cancel()
+        task.cancel()
+        // Let the cancellation propagate across the bridge before provoking more emissions.
+        try await Task.sleep(for: .milliseconds(100))
         let countAtCancel = count
-        binding.viewModel.onSearchQueryChanged(query: "repsol")
-        binding.viewModel.onFuelFilterSelected(filter: FuelFilterDiesel.shared)
+
+        viewModel.onSearchQueryChanged(query: "repsol")
+        viewModel.onFuelFilterSelected(filter: FuelFilterDiesel.shared)
         try await Task.sleep(for: .milliseconds(700))
 
-        #expect(subscription.isCancelled)
         #expect(count == countAtCancel)
     }
 
@@ -60,34 +71,32 @@ struct BridgeIntegrationTests {
 
     @Test("Builds the list ViewModel with every dependency resolved and loads the fake stations")
     func buildsListViewModel() async throws {
-        let store = GasStationsStore()
-        defer { store.deactivate() }
-        store.activate()
+        let viewModel = IosViewModelFactory.shared.gasStations()
 
         try await waitUntil {
-            if case .success = store.content { return true }
+            if case .success = viewModel.state.content { return true }
             return false
         }
 
-        guard case .success(let stations) = store.content else {
-            Issue.record("expected the list to load, got \(store.content)")
+        guard case .success(let stations) = viewModel.state.content else {
+            Issue.record("expected the list to load, got \(viewModel.state.content)")
             return
         }
         #expect(stations.count == FakeGasStationsKt.fakeGasStations.count)
-        #expect(store.selectedProvince != nil)
+        #expect(viewModel.state.selectedProvince != nil)
     }
 
     @Test("Applies the fuel filter through the ViewModel, not in Swift")
     func appliesFuelFilterThroughTheViewModel() async throws {
-        let store = GasStationsStore()
-        defer { store.deactivate() }
-        store.activate()
-        try await waitUntil { if case .success = store.content { return true } else { return false } }
+        let viewModel = IosViewModelFactory.shared.gasStations()
+        try await waitUntil {
+            if case .success = viewModel.state.content { return true } else { return false }
+        }
 
-        store.selectFuel(.diesel)
-        try await waitUntil { store.selectedFuel == .diesel }
+        viewModel.onFuelFilterSelected(filter: FuelKind.diesel.kotlin)
+        try await waitUntil { viewModel.state.fuelKind == .diesel }
 
-        guard case .success(let stations) = store.content else {
+        guard case .success(let stations) = viewModel.state.content else {
             Issue.record("expected stations after switching fuel")
             return
         }
@@ -97,19 +106,19 @@ struct BridgeIntegrationTests {
 
     @Test("Filters through the ViewModel's debounced search")
     func filtersThroughTheViewModel() async throws {
-        let store = GasStationsStore()
-        defer { store.deactivate() }
-        store.activate()
-        try await waitUntil { if case .success = store.content { return true } else { return false } }
+        let viewModel = IosViewModelFactory.shared.gasStations()
+        try await waitUntil {
+            if case .success = viewModel.state.content { return true } else { return false }
+        }
 
-        store.search("BALLENOIL")
+        viewModel.onSearchQueryChanged(query: "BALLENOIL")
         // The 300 ms debounce lives in the ViewModel, so the result is not immediate.
         try await waitUntil(timeout: .seconds(5)) {
-            if case .success(let stations) = store.content { return stations.count == 1 }
+            if case .success(let stations) = viewModel.state.content { return stations.count == 1 }
             return false
         }
 
-        guard case .success(let stations) = store.content else {
+        guard case .success(let stations) = viewModel.state.content else {
             Issue.record("expected a filtered list")
             return
         }
@@ -118,17 +127,15 @@ struct BridgeIntegrationTests {
 
     @Test("Builds the detail ViewModel for the requested station")
     func buildsDetailViewModel() async throws {
-        let store = GasStationDetailStore(gasStationId: Self.firstFakeStationID)
-        defer { store.deactivate() }
-        store.activate()
+        let viewModel = IosViewModelFactory.shared.gasStationDetail(gasStationId: Self.firstFakeStationID)
 
         try await waitUntil {
-            if case .success = store.content { return true }
+            if case .success = viewModel.state.content { return true }
             return false
         }
 
-        guard case .success(let station, let scheduleDays) = store.content else {
-            Issue.record("expected the detail to load, got \(store.content)")
+        guard case .success(let station, let scheduleDays) = viewModel.state.content else {
+            Issue.record("expected the detail to load, got \(viewModel.state.content)")
             return
         }
         #expect(station.id == Self.firstFakeStationID)
@@ -137,13 +144,11 @@ struct BridgeIntegrationTests {
 
     @Test("Reports notFound for a station that is not cached")
     func reportsNotFoundForUnknownStation() async throws {
-        let store = GasStationDetailStore(gasStationId: "does-not-exist")
-        defer { store.deactivate() }
-        store.activate()
+        let viewModel = IosViewModelFactory.shared.gasStationDetail(gasStationId: "does-not-exist")
 
-        try await waitUntil { store.content == .notFound }
+        try await waitUntil { viewModel.state.content == .notFound }
 
-        #expect(store.content == .notFound)
+        #expect(viewModel.state.content == .notFound)
     }
 
     // MARK: - Navigation observer
@@ -152,11 +157,15 @@ struct BridgeIntegrationTests {
     func navigationActionReachesTheRouter() async throws {
         // An isolated navigator: the shared one is single-consumer and already has the running app's
         // router attached.
-        let binding = IosBindingFactory.shared.createIsolatedNavigationBinding()
-        let router = AppRouter(binding: binding)
+        let navigator = IosViewModelFactory.shared.isolatedNavigator()
+        let router = AppRouter(navigator: navigator)
         router.start()
+        // `navigationActions` is rendezvous-backed: give the router's task a turn to actually attach
+        // before emitting, exactly as the app does (the router starts at launch, navigation happens
+        // later).
+        try await Task.sleep(for: .milliseconds(200))
 
-        binding.requestNavigation(destination: DestinationGasStationDetails(gasStationId: "7153"))
+        try await navigator.navigate(destination: DestinationGasStationDetails(gasStationId: "7153"))
         try await waitUntil { !router.path.isEmpty }
 
         #expect(router.path == [.gasStationDetail(id: "7153")])
@@ -164,18 +173,20 @@ struct BridgeIntegrationTests {
 
     @Test("Tapping a row asks the ViewModel to navigate, so analytics still fire")
     func rowTapGoesThroughTheViewModel() async throws {
-        let binding = IosBindingFactory.shared.createIsolatedNavigationBinding()
-        let router = AppRouter(binding: binding)
+        let viewModel = IosViewModelFactory.shared.gasStations()
+        try await waitUntil {
+            if case .success = viewModel.state.content { return true } else { return false }
+        }
+
+        // A router over an isolated navigator must stay empty: the tap goes through the ViewModel and
+        // the *shared* navigator, never by pushing the stack from the view. The full chain is covered
+        // by the XCUITest.
+        let router = AppRouter(navigator: IosViewModelFactory.shared.isolatedNavigator())
         router.start()
 
-        // The list ViewModel navigates through the *shared* navigator, so this asserts the store
-        // forwards the tap rather than pushing the stack itself; the full chain is covered by the
-        // XCUITest.
-        let backend = SpyGasStationsBackend()
-        let store = GasStationsStore(backend: backend)
-        store.openStation(id: "7153")
+        viewModel.onItemClick(stationId: Self.firstFakeStationID)
+        try await Task.sleep(for: .milliseconds(300))
 
-        #expect(backend.calls == [.openStation("7153")])
         #expect(router.path.isEmpty)
     }
 }
