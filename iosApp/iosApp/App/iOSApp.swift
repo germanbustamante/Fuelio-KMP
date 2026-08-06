@@ -17,7 +17,7 @@ struct iOSApp: App {
             PostHogTracker_iosKt.registerNativePostHogTracker(tracker: PostHogTrackerBridge())
         }
 
-        if LaunchArguments.isUITestMode {
+        if LaunchArguments.usesDeterministicData {
             KoinInitIosKt.doInitKoinIosForUiTests()
         } else {
             KoinInitIosKt.doInitKoinIos()

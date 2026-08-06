@@ -13,7 +13,7 @@ final class GasStationsStore {
     private(set) var state: GasStationsUIState
 
     private let backend: GasStationsBackend
-    private var subscription: FlowSubscription?
+    private var subscription: (any StateSubscription)?
 
     init(backend: GasStationsBackend) {
         self.backend = backend
