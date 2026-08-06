@@ -1,4 +1,4 @@
-import Foundation
+import XCTest
 
 /// Accessibility identifiers and launch flags used by the UI tests.
 ///
@@ -36,4 +36,30 @@ enum UITestSupport {
     static let detailPricesSection = "detail_prices_section"
 
     static let permissionAlertSettings = "permission_alert_settings"
+}
+
+extension XCUIApplication {
+
+    /// Looks an element up by identifier regardless of the element *type* SwiftUI ends up exposing.
+    /// A row that merges its children (`.accessibilityElement(children: .combine)`) surfaces as a
+    /// button, a cell or an `other` depending on the traits applied, so pinning the query to one type
+    /// makes tests brittle for no benefit.
+    func element(id: String) -> XCUIElement {
+        descendants(matching: .any).matching(identifier: id).firstMatch
+    }
+
+    /// Launches with the deterministic in-memory Koin graph.
+    ///
+    /// The unit-test bundle is hosted by this same app, so an instance may still be shutting down
+    /// when the UI tests start; SpringBoard then rejects the launch with "Application failed
+    /// preflight checks". Terminating first makes the launch deterministic.
+    @discardableResult
+    func launchForUITests() -> XCUIApplication {
+        if state != .notRunning {
+            terminate()
+        }
+        launchArguments = [UITestSupport.uiTestMode]
+        launch()
+        return self
+    }
 }
