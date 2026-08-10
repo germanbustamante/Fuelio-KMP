@@ -2,6 +2,14 @@ import SwiftUI
 import CorePresentation
 import KMPObservableViewModelSwiftUI
 
+/// Owns the ViewModel's lifetime and forwards its state and actions to `GasStationsScreenBody`, which
+/// does the actual rendering.
+///
+/// The split exists so `#Preview` can render `GasStationsScreenBody` directly with a fake
+/// `GasStationsUIState` and no-op closures, never touching `IosViewModelFactory`/Koin or constructing
+/// `viewModelScope`. Resolving the real ViewModel under Xcode's Previews JIT executor crashes (Kotlin/
+/// Native's `Dispatchers.Main` initialization doesn't tolerate that non-standard launch path), so
+/// previews must stay on the stateless half of the screen.
 struct GasStationsScreen: View {
 
     /// `@StateViewModel` owns the Kotlin ViewModel's lifetime: it is created once per screen and
@@ -9,9 +17,42 @@ struct GasStationsScreen: View {
     /// annotated `@NativeCoroutinesState`, so there is no subscription to start or tear down here.
     @StateViewModel private var viewModel = IosViewModelFactory.shared.gasStations()
 
-    /// The Kotlin `GasStationsUIState` is read as-is. Re-mapping it into a parallel Swift struct
-    /// would duplicate the model and invite the two to drift.
-    private var state: GasStationsUIState { viewModel.state }
+    var body: some View {
+        GasStationsScreenBody(
+            state: viewModel.state,
+            onRefresh: { viewModel.onRefresh() },
+            onProvinceSelected: { viewModel.onProvinceSelected(province: $0) },
+            onFilterProvinceToggle: { viewModel.onFilterProvinceToggle(showFilterProvince: $0) },
+            onOpenAppSettings: { viewModel.onOpenAppSettings() },
+            onDismissPermissionSnackbar: { viewModel.onDismissPermissionSnackbar() },
+            onDismissStaleDataError: { viewModel.onDismissStaleDataError() },
+            onSearchQueryChanged: { viewModel.onSearchQueryChanged(query: $0) },
+            onFuelFilterSelected: { viewModel.onFuelFilterSelected(filter: $0.kotlin) },
+            onToggleFavorite: { viewModel.onToggleFavorite(stationId: $0) },
+            onItemClick: { viewModel.onItemClick(stationId: $0) },
+            onRetry: { viewModel.onRetry() },
+            onDetectLocationTapped: { viewModel.onDetectLocationTapped() }
+        )
+    }
+}
+
+/// Pure rendering over `state` and the actions it's handed — never reaches for the ViewModel or Koin
+/// itself, which is what makes it safe to instantiate from `#Preview`.
+struct GasStationsScreenBody: View {
+
+    let state: GasStationsUIState
+    let onRefresh: () -> Void
+    let onProvinceSelected: (DomainProvinceBO) -> Void
+    let onFilterProvinceToggle: (Bool) -> Void
+    let onOpenAppSettings: () -> Void
+    let onDismissPermissionSnackbar: () -> Void
+    let onDismissStaleDataError: () -> Void
+    let onSearchQueryChanged: (String) -> Void
+    let onFuelFilterSelected: (FuelKind) -> Void
+    let onToggleFavorite: (String) -> Void
+    let onItemClick: (String) -> Void
+    let onRetry: () -> Void
+    let onDetectLocationTapped: () -> Void
 
     var body: some View {
         content
@@ -26,22 +67,22 @@ struct GasStationsScreen: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbar }
             .searchable(text: searchBinding, prompt: Text("Search gas station…"))
-            .refreshable { viewModel.onRefresh() }
+            .refreshable { onRefresh() }
             .sheet(isPresented: provinceSheetBinding) {
                 ProvincePickerSheet(
                     provinces: state.provinces,
                     selected: state.selectedProvince,
-                    onSelect: { viewModel.onProvinceSelected(province: $0) },
-                    onDismiss: { viewModel.onFilterProvinceToggle(showFilterProvince: false) }
+                    onSelect: onProvinceSelected,
+                    onDismiss: { onFilterProvinceToggle(false) }
                 )
             }
             // Android shows a Snackbar with an action here. iOS has no Snackbar, and unlike the
             // stale-data notice this one needs a decision from the user, so an alert is the right
             // native equivalent.
             .alert("Location access needed", isPresented: permissionAlertBinding) {
-                Button("Open Settings") { viewModel.onOpenAppSettings() }
+                Button("Open Settings") { onOpenAppSettings() }
                     .accessibilityIdentifier(A11yID.permissionAlertSettings)
-                Button("Cancel", role: .cancel) { viewModel.onDismissPermissionSnackbar() }
+                Button("Cancel", role: .cancel) { onDismissPermissionSnackbar() }
             } message: {
                 Text("Location access permanently denied. Enable it in Settings to see nearby stations.")
             }
@@ -51,7 +92,7 @@ struct GasStationsScreen: View {
                 isPresented: state.staleDataError != nil,
                 message: "Couldn't refresh. Showing saved data.",
                 identifier: A11yID.staleDataBanner,
-                onDismiss: { viewModel.onDismissStaleDataError() }
+                onDismiss: onDismissStaleDataError
             )
     }
 
@@ -86,7 +127,7 @@ struct GasStationsScreen: View {
                 title: "No matches found",
                 message: "No gas station matches that name or address. Try a different search term.",
                 actionTitle: "Clear search",
-                action: { viewModel.onSearchQueryChanged(query: "") }
+                action: { onSearchQueryChanged("") }
             )
             // `ContentUnavailableView` builds its own accessibility container, which swallows a bare
             // `.accessibilityIdentifier`. Declaring the wrapper as a container makes it queryable.
@@ -99,7 +140,7 @@ struct GasStationsScreen: View {
                 message: message,
                 retryTitle: "Retry",
                 retryIdentifier: A11yID.retryButton,
-                onRetry: { viewModel.onRetry() }
+                onRetry: onRetry
             )
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier(A11yID.errorState)
@@ -116,19 +157,19 @@ struct GasStationsScreen: View {
                 GasStationRow(
                     item: item,
                     isFavorite: isFavorite,
-                    onToggleFavorite: { viewModel.onToggleFavorite(stationId: item.station.id) }
+                    onToggleFavorite: { onToggleFavorite(item.station.id) }
                 )
                 .contentShape(.rect)
                 // Routed through the ViewModel, not the router, so the selection analytics event
                 // still fires.
-                .onTapGesture { viewModel.onItemClick(stationId: item.station.id) }
+                .onTapGesture { onItemClick(item.station.id) }
                 .accessibilityAddTraits(.isButton)
                 .accessibilityAction(named: isFavorite ? "Remove from favorites" : "Add to favorites") {
-                    viewModel.onToggleFavorite(stationId: item.station.id)
+                    onToggleFavorite(item.station.id)
                 }
                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
                     Button {
-                        viewModel.onToggleFavorite(stationId: item.station.id)
+                        onToggleFavorite(item.station.id)
                     } label: {
                         Label(
                             isFavorite ? "Remove from favorites" : "Add to favorites",
@@ -160,13 +201,13 @@ struct GasStationsScreen: View {
         ToolbarItem(placement: .principal) {
             ProvinceTitleButton(
                 province: state.selectedProvince,
-                onTap: { viewModel.onFilterProvinceToggle(showFilterProvince: true) }
+                onTap: { onFilterProvinceToggle(true) }
             )
         }
 
         ToolbarItem(placement: .topBarTrailing) {
             Button {
-                viewModel.onDetectLocationTapped()
+                onDetectLocationTapped()
             } label: {
                 Label("Detect my location", systemImage: "location")
             }
@@ -181,14 +222,14 @@ struct GasStationsScreen: View {
     private var searchBinding: Binding<String> {
         Binding(
             get: { state.searchQuery },
-            set: { viewModel.onSearchQueryChanged(query: $0) }
+            set: { onSearchQueryChanged($0) }
         )
     }
 
     private var fuelBinding: Binding<FuelKind> {
         Binding(
             get: { state.fuelKind },
-            set: { viewModel.onFuelFilterSelected(filter: $0.kotlin) }
+            set: { onFuelFilterSelected($0) }
         )
     }
 
@@ -198,7 +239,7 @@ struct GasStationsScreen: View {
         Binding(
             get: { state.showPermissionDeniedPermanentlySnackbar },
             set: { isPresented in
-                if !isPresented { viewModel.onDismissPermissionSnackbar() }
+                if !isPresented { onDismissPermissionSnackbar() }
             }
         )
     }
@@ -209,7 +250,7 @@ struct GasStationsScreen: View {
         Binding(
             get: { state.showFilterProvince },
             set: { isPresented in
-                if !isPresented { viewModel.onFilterProvinceToggle(showFilterProvince: false) }
+                if !isPresented { onFilterProvinceToggle(false) }
             }
         )
     }
@@ -217,20 +258,82 @@ struct GasStationsScreen: View {
 
 #Preview {
     NavigationStack {
-        GasStationsScreen()
+        GasStationsScreenBody(
+            state: GasStationsFakesKt.fakeGasStationsUIState,
+            onRefresh: {},
+            onProvinceSelected: { _ in },
+            onFilterProvinceToggle: { _ in },
+            onOpenAppSettings: {},
+            onDismissPermissionSnackbar: {},
+            onDismissStaleDataError: {},
+            onSearchQueryChanged: { _ in },
+            onFuelFilterSelected: { _ in },
+            onToggleFavorite: { _ in },
+            onItemClick: { _ in },
+            onRetry: {},
+            onDetectLocationTapped: {}
+        )
     }
 }
 
 #Preview("Accessibility XXXL") {
     NavigationStack {
-        GasStationsScreen()
+        GasStationsScreenBody(
+            state: GasStationsFakesKt.fakeGasStationsUIState,
+            onRefresh: {},
+            onProvinceSelected: { _ in },
+            onFilterProvinceToggle: { _ in },
+            onOpenAppSettings: {},
+            onDismissPermissionSnackbar: {},
+            onDismissStaleDataError: {},
+            onSearchQueryChanged: { _ in },
+            onFuelFilterSelected: { _ in },
+            onToggleFavorite: { _ in },
+            onItemClick: { _ in },
+            onRetry: {},
+            onDetectLocationTapped: {}
+        )
     }
     .dynamicTypeSize(.accessibility3)
 }
 
 #Preview("Dark") {
     NavigationStack {
-        GasStationsScreen()
+        GasStationsScreenBody(
+            state: GasStationsFakesKt.fakeGasStationsUIState,
+            onRefresh: {},
+            onProvinceSelected: { _ in },
+            onFilterProvinceToggle: { _ in },
+            onOpenAppSettings: {},
+            onDismissPermissionSnackbar: {},
+            onDismissStaleDataError: {},
+            onSearchQueryChanged: { _ in },
+            onFuelFilterSelected: { _ in },
+            onToggleFavorite: { _ in },
+            onItemClick: { _ in },
+            onRetry: {},
+            onDetectLocationTapped: {}
+        )
     }
     .preferredColorScheme(.dark)
+}
+
+#Preview("Error") {
+    NavigationStack {
+        GasStationsScreenBody(
+            state: GasStationsFakesKt.fakeGasStationsUIStateError,
+            onRefresh: {},
+            onProvinceSelected: { _ in },
+            onFilterProvinceToggle: { _ in },
+            onOpenAppSettings: {},
+            onDismissPermissionSnackbar: {},
+            onDismissStaleDataError: {},
+            onSearchQueryChanged: { _ in },
+            onFuelFilterSelected: { _ in },
+            onToggleFavorite: { _ in },
+            onItemClick: { _ in },
+            onRetry: {},
+            onDetectLocationTapped: {}
+        )
+    }
 }

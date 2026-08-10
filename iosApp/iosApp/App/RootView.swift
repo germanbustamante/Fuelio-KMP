@@ -23,7 +23,3 @@ struct RootView: View {
         .task { router.start() }
     }
 }
-
-#Preview {
-    RootView()
-}
