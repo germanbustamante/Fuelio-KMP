@@ -9,6 +9,7 @@ object PermissionResultBridge {
     private var continuation: CancellableContinuation<Boolean>? = null
 
     suspend fun awaitResult(): Boolean = suspendCancellableCoroutine { cont ->
+        continuation?.cancel()
         continuation = cont
         cont.invokeOnCancellation { continuation = null }
     }
