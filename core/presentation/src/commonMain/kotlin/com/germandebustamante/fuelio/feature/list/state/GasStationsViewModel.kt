@@ -210,7 +210,7 @@ class GasStationsViewModel(
     fun onSearchQueryChanged(query: String) {
         // Update the text field immediately; filtering is debounced in observeSearchQuery
         updateState { it.copy(searchQuery = query) }
-        _searchQueryFlow.value = query
+        _searchQueryFlow.update { query }
     }
 
     //endregion
@@ -300,9 +300,7 @@ class GasStationsViewModel(
 
     fun onRetry() {
         updateState { it.withErrorCleared() }
-        _selectedProvince.value?.let {
-            _selectedProvince.update { it }
-        }
+        viewModelScope.launch { _refreshTrigger.emit(Unit) }
     }
 
     fun onItemClick(stationId: String) {
