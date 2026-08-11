@@ -1,19 +1,10 @@
 import SwiftUI
 import CorePresentation
 
-// Display helpers over the exported Kotlin models. Formatting of *numbers* stays in Kotlin
-// (`formatAsEuros`/`formatAsKilometers`) so Android and iOS cannot drift; only presentation choices
-// that are genuinely platform-specific live here.
-
-extension DomainGasStationBO {
-
-    /// Upstream data is fully upper-cased ("REPSOL", "S.C.A. NTRA. SRA. DE LA FUENSANTA"), which reads
-    /// as shouting. Android applies the same first-letter capitalization.
-    var displayName: String {
-        guard let first = name.first else { return name }
-        return first.uppercased() + name.dropFirst().lowercased()
-    }
-}
+// Display helpers over the exported Kotlin models. Formatting — of numbers (`formatAsEuros`/
+// `formatAsKilometers`) and of the station name (`GasStationBO.displayName`, exported directly as a
+// native Swift property, no wrapper needed) — stays in Kotlin so Android and iOS cannot drift; only
+// presentation choices that are genuinely platform-specific live here.
 
 extension GasStationItemVO {
 
