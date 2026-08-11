@@ -121,8 +121,8 @@ internal val LightColorScheme = lightColorScheme(
 
 internal val DarkColorScheme = darkColorScheme(
     // Primary
-    primary = DeepOrange300,
-    onPrimary = DeepOrange900,
+    primary = DeepOrange500,
+    onPrimary = Color.White,
     primaryContainer = DeepOrange950,
     onPrimaryContainer = DeepOrange100,
 

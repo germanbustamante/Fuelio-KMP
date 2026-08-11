@@ -33,7 +33,7 @@
     <string name="detail_schedule_open_24h">Abierto 24h</string>
     <string name="detail_not_found_title">Gasolinera no disponible</string>
     <string name="detail_not_found_subtitle">Esta gasolinera todavía no está guardada localmente. Vuelve a la lista para cargarla primero.</string>
-    <string name="detail_map_placeholder">Vista previa del mapa próximamente</string>
+    <string name="detail_map_showing">Mapa mostrando %1$s</string>
     <string name="day_monday">Lunes</string>
     <string name="day_tuesday">Martes</string>
     <string name="day_wednesday">Miércoles</string>

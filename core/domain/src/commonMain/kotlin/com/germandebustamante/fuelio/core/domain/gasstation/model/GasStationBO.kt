@@ -20,6 +20,8 @@ data class GasStationBO(
 ) {
      val brand: GasStationBrand? by lazy(LazyThreadSafetyMode.NONE) { GasStationBrand.fromName(name) }
 
+    val displayName: String by lazy(LazyThreadSafetyMode.NONE) { name.lowercase().replaceFirstChar { it.uppercase() } }
+
     fun getFullDirection() = "$address, $zipCode $municipality"
 
     fun isOpen(now: LocalDateTime): Boolean {
