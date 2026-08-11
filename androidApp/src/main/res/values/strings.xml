@@ -35,7 +35,7 @@
     <string name="detail_schedule_open_24h">Open 24h</string>
     <string name="detail_not_found_title">Gas station not available</string>
     <string name="detail_not_found_subtitle">This station isn\'t cached locally yet. Go back to the list to load it first.</string>
-    <string name="detail_map_placeholder">Map preview coming soon</string>
+    <string name="detail_map_showing">Map showing %1$s</string>
     <string name="day_monday">Monday</string>
     <string name="day_tuesday">Tuesday</string>
     <string name="day_wednesday">Wednesday</string>

@@ -14,6 +14,19 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${MAPS_API_KEY}" />
+
+        <!-- Google Play services' Maps Dynamite module still touches org.apache.http.* by
+             reflection, which the Android bootclasspath no longer provides by default for apps
+             targeting API 28+. Without this, some devices/emulators crash on first map render
+             with NoClassDefFoundError: org.apache.http.ProtocolVersion. -->
+        <uses-library
+            android:name="org.apache.http.legacy"
+            android:required="false" />
+
         <activity
             android:exported="true"
             android:name=".MainActivity">

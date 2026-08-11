@@ -26,8 +26,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.capitalize
-import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.AndroidUiModes
 import androidx.compose.ui.tooling.preview.Preview
@@ -53,7 +51,7 @@ fun GasStationItem(
     onToggleFavorite: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val stationName = gasStation.station.name.lowercase().capitalize(Locale.current)
+    val stationName = gasStation.station.displayName
     val address = gasStation.station.getFullDirection()
     val openLabel = stringResource(if (gasStation.isOpen) R.string.open else R.string.closed)
     val distanceLabel = gasStation.distanceInKilometers?.let { stringResource(R.string.at_distance, it.formatAsKilometers()) } ?: ""

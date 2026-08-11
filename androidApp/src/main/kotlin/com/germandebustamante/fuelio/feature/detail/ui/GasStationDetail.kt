@@ -2,11 +2,11 @@
 
 package com.germandebustamante.fuelio.feature.detail.ui
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -28,11 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.annotation.StringRes
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.AndroidUiModes
@@ -46,9 +41,6 @@ import com.germandebustamante.fuelio.core.navigation.destination.Destination
 import com.germandebustamante.fuelio.core.ui.theme.FuelioSpacing
 import com.germandebustamante.fuelio.core.ui.theme.FuelioTheme
 import com.germandebustamante.fuelio.core.util.formatAsEuros
-import com.germandebustamante.fuelio.designsystem.button.FuelioTextButton
-import com.germandebustamante.fuelio.designsystem.button.config.text.TextButtonConfig
-import com.germandebustamante.fuelio.designsystem.button.config.text.TextButtonSize
 import com.germandebustamante.fuelio.designsystem.card.FuelioCard
 import com.germandebustamante.fuelio.designsystem.emptystate.FuelioEmptyState
 import com.germandebustamante.fuelio.designsystem.progress.SkeletonBox
@@ -108,7 +100,9 @@ private fun GasStationDetail(
             targetState = state.contentState,
             label = "detail_content_state",
             transitionSpec = { fadeIn() togetherWith fadeOut() },
-            modifier = Modifier.padding(padding).fillMaxSize(),
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize(),
         ) { contentState ->
             when (contentState) {
                 ContentState.Loading -> GasStationDetailSkeleton(modifier = Modifier.fillMaxSize())
@@ -117,6 +111,7 @@ private fun GasStationDetail(
                     scheduleDays = contentState.scheduleDays,
                     modifier = Modifier.fillMaxSize(),
                 )
+
                 ContentState.NotFound -> FuelioEmptyState(
                     title = stringResource(R.string.detail_not_found_title),
                     subtitle = stringResource(R.string.detail_not_found_subtitle),
@@ -140,8 +135,7 @@ private fun GasStationDetailContent(
     scheduleDays: List<ScheduleDayVO>,
     modifier: Modifier = Modifier,
 ) {
-    val uriHandler = LocalUriHandler.current
-    val stationName = gasStation.station()
+    val stationName = gasStation.displayName
 
     LazyColumn(
         modifier = modifier,
@@ -162,51 +156,13 @@ private fun GasStationDetailContent(
             }
         }
 
-        item { MapPlaceholder() }
+        item { GasStationMapPreview(stationName, gasStation.latitude, gasStation.longitude) }
 
-        item {
-            FuelioTextButton(
-                text = stringResource(R.string.detail_directions_button),
-                onClick = {
-                    uriHandler.openUri(
-                        "https://www.google.com/maps/dir/?api=1&destination=${gasStation.latitude},${gasStation.longitude}",
-                    )
-                },
-                config = TextButtonConfig(size = TextButtonSize.LARGE),
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
+        item { GasStationDirectionsButton(gasStation) }
 
         item { PricesSection(gasStation) }
 
         item { ScheduleSection(scheduleDays) }
-    }
-}
-
-private fun GasStationBO.station(): String = name.lowercase().replaceFirstChar { it.uppercase() }
-
-@Composable
-private fun MapPlaceholder(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .aspectRatio(16f / 9f)
-            .clip(MaterialTheme.shapes.large)
-            .background(MaterialTheme.colorScheme.surfaceVariant),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(FuelioSpacing.xs)) {
-            Icon(
-                imageVector = Icons.Filled.LocationOn,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text = stringResource(R.string.detail_map_placeholder),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
     }
 }
 
@@ -284,7 +240,9 @@ private fun ScheduleSection(scheduleDays: List<ScheduleDayVO>, modifier: Modifie
                         is ScheduleDayStatus.Hours -> "${status.start}–${status.end}"
                     }
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = FuelioSpacing.sm),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = FuelioSpacing.sm),
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text(

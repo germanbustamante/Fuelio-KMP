@@ -188,7 +188,7 @@ private fun ButtonContent(
 private fun Boolean.toTextButtonState() = if (this) TextButtonState.LOADING else TextButtonState.IDLE
 
 @Composable
-@Preview
+@Preview(uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
 private fun ButtonPreview() {
     var state by rememberSaveable { mutableStateOf(TextButtonState.IDLE) }
     FuelioTheme {
