@@ -2,6 +2,7 @@ package com.germandebustamante.fuelio.core.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
@@ -13,8 +14,11 @@ import androidx.savedstate.serialization.SavedStateConfiguration
 import com.germandebustamante.fuelio.core.flow.ObserveAsEvent
 import com.germandebustamante.fuelio.core.navigation.action.NavigationAction
 import com.germandebustamante.fuelio.core.navigation.action.Navigator
+import com.germandebustamante.fuelio.core.navigation.deeplink.ExternalUriHandler
+import com.germandebustamante.fuelio.core.navigation.deeplink.parseDeepLink
 import com.germandebustamante.fuelio.core.navigation.destination.Destination
 import com.germandebustamante.fuelio.core.navigation.destination.DestinationNavKey
+import com.germandebustamante.fuelio.core.navigation.destination.buildSyntheticBackStack
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import com.germandebustamante.fuelio.feature.detail.ui.GasStationDetail
 import com.germandebustamante.fuelio.feature.list.ui.GasStationsScreen
@@ -34,6 +38,16 @@ fun FuelioNavHost(locationPermissionController: LocationPermissionController) {
             is NavigationAction.Navigate -> backStack.add(DestinationNavKey(action.destination))
             is NavigationAction.Back -> backStack.removeLastOrNull()
         }
+    }
+
+    DisposableEffect(Unit) {
+        ExternalUriHandler.listener = { uri ->
+            parseDeepLink(uri)?.let { destination ->
+                backStack.clear()
+                backStack.addAll(buildSyntheticBackStack(destination).map { DestinationNavKey(it) })
+            }
+        }
+        onDispose { ExternalUriHandler.listener = null }
     }
 
     NavDisplay(
