@@ -35,6 +35,9 @@ struct iOSApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .onOpenURL { url in
+                    ExternalUriHandler.shared.onNewUri(uri: url.absoluteString)
+                }
         }
     }
 }
