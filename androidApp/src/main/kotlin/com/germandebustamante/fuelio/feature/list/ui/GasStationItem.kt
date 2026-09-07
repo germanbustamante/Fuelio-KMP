@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -33,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.germandebustamante.fuelio.R
 import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationBrand
 import com.germandebustamante.fuelio.core.fake.fakeGasStations
+import com.germandebustamante.fuelio.core.testing.A11yIdentifiers
 import com.germandebustamante.fuelio.core.ui.theme.FuelioSpacing
 import com.germandebustamante.fuelio.core.ui.theme.FuelioTheme
 import com.germandebustamante.fuelio.core.util.formatAsEuros
@@ -64,6 +66,7 @@ fun GasStationItem(
     FuelioCard(
         onClick = onItemClick,
         modifier = modifier
+            .testTag(A11yIdentifiers.stationRow(gasStation.station.id))
             .fillMaxWidth()
             .semantics(mergeDescendants = true) { contentDescription = a11yDesc },
     ) {
@@ -83,6 +86,7 @@ fun GasStationItem(
                         text = priceLabel,
                         style = MaterialTheme.typography.headlineMedium,
                         color = if (gasStation.isCheapest) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.testTag(A11yIdentifiers.stationPrice(gasStation.station.id)),
                     )
                     Text(
                         text = "/L",
@@ -100,7 +104,9 @@ fun GasStationItem(
                     IconToggleButton(
                         checked = isFavorite,
                         onCheckedChange = { onToggleFavorite() },
-                        modifier = Modifier.size(32.dp),
+                        modifier = Modifier
+                            .testTag(A11yIdentifiers.favoriteButton(gasStation.station.id))
+                            .size(32.dp),
                     ) {
                         Icon(
                             imageVector = if (isFavorite) Icons.Filled.Star else Icons.Outlined.StarBorder,

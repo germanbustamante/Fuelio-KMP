@@ -75,6 +75,12 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        // FuelioTestRunner swaps in FuelioTestApplication, which starts Koin with the shared
+        // uiTestModule fakes — the Android mirror of iOS's initKoinIosForUiTests, so the
+        // instrumentation suite exercises the real app without the network, Room, or a system
+        // permission dialog.
+        testInstrumentationRunner = "com.germandebustamante.fuelio.FuelioTestRunner"
+
         // Maps SDK reads its key from this manifest placeholder at runtime, not from Kotlin code,
         // so it can't go through BuildKonfig like POSTHOG_API_KEY.
         manifestPlaceholders[BuildConstants.MAPS_API_KEY_MANIFEST_PLACEHOLDER] =
@@ -173,4 +179,12 @@ dependencies {
     debugImplementation(compose.uiTooling)
 
     testImplementation(libs.kotlin.test)
+
+    androidTestImplementation(libs.ui.test.junit4)
+    androidTestImplementation(libs.androidx.runner)
+    androidTestImplementation(libs.androidx.rules)
+    androidTestImplementation(libs.androidx.testExt.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
+    debugImplementation(libs.androidx.ui.test.manifest)
 }

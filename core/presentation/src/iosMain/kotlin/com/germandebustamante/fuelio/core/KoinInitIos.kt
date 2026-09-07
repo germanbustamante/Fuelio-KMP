@@ -1,6 +1,6 @@
 package com.germandebustamante.fuelio.core
 
-import com.germandebustamante.fuelio.core.interop.uiTestModule
+import com.germandebustamante.fuelio.core.testing.uiTestModule
 import com.germandebustamante.fuelio.di.initKoin
 
 fun initKoinIos() {

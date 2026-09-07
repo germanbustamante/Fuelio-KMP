@@ -5,13 +5,15 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import com.germandebustamante.fuelio.core.testing.A11yIdentifiers
 import com.germandebustamante.fuelio.core.ui.theme.FuelioSpacing
 import com.germandebustamante.fuelio.designsystem.progress.FuelioGasStationItemSkeleton
 
 @Composable
 fun GasStationsLoadingSkeleton(modifier: Modifier = Modifier) {
     LazyColumn(
-        modifier = modifier,
+        modifier = modifier.testTag(A11yIdentifiers.LOADING_SKELETON),
         contentPadding = PaddingValues(
             start = FuelioSpacing.md,
             end = FuelioSpacing.md,

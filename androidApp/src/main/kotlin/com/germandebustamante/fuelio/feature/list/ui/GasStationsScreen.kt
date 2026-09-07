@@ -52,11 +52,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.AndroidUiModes
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.germandebustamante.fuelio.core.domain.province.model.ProvinceBO
+import com.germandebustamante.fuelio.core.testing.A11yIdentifiers
 import com.germandebustamante.fuelio.core.ui.theme.FuelioSpacing
 import com.germandebustamante.fuelio.core.ui.theme.FuelioTheme
 import com.germandebustamante.fuelio.designsystem.button.FuelioIconButton
@@ -162,7 +166,9 @@ private fun GasStationsScreen(
                             )
                             state.selectedProvince?.let { province ->
                                 Row(
-                                    modifier = Modifier.clickable { onFilterProvinceToggle(true) }
+                                    modifier = Modifier
+                                        .testTag(A11yIdentifiers.PROVINCE_BUTTON)
+                                        .clickable { onFilterProvinceToggle(true) }
                                         .padding(horizontal = 4.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(FuelioSpacing.xxs),
@@ -187,6 +193,8 @@ private fun GasStationsScreen(
                         onClick = onDetectLocationTapped,
                         drawableRes = R.drawable.my_location_ic,
                         config = IconButtonConfig(size = IconButtonSize.MEDIUM, variant = IconButtonVariant.Standard),
+                        contentDescriptionRes = R.string.detect_location,
+                        modifier = Modifier.testTag(A11yIdentifiers.DETECT_LOCATION_BUTTON),
                     )
                 },
             )
@@ -243,6 +251,7 @@ private fun GasStationsScreen(
 
                         is ContentState.Success -> LazyColumn(
                             state = listState,
+                            modifier = Modifier.testTag(A11yIdentifiers.STATIONS_LIST),
                             contentPadding = PaddingValues(
                                 start = FuelioSpacing.md,
                                 end = FuelioSpacing.md,
@@ -334,7 +343,7 @@ private fun ProvinceBottomSheetDialog(
                 onDismissRequest()
             },
             sheetState = bottomSheetState,
-            modifier = modifier,
+            modifier = modifier.testTag(A11yIdentifiers.PROVINCE_SHEET),
         ) {
             Column(
                 modifier = Modifier
@@ -355,6 +364,8 @@ private fun ProvinceBottomSheetDialog(
                     FuelioIconButton(
                         drawableRes = R.drawable.close_ic,
                         config = IconButtonConfig(size = IconButtonSize.SMALL, variant = IconButtonVariant.Standard),
+                        contentDescriptionRes = R.string.province_sheet_close,
+                        modifier = Modifier.testTag(A11yIdentifiers.PROVINCE_SHEET_CLOSE),
                         onClick = {
                             provinceSearchQuery = ""
                             onDismissRequest()
@@ -387,6 +398,7 @@ private fun ProvinceBottomSheetDialog(
                             onProvinceSelected(province)
                             onDismissRequest()
                         },
+                        modifier = Modifier.testTag(A11yIdentifiers.provinceRow(province.id)),
                     )
                 }
             }
@@ -395,9 +407,9 @@ private fun ProvinceBottomSheetDialog(
 }
 
 @Composable
-private fun ProvinceItem(name: String, onClick: () -> Unit) {
+private fun ProvinceItem(name: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(vertical = FuelioSpacing.md),
