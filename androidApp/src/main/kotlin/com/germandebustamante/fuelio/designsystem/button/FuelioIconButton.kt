@@ -14,6 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.annotation.StringRes
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.annotation.DrawableRes
@@ -33,15 +35,17 @@ fun FuelioIconButton(
     modifier: Modifier = Modifier,
     config: IconButtonConfig = IconButtonConfig(),
     enabled: Boolean = true,
+    @StringRes contentDescriptionRes: Int? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val shape = config.getShape()
     val contentPadding = PaddingValues(config.size.contentPadding)
     val buttonModifier = modifier.size(config.size.size)
+    val contentDescription = contentDescriptionRes?.let { stringResource(it) }
     val iconContent: @Composable () -> Unit = {
         Icon(
             painterResource(drawableRes),
-            null,
+            contentDescription,
             modifier = Modifier.size(config.size.iconSize)
         )
     }

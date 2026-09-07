@@ -7,8 +7,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import com.germandebustamante.fuelio.R
+import com.germandebustamante.fuelio.core.testing.A11yIdentifiers
 import com.germandebustamante.fuelio.designsystem.button.FuelioTextButton
 import com.germandebustamante.fuelio.designsystem.emptystate.FuelioEmptyState
 
@@ -32,8 +34,9 @@ fun GasStationsErrorState(
             FuelioTextButton(
                 text = stringResource(R.string.error_state_retry),
                 onClick = onRetry,
+                modifier = Modifier.testTag(A11yIdentifiers.RETRY_BUTTON),
             )
         },
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize().testTag(A11yIdentifiers.ERROR_STATE),
     )
 }

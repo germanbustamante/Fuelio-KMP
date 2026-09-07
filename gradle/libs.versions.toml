@@ -78,6 +78,11 @@ material3 = { module = "org.jetbrains.compose.material3:material3", version.ref 
 runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "runtime" }
 ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "ui" }
 ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "ui" }
+ui-test-junit4 = { module = "org.jetbrains.compose.ui:ui-test-junit4", version.ref = "ui" }
+# No JetBrains-published equivalent exists for this one (it's Android-instrumentation-only, with no
+# cross-platform surface to publish); the androidx artifact at the same version number is what
+# JetBrains' own ui-test-junit4-android build is compiled against, so it's the compatible pick.
+androidx-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "ui" }
 jetbrains-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "multiplatform-nav3-ui" }
 jetbrains-material3-adaptiveNavigation3 = { module = "org.jetbrains.compose.material3.adaptive:adaptive-navigation3", version.ref = "compose-multiplatform-adaptive" }
 jetbrains-lifecycle-viewmodelNavigation3 = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "compose-multiplatform-lifecycle" }
@@ -106,6 +111,7 @@ ktor-client-serialization = { module = "io.ktor:ktor-client-serialization", vers
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlinStdlib" }
 androidx-runner = { group = "androidx.test", name = "runner", version.ref = "runner" }
+androidx-rules = { group = "androidx.test", name = "rules", version.ref = "runner" }
 androidx-core = { group = "androidx.test", name = "core", version.ref = "core" }
 
 #Koin
