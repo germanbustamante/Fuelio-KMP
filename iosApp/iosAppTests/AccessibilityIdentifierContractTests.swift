@@ -43,5 +43,7 @@ struct AccessibilityIdentifierContractTests {
     @Test("The UI-test launch flag matches the one the app reads")
     func launchFlagMatches() {
         #expect(LaunchArguments.uiTestMode == "-UITestMode")
+        #expect(LaunchArguments.uiTestFailureMode == "-UITestFailure")
+        #expect(LaunchArguments.uiTestDeepLink == "-UITestDeepLink")
     }
 }
