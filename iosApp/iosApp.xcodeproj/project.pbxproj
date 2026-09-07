@@ -52,22 +52,16 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		00A9932B5902C28EE9CAD21A /* iosAppTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = iosAppTests;
 			sourceTree = "<group>";
 		};
 		1EB5F73297B234C95D711FEF /* Configuration */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = Configuration;
 			sourceTree = "<group>";
 		};
 		7047BC43D692933F5CC70FF4 /* iosAppUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = iosAppUITests;
 			sourceTree = "<group>";
 		};
