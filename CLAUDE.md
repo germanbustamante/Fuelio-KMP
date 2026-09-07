@@ -316,6 +316,13 @@ the exporter emit a plain typed `state` property instead of an erased `StateFlow
 5. Map any new Kotlin sealed type in `Support/KotlinSealed.swift` — **only there** — with
    `onEnum(of:)`, and cover every variant in `KotlinSealedMappingTests`. Because SKIE makes that
    `switch` exhaustive, a variant added in Kotlin is a compile error rather than a silent `default`.
+   **Never express a cross-cutting property (e.g. "is this destination linkable") as a sealed
+   sub-interface over an exported sealed type** — SKIE turns every direct subtype into a Swift enum
+   case, sub-interfaces included, and a concrete type implementing both the exported type and the
+   marker sub-interface gets shadowed by the sub-interface's case in `onEnum(of:)`, silently making its
+   own case dead code (see ADR 0004's Consequences for the incident this caused with
+   `Destination`/`DeepLinkDestination`). Use an extension property/function with an exhaustive `when`
+   instead — same compile-time guarantee, no effect on the exported enum.
 6. Do **not** annotate `suspend` functions with `@NativeCoroutines` unless Swift actually calls them:
    the annotation replaces the exported `async` form with a closure that must be invoked via
    `asyncFunction(for:)`, and calling it as `try await` compiles with only a warning while doing
