@@ -30,6 +30,12 @@ struct iOSApp: App {
         } else {
             KoinInitIosKt.doInitKoinIos()
         }
+
+        // Buffered by `ExternalUriHandler` until `AppRouter.start()` registers its listener — the
+        // exact same path a real cold-launch `.onOpenURL` takes.
+        if let deepLinkUri = LaunchArguments.deepLinkUri {
+            ExternalUriHandler.shared.onNewUri(uri: deepLinkUri)
+        }
     }
 
     var body: some Scene {

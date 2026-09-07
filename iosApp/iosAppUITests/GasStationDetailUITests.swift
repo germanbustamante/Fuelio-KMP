@@ -37,6 +37,7 @@ final class GasStationDetailUITests: XCTestCase {
         )
     }
 
-    // The detail "not found" state is unreachable through the UI on purpose — the list only offers
-    // stations that are already cached — so it is covered by `BridgeIntegrationTests` instead.
+    // The detail "not found" state cannot be reached by tapping through the list — it only offers
+    // stations that are already cached — but a deep link to an uncached station id reaches exactly
+    // that state, and `DeepLinkUITests.testDeepLinkToAnUncachedStationShowsNotFound` covers it.
 }
