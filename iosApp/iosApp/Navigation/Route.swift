@@ -22,6 +22,18 @@ enum Route: Hashable {
     }
 }
 
+extension Route {
+
+    /// Routes to push for a deep link, in order.
+    ///
+    /// `buildSyntheticBackStack` returns the full stack *including* the root `GasStations`, which has
+    /// no `Route` case because it is the `NavigationStack`'s root view rather than a pushed screen —
+    /// `Route.init?` returns nil for it, so `compactMap` drops exactly that element and nothing else.
+    static func syntheticStack(for destination: Destination) -> [Route] {
+        buildSyntheticBackStack(target: destination).compactMap(Route.init)
+    }
+}
+
 /// Swift-native view of `NavigationAction`, converted in one place like every other sealed type.
 enum RouterAction: Equatable {
     case push(Route)
