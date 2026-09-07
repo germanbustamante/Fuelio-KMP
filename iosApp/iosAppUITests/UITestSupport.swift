@@ -10,6 +10,7 @@ enum UITestSupport {
 
     static let uiTestMode = "-UITestMode"
     static let uiTestFailureMode = "-UITestFailure"
+    static let uiTestDeepLink = "-UITestDeepLink"
 
     /// First entries of `core/fake/FakeGasStations.kt` and `feature/list/state/GasStationsFakes.kt`,
     /// which the UI-test Koin overrides serve.
@@ -17,6 +18,14 @@ enum UITestSupport {
     static let ballenoilStationName = "Ballenoil"
     static let madridProvinceID = "2"
     static let stationCount = 16
+
+    /// A station id absent from the fakes — `InMemoryGasStationRepository.getGasStationById` is a
+    /// local-only lookup, so this deterministically reaches the detail screen's "not found" state.
+    static let uncachedStationID = "000000"
+
+    static func stationDetailDeepLink(_ stationID: String) -> String {
+        "fuelio://station/\(stationID)/detail"
+    }
 
     static let stationsList = "gas_stations_list"
     static let searchField = "station_search_field"
@@ -82,13 +91,14 @@ extension XCUIApplication {
     /// when the UI tests start; SpringBoard then rejects the launch with "Application failed
     /// preflight checks". Terminating first makes the launch deterministic.
     @discardableResult
-    func launchForUITests(simulateFailure: Bool = false) -> XCUIApplication {
+    func launchForUITests(simulateFailure: Bool = false, deepLink: String? = nil) -> XCUIApplication {
         if state != .notRunning {
             terminate()
         }
-        launchArguments = simulateFailure
-            ? [UITestSupport.uiTestMode, UITestSupport.uiTestFailureMode]
-            : [UITestSupport.uiTestMode]
+        var arguments = [UITestSupport.uiTestMode]
+        if simulateFailure { arguments.append(UITestSupport.uiTestFailureMode) }
+        if let deepLink { arguments += [UITestSupport.uiTestDeepLink, deepLink] }
+        launchArguments = arguments
         launch()
         return self
     }

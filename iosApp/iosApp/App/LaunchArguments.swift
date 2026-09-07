@@ -22,6 +22,14 @@ enum LaunchArguments {
     /// Makes the gas station repository fail so an XCUITest can reach the blocking error state.
     static let uiTestFailureMode = "-UITestFailure"
 
+    /// Feeds a deep link into `ExternalUriHandler` at startup so an XCUITest can exercise the
+    /// external-URI path. XCUITest cannot open a URL inside the app's own process, and driving
+    /// Safari instead is slow, network-dependent and gated by a localized system confirmation alert
+    /// — this reproduces every step the app owns (buffering, `AppRouter.start()` registering the
+    /// listener, `parseDeepLink`, the synthetic back stack) and leaves only SpringBoard's URL
+    /// delivery, which is Apple's code, to a manual `xcrun simctl openurl` check.
+    static let uiTestDeepLink = "-UITestDeepLink"
+
     static var usesDeterministicData: Bool {
         #if DEBUG
         let processInfo = ProcessInfo.processInfo
@@ -38,6 +46,17 @@ enum LaunchArguments {
         ProcessInfo.processInfo.arguments.contains(uiTestFailureMode)
         #else
         false
+        #endif
+    }
+
+    static var deepLinkUri: String? {
+        #if DEBUG
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let flagIndex = arguments.firstIndex(of: uiTestDeepLink),
+              arguments.indices.contains(flagIndex + 1) else { return nil }
+        return arguments[flagIndex + 1]
+        #else
+        return nil
         #endif
     }
 }
