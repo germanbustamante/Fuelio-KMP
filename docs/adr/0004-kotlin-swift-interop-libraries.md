@@ -138,3 +138,17 @@ into view code, and leave `viewModelScope` uncancelled.
 - `LazyStore` is kept for `AppRouter`: it is a plain Swift observable rather than a ViewModel, so
   `@StateViewModel` does not apply and it still needs create-once semantics that `@State` does not
   give.
+- **Caveat found while wiring deep linking:** the "adding a variant is a compile error" guarantee above
+  holds only for direct subtypes of the exported sealed type itself — it does not extend to a *sealed
+  sub-interface* layered over it. A `DeepLinkDestination: Destination` marker interface was tried first
+  to type-check "is this destination linkable"; SKIE turns every direct subtype of a sealed interface
+  into a `case` of the generated Swift enum, sub-interfaces included, so `Destination`'s enum grew a
+  third case for `DeepLinkDestination` alongside its two real screens. Because `GasStationDetails`
+  implemented both, the generated `onEnum(of:)` matched `case .deepLinkDestination` before the concrete
+  `case .gasStationDetails`, making the concrete case unreachable dead code — silently, with no compile
+  error, which is exactly the failure mode this ADR's library choice exists to prevent. The fix was to
+  drop the sub-interface and express "is linkable" as data instead of type (an `internal val
+  Destination.parent: Destination?` extension property matched with a non-`else` `when`), which keeps
+  `Destination`'s own subtype list — and therefore its exported Swift enum — untouched. Lesson: never
+  add a sealed sub-interface over a type exported through SKIE; extension properties/functions with an
+  exhaustive `when` give the same compile-time guarantee without perturbing the enum.
