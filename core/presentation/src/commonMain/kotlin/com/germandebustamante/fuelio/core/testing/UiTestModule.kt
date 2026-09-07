@@ -1,4 +1,4 @@
-package com.germandebustamante.fuelio.core.interop
+package com.germandebustamante.fuelio.core.testing
 
 import com.germandebustamante.fuelio.core.domain.error.DomainError
 import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationBO
@@ -16,14 +16,18 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 
 /**
- * Overrides for the iOS UI-test harness.
+ * Overrides for the UI-test harness, shared by both platforms.
  *
  * Only the outermost boundary is replaced — repositories and the location permission prompt. Every
- * layer above (use cases, ViewModels, `Navigator`, analytics) is the production one, so an XCUITest
- * exercises the real app rather than a mock of it, and does so without the network, without Room and
- * without a system permission dialog blocking the run.
+ * layer above (use cases, ViewModels, `Navigator`, analytics) is the production one, so an
+ * instrumentation/XCUITest run exercises the real app rather than a mock of it, and does so without
+ * the network, without Room and without a system permission dialog blocking the run.
+ *
+ * Moved here from `iosMain` (was iOS-only) since nothing in it touches a platform type — it is
+ * plugged into `initKoin(overrides = ...)` from Android's `FuelioTestApplication` the same way iOS's
+ * `initKoinIosForUiTests` already does, instead of duplicating a second copy of these fakes.
  */
-internal fun uiTestModule(simulateStationFailure: Boolean): Module = module {
+fun uiTestModule(simulateStationFailure: Boolean): Module = module {
     single<GasStationRepository> {
         if (simulateStationFailure) FailingGasStationRepository() else InMemoryGasStationRepository()
     }
@@ -59,8 +63,8 @@ private class InMemoryProvinceRepository : ProvinceRepository {
 }
 
 /**
- * Reports a permanent denial without touching CoreLocation, so no system alert appears mid-test and
- * the distance column stays absent (and therefore deterministic).
+ * Reports a permanent denial without touching platform location APIs, so no system permission
+ * dialog appears mid-test and the distance column stays absent (and therefore deterministic).
  */
 private class DeniedLocationPermissionController : LocationPermissionController {
 

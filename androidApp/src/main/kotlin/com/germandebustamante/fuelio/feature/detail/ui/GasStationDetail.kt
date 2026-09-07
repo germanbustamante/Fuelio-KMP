@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.AndroidUiModes
@@ -38,6 +39,7 @@ import com.germandebustamante.fuelio.R
 import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationBO
 import com.germandebustamante.fuelio.core.fake.fakeGasStations
 import com.germandebustamante.fuelio.core.navigation.destination.Destination
+import com.germandebustamante.fuelio.core.testing.A11yIdentifiers
 import com.germandebustamante.fuelio.core.ui.theme.FuelioSpacing
 import com.germandebustamante.fuelio.core.ui.theme.FuelioTheme
 import com.germandebustamante.fuelio.core.util.formatAsEuros
@@ -86,7 +88,10 @@ private fun GasStationDetail(
                 variant = FuelioTopBarVariant.Small,
                 title = {},
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.testTag(A11yIdentifiers.DETAIL_BACK_BUTTON),
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.navigate_back),
@@ -122,7 +127,7 @@ private fun GasStationDetail(
                             tint = MaterialTheme.colorScheme.error,
                         )
                     },
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().testTag(A11yIdentifiers.DETAIL_NOT_FOUND),
                 )
             }
         }
@@ -147,6 +152,7 @@ private fun GasStationDetailContent(
                 Text(
                     text = stationName,
                     style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.testTag(A11yIdentifiers.DETAIL_STATION_NAME),
                 )
                 Text(
                     text = gasStation.getFullDirection(),
@@ -158,11 +164,16 @@ private fun GasStationDetailContent(
 
         item { GasStationMapPreview(stationName, gasStation.latitude, gasStation.longitude) }
 
-        item { GasStationDirectionsButton(gasStation) }
+        item {
+            GasStationDirectionsButton(
+                gasStation,
+                modifier = Modifier.testTag(A11yIdentifiers.DETAIL_DIRECTIONS_BUTTON),
+            )
+        }
 
-        item { PricesSection(gasStation) }
+        item { PricesSection(gasStation, modifier = Modifier.testTag(A11yIdentifiers.DETAIL_PRICES_SECTION)) }
 
-        item { ScheduleSection(scheduleDays) }
+        item { ScheduleSection(scheduleDays, modifier = Modifier.testTag(A11yIdentifiers.DETAIL_SCHEDULE_SECTION)) }
     }
 }
 
