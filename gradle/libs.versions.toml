@@ -48,6 +48,10 @@ googleServices = "4.5.0"
 firebaseBom = "34.16.0"
 firebaseCrashlyticsPlugin = "3.0.7"
 
+#DataStore
+datastore = "1.2.1"
+okio = "3.18.2"
+
 #Room
 room = "2.8.4"
 sqlite = "2.7.0"
@@ -142,6 +146,13 @@ androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.r
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 androidx-room-sqlite-wrapper = { module = "androidx.room:room-sqlite-wrapper", version.ref = "room" }
+
+#DataStore
+# The -core variant is the pure-Kotlin one: the plain datastore-preferences artifact drags in
+# Android-only pieces that can't be used from commonMain. okio comes with it and supplies the Path
+# that PreferenceDataStoreFactory.createWithPath needs.
+androidx-datastore-preferences-core = { module = "androidx.datastore:datastore-preferences-core", version.ref = "datastore" }
+okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 
 #PostHog
 posthog-android = { module = "com.posthog:posthog-android", version.ref = "posthogAndroid" }
