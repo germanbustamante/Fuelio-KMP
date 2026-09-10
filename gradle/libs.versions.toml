@@ -29,6 +29,10 @@ runner = "1.7.0"
 core = "1.7.0"
 jetbrainsKotlinJvm = "2.4.0"
 
+#Static analysis
+ktlintPlugin = "14.2.0"
+ktlint = "1.7.1"
+
 #DI
 koinBom = "4.2.2"
 koin_plugin = "1.0.1"
@@ -165,3 +169,4 @@ firebaseCrashlytics = { id = "com.google.firebase.crashlytics", version.ref = "f
 buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }
 kmpNativeCoroutines = { id = "com.rickclephas.kmp.nativecoroutines", version.ref = "kmpNativeCoroutines" }
 skie = { id = "co.touchlab.skie", version.ref = "skie" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlintPlugin" }
