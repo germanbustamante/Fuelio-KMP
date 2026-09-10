@@ -12,7 +12,8 @@ struct SettingsScreen: View {
         SettingsScreenBody(
             state: viewModel.state,
             onThemeModeSelected: { viewModel.onThemeModeSelected(themeMode: $0) },
-            onDefaultFuelSelected: { viewModel.onDefaultFuelSelected(fuelType: $0) }
+            onDefaultFuelSelected: { viewModel.onDefaultFuelSelected(fuelType: $0) },
+            onBackTapped: { viewModel.onBackTapped() }
         )
     }
 }
@@ -22,6 +23,7 @@ struct SettingsScreenBody: View {
     let state: SettingsUIState
     let onThemeModeSelected: (DomainThemeMode) -> Void
     let onDefaultFuelSelected: (DomainFuelType) -> Void
+    let onBackTapped: () -> Void
 
     var body: some View {
         // A grouped `List` is what Settings looks like on iOS. Android uses a scrolling column of
@@ -43,6 +45,19 @@ struct SettingsScreenBody: View {
         }
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden()
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                // Through the ViewModel, never by popping the stack directly, or the analytics
+                // attached to the action would never fire.
+                Button {
+                    onBackTapped()
+                } label: {
+                    Label("Back", systemImage: "chevron.backward")
+                }
+                .accessibilityIdentifier(A11yID.settingsBackButton)
+            }
+        }
         .accessibilityIdentifier(A11yID.settingsScreen)
     }
 }
@@ -52,7 +67,8 @@ struct SettingsScreenBody: View {
         SettingsScreenBody(
             state: SettingsUIState(themeMode: .dark, defaultFuelType: .diesel, isLoading: false),
             onThemeModeSelected: { _ in },
-            onDefaultFuelSelected: { _ in }
+            onDefaultFuelSelected: { _ in },
+            onBackTapped: {}
         )
     }
     .fuelioTheme()

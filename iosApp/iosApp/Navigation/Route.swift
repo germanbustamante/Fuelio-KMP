@@ -12,6 +12,7 @@ import CorePresentation
 enum Route: Hashable {
     case gasStationDetail(id: String)
     case settings
+    case favorites
 
     init?(_ destination: Destination) {
         switch onEnum(of: destination) {
@@ -19,6 +20,8 @@ enum Route: Hashable {
             self = .gasStationDetail(id: details.gasStationId)
         case .settings:
             self = .settings
+        case .favorites:
+            self = .favorites
         case .gasStations:
             return nil
         }

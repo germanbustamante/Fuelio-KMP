@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shown when a favorite's station isn't in the local cache, so its details can't be rendered. -->
+    <plurals name="favorites_unresolved_banner">
+        <item quantity="one">%d favorite isn\'t loaded. Open its province to see it.</item>
+        <item quantity="other">%d favorites aren\'t loaded. Open their provinces to see them.</item>
+    </plurals>
+</resources>

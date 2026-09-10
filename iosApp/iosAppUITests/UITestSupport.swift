@@ -55,6 +55,13 @@ enum UITestSupport {
 
     static let permissionAlertSettings = "permission_alert_settings"
 
+    // Favorites
+    static let favoritesButton = "favorites_button"
+    static let favoritesScreen = "favorites_screen"
+    static let favoritesBackButton = "favorites_back_button"
+    static let favoritesEmpty = "favorites_empty"
+    static let favoritesUnresolvedBanner = "favorites_unresolved_banner"
+
     // Settings
     static let settingsButton = "settings_button"
     static let settingsScreen = "settings_screen"

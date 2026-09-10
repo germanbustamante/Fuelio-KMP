@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="favorites_unresolved_banner">
+        <item quantity="one">%d favorito no está cargado. Abre su provincia para verlo.</item>
+        <item quantity="other">%d favoritos no están cargados. Abre sus provincias para verlos.</item>
+    </plurals>
+</resources>

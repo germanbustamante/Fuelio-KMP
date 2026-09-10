@@ -6,6 +6,7 @@ import com.germandebustamante.fuelio.core.navigation.destination.Destination
 import com.germandebustamante.fuelio.feature.app.state.AppViewModel
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import com.germandebustamante.fuelio.feature.detail.state.GasStationDetailViewModel
+import com.germandebustamante.fuelio.feature.favorites.state.FavoritesViewModel
 import com.germandebustamante.fuelio.feature.list.state.GasStationsViewModel
 import com.germandebustamante.fuelio.feature.settings.state.SettingsViewModel
 import org.koin.core.component.KoinComponent
@@ -44,6 +45,8 @@ object IosViewModelFactory : KoinComponent {
     fun settings(): SettingsViewModel = get()
 
     fun app(): AppViewModel = get()
+
+    fun favorites(): FavoritesViewModel = get()
 
     fun gasStationDetail(gasStationId: String): GasStationDetailViewModel =
         get<GasStationDetailViewModel> { parametersOf(Destination.GasStationDetails(gasStationId)) }
