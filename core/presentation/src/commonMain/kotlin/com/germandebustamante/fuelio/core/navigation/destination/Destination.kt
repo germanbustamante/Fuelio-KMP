@@ -16,4 +16,7 @@ sealed interface Destination {
 
     @Serializable
     data class GasStationDetails(val gasStationId: String) : Destination
+
+    @Serializable
+    data object Settings : Destination
 }

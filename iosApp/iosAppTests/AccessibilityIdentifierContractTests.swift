@@ -1,4 +1,5 @@
 import Testing
+import CorePresentation
 @testable import Fuelio
 
 /// The XCUITest target runs out of process and cannot link the app module, so it mirrors these
@@ -29,6 +30,11 @@ struct AccessibilityIdentifierContractTests {
         #expect(A11yID.detailScheduleSection == "detail_schedule_section")
         #expect(A11yID.detailPricesSection == "detail_prices_section")
         #expect(A11yID.permissionAlertSettings == "permission_alert_settings")
+        #expect(A11yID.settingsButton == "settings_button")
+        #expect(A11yID.settingsScreen == "settings_screen")
+        #expect(A11yID.settingsBackButton == "settings_back_button")
+        #expect(A11yID.themePicker == "theme_picker")
+        #expect(A11yID.defaultFuelPicker == "default_fuel_picker")
     }
 
     @Test("Parameterised identifiers match the values the UI tests build")
@@ -38,6 +44,7 @@ struct AccessibilityIdentifierContractTests {
         #expect(A11yID.favoriteButton("7153") == "favorite_button_7153")
         #expect(A11yID.fuelOption(FuelKind.diesel.rawValue) == "fuel_option_diesel")
         #expect(A11yID.provinceRow("1") == "province_row_1")
+        #expect(A11yID.themeOption(DomainThemeMode.dark.rawIdentifier) == "theme_option_dark")
     }
 
     @Test("The UI-test launch flag matches the one the app reads")

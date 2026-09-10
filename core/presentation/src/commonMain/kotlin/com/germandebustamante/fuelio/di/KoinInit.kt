@@ -7,8 +7,10 @@ import com.germandebustamante.fuelio.core.logger.CrashReporting
 import com.germandebustamante.fuelio.core.startup.StartupTask
 import com.germandebustamante.fuelio.core.startup.di.startupModule
 import com.germandebustamante.fuelio.data.di.dataModule
+import com.germandebustamante.fuelio.feature.app.di.appModule
 import com.germandebustamante.fuelio.feature.detail.di.gasStationDetailModule
 import com.germandebustamante.fuelio.feature.list.di.gasStationListModule
+import com.germandebustamante.fuelio.feature.settings.di.settingsModule
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import org.koin.core.KoinApplication
@@ -30,6 +32,8 @@ fun initKoin(overrides: List<Module> = emptyList(), config: KoinAppDeclaration? 
         dataModule,
         gasStationListModule,
         gasStationDetailModule,
+        settingsModule,
+        appModule,
         analyticsModule,
         coreModule,
         startupModule,

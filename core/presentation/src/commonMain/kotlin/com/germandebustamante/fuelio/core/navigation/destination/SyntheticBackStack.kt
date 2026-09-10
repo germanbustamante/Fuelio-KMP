@@ -22,6 +22,7 @@ internal val Destination.parent: Destination?
     get() = when (this) {
         is Destination.GasStations -> null
         is Destination.GasStationDetails -> Destination.GasStations
+        is Destination.Settings -> Destination.GasStations
     }
 
 /**

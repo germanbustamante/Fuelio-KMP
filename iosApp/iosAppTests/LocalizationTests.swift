@@ -31,6 +31,8 @@ struct LocalizationTests {
         "This station isn't cached locally yet. Go back to the list to load it first.",
         "Fuel prices", "Schedule", " · today", "Open 24h", "Get directions", "Map showing %@",
         "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
+        "Settings", "Appearance", "System", "Light", "Dark", "Default fuel",
+        "The fuel the list is sorted and priced by when the app opens.",
     ]
 
     @Test("Ships a Spanish localization")

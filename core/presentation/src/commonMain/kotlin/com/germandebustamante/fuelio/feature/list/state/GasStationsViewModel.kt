@@ -25,6 +25,7 @@ import com.germandebustamante.fuelio.feature.list.analytics.GasStationsScreenVie
 import com.germandebustamante.fuelio.feature.list.analytics.LocationPermissionEvent
 import com.germandebustamante.fuelio.feature.list.analytics.LocationPermissionOutcome
 import com.germandebustamante.fuelio.feature.list.analytics.ProvinceChanged
+import com.germandebustamante.fuelio.feature.list.analytics.SettingsOpened
 import com.rickclephas.kmp.nativecoroutines.NativeCoroutinesState
 import com.rickclephas.kmp.observableviewmodel.MutableStateFlow
 import com.rickclephas.kmp.observableviewmodel.ViewModel
@@ -91,6 +92,15 @@ class GasStationsViewModel(
      */
     private var storedPreferences: UserPreferencesBO? = null
 
+    /**
+     * Whether the user has picked a fuel on this screen.
+     *
+     * Restoring the stored default races the user: reading it is file I/O launched concurrently with
+     * the rest of startup, so on a slow read it can land *after* a tap and silently put the filter
+     * back. As with the province, an explicit choice always wins.
+     */
+    private var hasUserSelectedFuel: Boolean = false
+
     // MutableStateFlow(viewModelScope, …) is the KMP-ObservableViewModel overload: it is what
     // notifies SwiftUI on every emission. The private flows above stay plain kotlinx flows — they
     // are internal plumbing that Swift never observes.
@@ -126,7 +136,9 @@ class GasStationsViewModel(
         storedPreferences ?: observeUserPreferencesUseCase().first().also { storedPreferences = it }
 
     private suspend fun applyStoredFuelPreference() {
-        applyFuelFilter(readStoredPreferences().defaultFuelType.toFuelFilter())
+        val storedFilter = readStoredPreferences().defaultFuelType.toFuelFilter()
+        if (hasUserSelectedFuel) return
+        applyFuelFilter(storedFilter)
     }
 
     @OptIn(FlowPreview::class)
@@ -236,6 +248,7 @@ class GasStationsViewModel(
     //region Filters
 
     fun onFuelFilterSelected(filter: FuelFilter) {
+        hasUserSelectedFuel = true
         viewModelScope.launch {
             applyFuelFilter(filter)
             setDefaultFuelTypeUseCase(filter.toFuelType())
@@ -303,7 +316,13 @@ class GasStationsViewModel(
                         val now = Clock.System.now().toLocalDateTime(SPAIN_TIMEZONE)
                         val built = buildGasStationItems(gasStations, now, _state.value.selectedFuelFilter)
                         allGasStations = built
-                        updateState { it.withStationsLoaded(built, isFromCache) }
+                        // Re-map against the filter as it stands *now*, not the one read before the
+                        // build: restoring the stored default is concurrent with this load, so the
+                        // filter can change while `buildGasStationItems` is off on another dispatcher.
+                        // Without this the list can show prices for a fuel the chip no longer says.
+                        updateState { state ->
+                            state.withStationsLoaded(built.map { it.withFuelFilter(state.selectedFuelFilter) }.markCheapest(), isFromCache)
+                        }
                     },
                     onFailure = { notifyError(OPERATION_FETCH_STATIONS, it) },
                 )
@@ -371,6 +390,13 @@ class GasStationsViewModel(
         viewModelScope.launch {
             analyticsManager.track(GasStationSelected(stationId))
             navigator.navigate(Destination.GasStationDetails(stationId))
+        }
+    }
+
+    fun onSettingsTapped() {
+        viewModelScope.launch {
+            analyticsManager.track(SettingsOpened)
+            navigator.navigate(Destination.Settings)
         }
     }
 

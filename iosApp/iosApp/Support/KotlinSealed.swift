@@ -1,3 +1,4 @@
+import SwiftUI
 import CorePresentation
 
 // The Objective-C exporter turns Kotlin `sealed interface`s into plain protocols with no
@@ -91,6 +92,33 @@ enum FuelKind: String, CaseIterable, Hashable, Identifiable {
 
 extension GasStationsUIState {
     var fuelKind: FuelKind { FuelKind(selectedFuelFilter) }
+}
+
+/// `DomainFuelType` is the domain-level enum the *preferences* use, `FuelFilter` the presentation-level
+/// sealed interface the *list* uses. SKIE exports the former as a plain Swift enum, so this is an
+/// ordinary exhaustive `switch` rather than an `onEnum(of:)` — but it belongs here for the same
+/// reason as everything else in this file: one place to change when Kotlin adds a fuel.
+extension DomainThemeMode {
+    /// `nil` is how SwiftUI says "follow the system", which is exactly what `.system` means — so the
+    /// resolution that Android needs an `isSystemInDarkTheme()` call for is free here.
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: nil
+        case .light: .light
+        case .dark: .dark
+        }
+    }
+}
+
+extension DomainFuelType {
+    var kind: FuelKind {
+        switch self {
+        case .gasoline95: .gasoline95
+        case .gasoline98: .gasoline98
+        case .diesel: .diesel
+        case .dieselPremium: .dieselPremium
+        }
+    }
 }
 
 // MARK: - Weekly schedule

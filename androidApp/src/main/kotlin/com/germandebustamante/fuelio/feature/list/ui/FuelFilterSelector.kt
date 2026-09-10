@@ -61,8 +61,13 @@ private fun FuelFilter.label(): String = when (this) {
     is FuelFilter.DieselPremium -> stringResource(R.string.fuel_filter_diesel_premium)
 }
 
-/** Matches iOS's `FuelKind.rawValue` so `A11yIdentifiers.fuelOption(...)` builds the same tag. */
-private val FuelFilter.rawValue: String
+/**
+ * Matches iOS's `FuelKind.rawValue` so `A11yIdentifiers.fuelOption(...)` builds the same tag.
+ *
+ * `internal` rather than private so the settings screen's default-fuel picker reuses the same
+ * identifiers — same four fuels, so the UI tests locate them the same way on both screens.
+ */
+internal val FuelFilter.rawValue: String
     get() = when (this) {
         is FuelFilter.Gasoline95 -> "gasoline95"
         is FuelFilter.Gasoline98 -> "gasoline98"

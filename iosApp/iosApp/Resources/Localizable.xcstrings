@@ -1,342 +1,19 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "Fuelio": {
+    " · today": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fuelio"
+            "value": " · today"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fuelio"
-          }
-        }
-      }
-    },
-    "Search gas station…": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search gas station…"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Buscar gasolinera…"
-          }
-        }
-      }
-    },
-    "No matches found": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No matches found"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No hay coincidencias"
-          }
-        }
-      }
-    },
-    "No gas station matches that name or address. Try a different search term.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No gas station matches that name or address. Try a different search term."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ninguna gasolinera coincide con ese nombre o dirección. Prueba con otro término de búsqueda."
-          }
-        }
-      }
-    },
-    "Clear search": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Clear search"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Borrar búsqueda"
-          }
-        }
-      }
-    },
-    "Something went wrong": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Something went wrong"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Algo salió mal"
-          }
-        }
-      }
-    },
-    "Retry": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Retry"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reintentar"
-          }
-        }
-      }
-    },
-    "Detect my location": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Detect my location"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Detectar mi ubicación"
-          }
-        }
-      }
-    },
-    "Couldn't refresh. Showing saved data.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't refresh. Showing saved data."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se pudo actualizar. Mostrando datos guardados."
-          }
-        }
-      }
-    },
-    "Location access needed": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Location access needed"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Se necesita acceso a la ubicación"
-          }
-        }
-      }
-    },
-    "Location access permanently denied. Enable it in Settings to see nearby stations.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Location access permanently denied. Enable it in Settings to see nearby stations."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Acceso a ubicación denegado permanentemente. Actívalo en Ajustes para ver gasolineras cercanas."
-          }
-        }
-      }
-    },
-    "Open Settings": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open Settings"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Abrir ajustes"
-          }
-        }
-      }
-    },
-    "Cancel": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cancel"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cancelar"
-          }
-        }
-      }
-    },
-    "Cheapest": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cheapest"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Más barata"
-          }
-        }
-      }
-    },
-    "Open": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Abierto"
-          }
-        }
-      }
-    },
-    "Closed": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Closed"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cerrado"
-          }
-        }
-      }
-    },
-    "at %@": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "at %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "a %@"
-          }
-        }
-      }
-    },
-    "cheapest station": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "cheapest station"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "gasolinera más barata"
-          }
-        }
-      }
-    },
-    "Favorite": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Favorite"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Favorita"
-          }
-        }
-      }
-    },
-    "Price unavailable": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Price unavailable"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Precio no disponible"
+            "value": " · hoy"
           }
         }
       }
@@ -358,19 +35,53 @@
         }
       }
     },
-    "Remove from favorites": {
+    "Appearance": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remove from favorites"
+            "value": "Appearance"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quitar de favoritos"
+            "value": "Apariencia"
+          }
+        }
+      }
+    },
+    "Back": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar"
           }
         }
       }
@@ -392,36 +103,36 @@
         }
       }
     },
-    "Select Province": {
+    "Cheapest": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Select Province"
+            "value": "Cheapest"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Seleccionar Provincia"
+            "value": "Más barata"
           }
         }
       }
     },
-    "Search province…": {
+    "Clear search": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Search province…"
+            "value": "Clear search"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Buscar provincia…"
+            "value": "Borrar búsqueda"
           }
         }
       }
@@ -443,53 +154,87 @@
         }
       }
     },
-    "Fuel type": {
+    "Closed": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fuel type"
+            "value": "Closed"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tipo de combustible"
+            "value": "Cerrado"
           }
         }
       }
     },
-    "Gasoline 95": {
+    "Couldn't refresh. Showing saved data.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gasoline 95"
+            "value": "Couldn't refresh. Showing saved data."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gasolina 95"
+            "value": "No se pudo actualizar. Mostrando datos guardados."
           }
         }
       }
     },
-    "Gasoline 98": {
+    "Dark": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gasoline 98"
+            "value": "Dark"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gasolina 98"
+            "value": "Oscuro"
+          }
+        }
+      }
+    },
+    "Default fuel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default fuel"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combustible por defecto"
+          }
+        }
+      }
+    },
+    "Detect my location": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detect my location"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detectar mi ubicación"
           }
         }
       }
@@ -528,53 +273,36 @@
         }
       }
     },
-    "Back": {
+    "Favorite": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Back"
+            "value": "Favorite"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Volver"
+            "value": "Favorita"
           }
         }
       }
     },
-    "Gas station not available": {
+    "Friday": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gas station not available"
+            "value": "Friday"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gasolinera no disponible"
-          }
-        }
-      }
-    },
-    "This station isn't cached locally yet. Go back to the list to load it first.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This station isn't cached locally yet. Go back to the list to load it first."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Esta gasolinera todavía no está guardada localmente. Vuelve a la lista para cargarla primero."
+            "value": "Viernes"
           }
         }
       }
@@ -596,53 +324,87 @@
         }
       }
     },
-    "Schedule": {
+    "Fuel type": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Schedule"
+            "value": "Fuel type"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Horario"
+            "value": "Tipo de combustible"
           }
         }
       }
     },
-    " · today": {
+    "Fuelio": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": " · today"
+            "value": "Fuelio"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": " · hoy"
+            "value": "Fuelio"
           }
         }
       }
     },
-    "Open 24h": {
+    "Gas station not available": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open 24h"
+            "value": "Gas station not available"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abierto 24h"
+            "value": "Gasolinera no disponible"
+          }
+        }
+      }
+    },
+    "Gasoline 95": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gasoline 95"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gasolina 95"
+          }
+        }
+      }
+    },
+    "Gasoline 98": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gasoline 98"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gasolina 98"
           }
         }
       }
@@ -660,6 +422,57 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cómo llegar"
+          }
+        }
+      }
+    },
+    "Light": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claro"
+          }
+        }
+      }
+    },
+    "Location access needed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Location access needed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se necesita acceso a la ubicación"
+          }
+        }
+      }
+    },
+    "Location access permanently denied. Enable it in Settings to see nearby stations.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Location access permanently denied. Enable it in Settings to see nearby stations."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acceso a ubicación denegado permanentemente. Actívalo en Ajustes para ver gasolineras cercanas."
           }
         }
       }
@@ -698,6 +511,346 @@
         }
       }
     },
+    "No gas station matches that name or address. Try a different search term.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No gas station matches that name or address. Try a different search term."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguna gasolinera coincide con ese nombre o dirección. Prueba con otro término de búsqueda."
+          }
+        }
+      }
+    },
+    "No matches found": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matches found"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay coincidencias"
+          }
+        }
+      }
+    },
+    "Open": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abierto"
+          }
+        }
+      }
+    },
+    "Open 24h": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open 24h"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abierto 24h"
+          }
+        }
+      }
+    },
+    "Open Settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Settings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir ajustes"
+          }
+        }
+      }
+    },
+    "Price unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price unavailable"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precio no disponible"
+          }
+        }
+      }
+    },
+    "Remove from favorites": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from favorites"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar de favoritos"
+          }
+        }
+      }
+    },
+    "Retry": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar"
+          }
+        }
+      }
+    },
+    "Saturday": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saturday"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sábado"
+          }
+        }
+      }
+    },
+    "Schedule": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schedule"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Horario"
+          }
+        }
+      }
+    },
+    "Search gas station…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search gas station…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar gasolinera…"
+          }
+        }
+      }
+    },
+    "Search province…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search province…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar provincia…"
+          }
+        }
+      }
+    },
+    "Select Province": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select Province"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seleccionar Provincia"
+          }
+        }
+      }
+    },
+    "Settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustes"
+          }
+        }
+      }
+    },
+    "Something went wrong": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Something went wrong"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algo salió mal"
+          }
+        }
+      }
+    },
+    "Sunday": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sunday"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Domingo"
+          }
+        }
+      }
+    },
+    "System": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sistema"
+          }
+        }
+      }
+    },
+    "The fuel the list is sorted and priced by when the app opens.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The fuel the list is sorted and priced by when the app opens."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El combustible con el que se ordena y se muestra el precio al abrir la app."
+          }
+        }
+      }
+    },
+    "This station isn't cached locally yet. Go back to the list to load it first.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This station isn't cached locally yet. Go back to the list to load it first."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta gasolinera todavía no está guardada localmente. Vuelve a la lista para cargarla primero."
+          }
+        }
+      }
+    },
+    "Thursday": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thursday"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jueves"
+          }
+        }
+      }
+    },
     "Tuesday": {
       "extractionState": "manual",
       "localizations": {
@@ -732,70 +885,36 @@
         }
       }
     },
-    "Thursday": {
+    "at %@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Thursday"
+            "value": "at %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Jueves"
+            "value": "a %@"
           }
         }
       }
     },
-    "Friday": {
+    "cheapest station": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Friday"
+            "value": "cheapest station"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Viernes"
-          }
-        }
-      }
-    },
-    "Saturday": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Saturday"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sábado"
-          }
-        }
-      }
-    },
-    "Sunday": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sunday"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Domingo"
+            "value": "gasolinera más barata"
           }
         }
       }
