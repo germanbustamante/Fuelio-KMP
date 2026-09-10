@@ -67,7 +67,14 @@ open core/presentation/build/bin/iosSimulatorArm64/debugFramework/CorePresentati
 
 ```shell
 ./gradlew :androidApp:testDebugUnitTest              # Compose-dependent code (designsystem, screens)
+# Every KMP module's commonTest runs on the JVM as well as on the simulator. The host tasks are the
+# fast loop (and what CI runs on Linux); the simulator tasks additionally cover each module's
+# iosTest source set.
+./gradlew :core:domain:testAndroidHostTest
+./gradlew :core:analytics:testAndroidHostTest
+./gradlew :data:testAndroidHostTest
 ./gradlew :core:presentation:testAndroidHostTest      # ViewModel/state/navigation tests, JVM
+
 ./gradlew :core:presentation:iosSimulatorArm64Test    # Same tests + the iOS DI factory, simulator target
 ./gradlew :core:domain:iosSimulatorArm64Test
 ./gradlew :data:iosSimulatorArm64Test

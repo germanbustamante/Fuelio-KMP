@@ -25,11 +25,18 @@ this repo's package/branding to Octana; that name belongs to the other, private 
 
 # Tests
 ./gradlew :androidApp:testDebugUnitTest         # androidApp unit tests (Compose-dependent code: designsystem, screens)
+# Every KMP module declares withHostTestBuilder {}, so each one's commonTest runs on the JVM too.
+# Prefer the host tasks for a fast local loop and for CI on Linux; the simulator tasks are what
+# additionally cover each module's iosTest source set (the Swift-facing bridges).
+./gradlew :core:domain:testAndroidHostTest      # Domain module tests, JVM
+./gradlew :core:analytics:testAndroidHostTest   # Analytics module tests, JVM
+./gradlew :data:testAndroidHostTest             # Data module tests, JVM
 ./gradlew :core:presentation:testAndroidHostTest      # ViewModel/state/navigation tests on the JVM (Android host)
-./gradlew :core:presentation:iosSimulatorArm64Test    # Same tests, iOS simulator target — this is where the ~40 ViewModel tests actually live
-./gradlew :core:domain:iosSimulatorArm64Test    # Domain module tests (KMP-only module, no JVM/Android test task)
-./gradlew :data:iosSimulatorArm64Test           # Data module tests (same — runs via the iOS simulator target)
-./gradlew :core:analytics:iosSimulatorArm64Test # Analytics module tests (same — also covers the iosTest bridge tests)
+
+./gradlew :core:presentation:iosSimulatorArm64Test    # Same tests + the iOS DI factory, simulator target
+./gradlew :core:domain:iosSimulatorArm64Test
+./gradlew :data:iosSimulatorArm64Test
+./gradlew :core:analytics:iosSimulatorArm64Test # Also covers the iosTest tracker-bridge tests
 ./gradlew connectedAndroidTest             # Android instrumentation tests
 
 # iOS
