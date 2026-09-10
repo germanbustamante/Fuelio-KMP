@@ -5,6 +5,8 @@ import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationsRes
 import com.germandebustamante.fuelio.core.domain.gasstation.testing.GasStationBOMother
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationUseCase
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationsByLocationUseCase
+import com.germandebustamante.fuelio.core.domain.gasstation.usecase.ObserveFavoriteStationIdsUseCase
+import com.germandebustamante.fuelio.core.domain.gasstation.usecase.ToggleFavoriteStationUseCase
 import com.germandebustamante.fuelio.core.domain.preferences.model.UserPreferencesBO
 import com.germandebustamante.fuelio.core.domain.preferences.usecase.ObserveUserPreferencesUseCase
 import com.germandebustamante.fuelio.core.domain.preferences.usecase.SetDefaultFuelTypeUseCase
@@ -82,6 +84,14 @@ class IosViewModelFactoryTest {
         every { openAppSettings() } returns Unit
     }
 
+    private val observeFavoriteStationIdsUseCase: ObserveFavoriteStationIdsUseCase = mock {
+        every { invoke() } returns flowOf(emptySet())
+    }
+
+    private val toggleFavoriteStationUseCase: ToggleFavoriteStationUseCase = mock {
+        everySuspend { invoke(any()) } returns Unit
+    }
+
     private val observeUserPreferencesUseCase: ObserveUserPreferencesUseCase = mock {
         every { invoke() } returns flowOf(UserPreferencesBO())
     }
@@ -103,6 +113,8 @@ class IosViewModelFactoryTest {
         single { getProvincesUseCase }
         single { getGasStationUseCase }
         single { ResolveProvinceByLocationUseCase() }
+        single { observeFavoriteStationIdsUseCase }
+        single { toggleFavoriteStationUseCase }
         single { observeUserPreferencesUseCase }
         single { setDefaultFuelTypeUseCase }
         single { setSavedProvinceUseCase }
