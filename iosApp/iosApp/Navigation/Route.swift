@@ -11,11 +11,14 @@ import CorePresentation
 /// screen. A `Navigate(GasStations)` action therefore pops back to the root.
 enum Route: Hashable {
     case gasStationDetail(id: String)
+    case settings
 
     init?(_ destination: Destination) {
         switch onEnum(of: destination) {
         case .gasStationDetails(let details):
             self = .gasStationDetail(id: details.gasStationId)
+        case .settings:
+            self = .settings
         case .gasStations:
             return nil
         }

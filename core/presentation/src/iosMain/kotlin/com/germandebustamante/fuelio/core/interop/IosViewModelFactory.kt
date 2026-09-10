@@ -3,9 +3,11 @@ package com.germandebustamante.fuelio.core.interop
 import com.germandebustamante.fuelio.core.navigation.action.DefaultNavigator
 import com.germandebustamante.fuelio.core.navigation.action.Navigator
 import com.germandebustamante.fuelio.core.navigation.destination.Destination
+import com.germandebustamante.fuelio.feature.app.state.AppViewModel
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import com.germandebustamante.fuelio.feature.detail.state.GasStationDetailViewModel
 import com.germandebustamante.fuelio.feature.list.state.GasStationsViewModel
+import com.germandebustamante.fuelio.feature.settings.state.SettingsViewModel
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 import org.koin.core.parameter.parametersOf
@@ -33,6 +35,15 @@ object IosViewModelFactory : KoinComponent {
      * it as a parameter rather than resolving it internally.
      */
     fun gasStations(): GasStationsViewModel = get<GasStationsViewModel> { parametersOf(get<LocationPermissionController>()) }
+
+    /**
+     * Neither of these takes resolution parameters, so they would work through a plain Koin lookup
+     * from Swift too — they live here so Swift has one place to obtain any ViewModel rather than two
+     * different mechanisms depending on the screen.
+     */
+    fun settings(): SettingsViewModel = get()
+
+    fun app(): AppViewModel = get()
 
     fun gasStationDetail(gasStationId: String): GasStationDetailViewModel =
         get<GasStationDetailViewModel> { parametersOf(Destination.GasStationDetails(gasStationId)) }

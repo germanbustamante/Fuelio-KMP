@@ -41,6 +41,7 @@ import dev.mokkery.verify.VerifyMode
 import dev.mokkery.verifySuspend
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -1404,6 +1405,20 @@ class GasStationsViewModelTest {
         // THEN — restoring the default must not look like the user choosing it
         verifySuspend(VerifyMode.not) { setDefaultFuelTypeUseCase(any()) }
         verifySuspend(VerifyMode.not) { setSavedProvinceUseCase(any()) }
+    }
+
+    @Test
+    fun `onFuelFilterSelected - GIVEN a slow preference read WHEN the user picks first THEN the restore does not clobber it`() = runTest {
+        // GIVEN a preferences read that never completes within startup
+        every { observeUserPreferencesUseCase() } returns MutableSharedFlow()
+
+        // WHEN the user picks a fuel before the stored default arrives
+        createSut()
+        sut.onFuelFilterSelected(FuelFilter.Diesel)
+        advanceUntilIdle()
+
+        // THEN the pick stands — this is the race the iOS integration suite caught
+        assertEquals(FuelFilter.Diesel, sut.state.value.selectedFuelFilter)
     }
 
     @Test

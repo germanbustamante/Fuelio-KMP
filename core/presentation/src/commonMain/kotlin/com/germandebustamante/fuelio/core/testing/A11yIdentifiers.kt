@@ -41,6 +41,15 @@ object A11yIdentifiers {
     const val DETAIL_SCHEDULE_SECTION = "detail_schedule_section"
     const val DETAIL_PRICES_SECTION = "detail_prices_section"
 
+    // Settings
+    const val SETTINGS_BUTTON = "settings_button"
+    const val SETTINGS_SCREEN = "settings_screen"
+    const val SETTINGS_BACK_BUTTON = "settings_back_button"
+    const val THEME_PICKER = "theme_picker"
+    const val DEFAULT_FUEL_PICKER = "default_fuel_picker"
+
+    fun themeOption(rawValue: String): String = "theme_option_$rawValue"
+
     // Permissions
     const val PERMISSION_ALERT_SETTINGS = "permission_alert_settings"
 }
