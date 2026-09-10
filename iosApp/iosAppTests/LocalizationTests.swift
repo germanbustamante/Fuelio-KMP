@@ -33,6 +33,9 @@ struct LocalizationTests {
         "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
         "Settings", "Appearance", "System", "Light", "Dark", "Default fuel",
         "The fuel the list is sorted and priced by when the app opens.",
+        "Favorites", "No favorites yet",
+        "Tap the star on any gas station to keep it here and compare prices at a glance.",
+        "%lld favorites aren't loaded. Open their provinces to see them.",
     ]
 
     @Test("Ships a Spanish localization")

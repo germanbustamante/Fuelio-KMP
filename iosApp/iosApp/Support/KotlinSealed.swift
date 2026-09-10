@@ -121,6 +121,29 @@ extension DomainFuelType {
     }
 }
 
+// MARK: - Favorites content
+
+enum FavoritesContent: Equatable {
+    case loading
+    /// `unresolvedCount` is favourites whose station isn't cached, not an error — see
+    /// `FavoriteStationsResult`.
+    case success(stations: [GasStationItemVO], unresolvedCount: Int)
+    case empty
+
+    init(_ kotlin: FavoritesContentState) {
+        switch onEnum(of: kotlin) {
+        case .loading: self = .loading
+        case .success(let success):
+            self = .success(stations: success.stations, unresolvedCount: Int(success.unresolvedCount))
+        case .empty: self = .empty
+        }
+    }
+}
+
+extension FavoritesUIState {
+    var content: FavoritesContent { FavoritesContent(contentState) }
+}
+
 // MARK: - Weekly schedule
 
 enum ScheduleStatus: Equatable {

@@ -41,4 +41,14 @@ class SyntheticBackStackTest {
     fun `buildSyntheticBackStack - GIVEN settings THEN the list sits underneath it`() {
         assertEquals(listOf(Destination.GasStations, Destination.Settings), buildSyntheticBackStack(Destination.Settings))
     }
+
+    @Test
+    fun `parent - GIVEN favorites THEN back lands on the list`() {
+        assertEquals(Destination.GasStations, Destination.Favorites.parent)
+    }
+
+    @Test
+    fun `buildSyntheticBackStack - GIVEN favorites THEN the list sits underneath it`() {
+        assertEquals(listOf(Destination.GasStations, Destination.Favorites), buildSyntheticBackStack(Destination.Favorites))
+    }
 }

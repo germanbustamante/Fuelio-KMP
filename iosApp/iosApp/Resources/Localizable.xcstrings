@@ -18,6 +18,47 @@
         }
       }
     },
+    "%lld favorites aren't loaded. Open their provinces to see them.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld favorite isn't loaded. Open its province to see it."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld favorites aren't loaded. Open their provinces to see them."
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld favorito no está cargado. Abre su provincia para verlo."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld favoritos no están cargados. Abre sus provincias para verlos."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Add to favorites": {
       "extractionState": "manual",
       "localizations": {
@@ -290,6 +331,23 @@
         }
       }
     },
+    "Favorites": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favorites"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favoritos"
+          }
+        }
+      }
+    },
     "Friday": {
       "extractionState": "manual",
       "localizations": {
@@ -507,6 +565,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lunes"
+          }
+        }
+      }
+    },
+    "No favorites yet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No favorites yet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía no hay favoritos"
           }
         }
       }
@@ -796,6 +871,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sistema"
+          }
+        }
+      }
+    },
+    "Tap the star on any gas station to keep it here and compare prices at a glance.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap the star on any gas station to keep it here and compare prices at a glance."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toca la estrella de cualquier gasolinera para guardarla aquí y comparar precios de un vistazo."
           }
         }
       }

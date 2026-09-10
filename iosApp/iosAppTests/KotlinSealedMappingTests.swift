@@ -42,6 +42,30 @@ struct KotlinSealedMappingTests {
         #expect(GasStationDetailContent(success) == .success(station: station, scheduleDays: success.scheduleDays))
     }
 
+    // MARK: - Favorites content state
+
+    @Test("Maps every favorites FavoritesContentState variant")
+    func mapsFavoritesContentState() {
+        #expect(FavoritesContent(FavoritesContentStateLoading.shared) == .loading)
+        #expect(FavoritesContent(FavoritesContentStateEmpty.shared) == .empty)
+
+        let stations = GasStationsFakesKt.fakeGasStationItemVOs
+        let success = FavoritesContentStateSuccess(stations: stations, unresolvedCount: 2)
+        #expect(FavoritesContent(success) == .success(stations: stations, unresolvedCount: 2))
+    }
+
+    @Test("Derives the favorites content state from a real UIState")
+    func derivesFavoritesContentFromUIState() {
+        let stations = GasStationsFakesKt.fakeGasStationItemVOs
+        let loading = FavoritesUIState(stations: [], unresolvedCount: 0, isLoading: true)
+        let empty = FavoritesUIState(stations: [], unresolvedCount: 0, isLoading: false)
+        let loaded = FavoritesUIState(stations: stations, unresolvedCount: 1, isLoading: false)
+
+        #expect(loading.content == .loading)
+        #expect(empty.content == .empty)
+        #expect(loaded.content == .success(stations: stations, unresolvedCount: 1))
+    }
+
     // MARK: - Fuel filter
 
     @Test("Round-trips every FuelFilter variant", arguments: FuelKind.allCases)

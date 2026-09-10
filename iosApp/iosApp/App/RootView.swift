@@ -24,6 +24,8 @@ struct RootView: View {
                         GasStationDetailScreen(gasStationId: id)
                     case .settings:
                         SettingsScreen()
+                    case .favorites:
+                        FavoritesScreen()
                     }
                 }
         }

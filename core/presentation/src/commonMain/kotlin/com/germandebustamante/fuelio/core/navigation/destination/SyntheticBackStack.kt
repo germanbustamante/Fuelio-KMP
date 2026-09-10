@@ -23,6 +23,7 @@ internal val Destination.parent: Destination?
         is Destination.GasStations -> null
         is Destination.GasStationDetails -> Destination.GasStations
         is Destination.Settings -> Destination.GasStations
+        is Destination.Favorites -> Destination.GasStations
     }
 
 /**

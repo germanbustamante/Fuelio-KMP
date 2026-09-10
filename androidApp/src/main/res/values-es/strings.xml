@@ -52,4 +52,10 @@
     <string name="settings_theme_dark">Oscuro</string>
     <string name="settings_default_fuel_title">Combustible por defecto</string>
     <string name="settings_default_fuel_description">El combustible con el que se ordena y se muestra el precio al abrir la app.</string>
+    <!-- Favoritos -->
+    <string name="open_favorites">Favoritos</string>
+    <string name="favorites_title">Favoritos</string>
+    <string name="favorites_back">Atrás</string>
+    <string name="favorites_empty_title">Todavía no hay favoritos</string>
+    <string name="favorites_empty_subtitle">Toca la estrella de cualquier gasolinera para guardarla aquí y comparar precios de un vistazo.</string>
 </resources>
