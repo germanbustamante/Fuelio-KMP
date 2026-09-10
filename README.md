@@ -1,5 +1,7 @@
 # Fuelio
 
+[![CI](https://github.com/germanbustamante/Fuelio-KMP/actions/workflows/ci.yml/badge.svg?branch=development)](https://github.com/germanbustamante/Fuelio-KMP/actions/workflows/ci.yml)
+
 A gas-station finder built with Kotlin Multiplatform: shared domain/data/presentation logic in
 Kotlin, **native UI on each platform** — Jetpack Compose on Android, SwiftUI on iOS. See
 [`docs/adr/`](./docs/adr) for the architectural decisions behind that split, and `CLAUDE.md` for the

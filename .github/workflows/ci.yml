@@ -1,0 +1,175 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [development]
+  push:
+    branches: [development]
+  workflow_dispatch:
+
+# A new push to a PR makes the in-flight run pointless.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Both secrets are optional. thirdparties.properties is gitignored, so a clean checkout has
+  # neither key; the build treats blank as a supported state (PostHog stays off, the map renders
+  # empty) rather than failing. keystore.properties is likewise absent, so the release signing
+  # config is simply never created.
+  MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+  POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+
+jobs:
+  lint:
+    name: ktlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/development' }}
+          gradle-home-cache-cleanup: true
+      - run: ./gradlew ktlintCheck
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: ktlint-reports
+          path: '**/build/reports/ktlint/**'
+
+  android:
+    name: Android tests and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/development' }}
+          gradle-home-cache-cleanup: true
+
+      # Every KMP module's commonTest runs on the JVM, so the only thing that needs a macOS runner
+      # is the iosTest source sets and Xcode itself.
+      - name: Run JVM tests
+        run: |
+          ./gradlew \
+            :core:domain:testAndroidHostTest \
+            :core:analytics:testAndroidHostTest \
+            :data:testAndroidHostTest \
+            :core:presentation:testAndroidHostTest \
+            :androidApp:testDebugUnitTest
+
+      - name: Build debug APK
+        run: ./gradlew :androidApp:assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fuelio-debug-apk
+          path: androidApp/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: android-test-reports
+          path: '**/build/reports/tests/**'
+
+  ios:
+    name: iOS tests
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/development' }}
+          gradle-home-cache-cleanup: true
+
+      # The Kotlin/Native toolchain is a ~1.5GB download; caching it is by far the biggest win on
+      # this job. Keyed on the version catalog because that is what pins the Kotlin version.
+      - name: Cache Kotlin/Native toolchain
+        uses: actions/cache@v4
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
+          restore-keys: konan-${{ runner.os }}-
+
+      - name: Run Kotlin/Native tests
+        run: |
+          ./gradlew \
+            :core:domain:iosSimulatorArm64Test \
+            :core:analytics:iosSimulatorArm64Test \
+            :data:iosSimulatorArm64Test \
+            :core:presentation:iosSimulatorArm64Test
+
+      # Diagnostic: when the runner image rotates, the failure mode for a missing device is an
+      # opaque "Application failed preflight checks", not a clear error. This makes it obvious.
+      - name: List available simulators
+        run: xcrun simctl list devices available
+
+      - name: Run Swift tests
+        env:
+          SIMULATOR_NAME: iPhone 17
+        run: |
+          xcodebuild test \
+            -project iosApp/iosApp.xcodeproj \
+            -scheme iosApp \
+            -destination "platform=iOS Simulator,name=${SIMULATOR_NAME},OS=latest" \
+            -resultBundlePath build/iosApp.xcresult \
+            -retry-tests-on-failure -test-iterations 2 \
+            CODE_SIGNING_ALLOWED=NO
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: ios-test-results
+          path: build/iosApp.xcresult
+
+  # The eight Compose instrumentation suites are the slowest and flakiest thing in the matrix, and
+  # an emulator on a shared runner is the number one source of false reds. Gating every PR on it
+  # would train people to ignore CI, so it runs on merges to development and on demand instead.
+  instrumentation:
+    name: Android instrumentation tests
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      # API 35, not 37: there is no stable emulator system image for 37 yet. minSdk is 26, so an
+      # API 35 device still exercises everything these suites assert on.
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          script: ./gradlew :androidApp:connectedDebugAndroidTest
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: instrumentation-reports
+          path: androidApp/build/reports/androidTests/**
