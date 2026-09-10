@@ -55,7 +55,7 @@ fun FuelioNavHost(locationPermissionController: LocationPermissionController) {
         onBack = { backStack.removeLastOrNull() },
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
-            rememberViewModelStoreNavEntryDecorator()
+            rememberViewModelStoreNavEntryDecorator(),
         ),
         entryProvider = entryProvider {
             entry<DestinationNavKey> { key ->
@@ -65,7 +65,7 @@ fun FuelioNavHost(locationPermissionController: LocationPermissionController) {
                     is Destination.GasStationDetails -> GasStationDetail(destination)
                 }
             }
-        }
+        },
     )
 }
 

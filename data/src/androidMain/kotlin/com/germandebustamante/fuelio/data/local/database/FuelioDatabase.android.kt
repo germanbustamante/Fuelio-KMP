@@ -9,6 +9,6 @@ actual fun getDatabaseBuilder(contextProvider: ContextProvider): RoomDatabase.Bu
     val dbFile = appContext.getDatabasePath("fuelio.db")
     return Room.databaseBuilder<FuelioDatabase>(
         context = appContext,
-        name = dbFile.absolutePath
+        name = dbFile.absolutePath,
     )
 }

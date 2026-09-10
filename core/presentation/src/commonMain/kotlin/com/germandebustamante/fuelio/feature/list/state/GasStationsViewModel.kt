@@ -330,7 +330,7 @@ class GasStationsViewModel(
                     operation = operation,
                     errorType = domainError::class.simpleName ?: "Unknown",
                     errorMessage = domainError.message,
-                )
+                ),
             )
         }
     }

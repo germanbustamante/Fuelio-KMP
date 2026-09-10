@@ -24,13 +24,12 @@ object ScheduleSegmentListConverter {
     }
 
     @TypeConverter
-    fun toScheduleString(value: List<ScheduleSegmentEntity>): String =
-        value.joinToString(SEGMENT_SEPARATOR) { segment ->
-            listOf(
-                segment.startDay.name,
-                segment.endDay.name,
-                segment.startTime?.toString().orEmpty(),
-                segment.endTime?.toString().orEmpty(),
-            ).joinToString(FIELD_SEPARATOR)
-        }
+    fun toScheduleString(value: List<ScheduleSegmentEntity>): String = value.joinToString(SEGMENT_SEPARATOR) { segment ->
+        listOf(
+            segment.startDay.name,
+            segment.endDay.name,
+            segment.startTime?.toString().orEmpty(),
+            segment.endTime?.toString().orEmpty(),
+        ).joinToString(FIELD_SEPARATOR)
+    }
 }

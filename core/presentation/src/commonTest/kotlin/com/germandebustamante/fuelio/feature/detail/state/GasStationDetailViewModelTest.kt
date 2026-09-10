@@ -58,19 +58,19 @@ class GasStationDetailViewModelTest {
 
     @Test
     fun `init - WHEN the ViewModel is created THEN a gas_station_detail screen trace is tracked with the station id`() = runTest {
-        //GIVEN
+        // GIVEN
         val screenViewedTraceSlot = Capture.slot<GasStationDetailScreenViewed>()
         everySuspend { analyticsManager.track(capture(screenViewedTraceSlot)) } returns Unit
 
-        //WHEN
+        // WHEN
         sut = GasStationDetailViewModel(route, getGasStation, navigator, analyticsManager)
         advanceUntilIdle()
 
-        //THEN
+        // THEN
         assertEquals(GasStationDetailScreenViewed.SCREEN_NAME, screenViewedTraceSlot.get().screenName)
         assertEquals(
             GAS_STATION_ID,
-            screenViewedTraceSlot.get().params?.get(GasStationDetailScreenViewed.PARAM_GAS_STATION_ID)
+            screenViewedTraceSlot.get().params?.get(GasStationDetailScreenViewed.PARAM_GAS_STATION_ID),
         )
     }
 

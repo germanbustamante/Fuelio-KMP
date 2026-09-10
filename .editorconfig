@@ -27,14 +27,26 @@ ij_kotlin_allow_trailing_comma_on_call_site = true
 # Wildcard imports are never used here; keep it that way.
 ktlint_standard_no-wildcard-imports = enabled
 
+# Files are named after the concept they hold, not after their single declaration: the theme adapter
+# is Color.kt/Spacing.kt/Shape.kt/Typography.kt mirroring the design-token files it adapts, and
+# CLAUDE.md documents those names. Renaming them to FuelioSpacing.kt etc. would break that mapping.
+ktlint_standard_filename = disabled
+
+# ViewModels use the `_name` prefix for private plumbing flows that have no public counterpart on
+# purpose: it marks "internal, never observed from Swift" as opposed to the `_state`/`state` pair that
+# KMP-ObservableViewModel does expose. See the comment in GasStationsViewModel.
+ktlint_standard_backing-property-naming = disabled
+
 [core/presentation/src/commonMain/kotlin/com/germandebustamante/fuelio/core/designtokens/*.kt]
 # Design tokens are SCREAMING_SNAKE_CASE `const val`s on purpose: that is the only shape
 # Kotlin/Native exports as plain static constants Swift can read (see ADR 0003).
 ktlint_standard_property-naming = disabled
 
 [**/src/*Test/**/*.kt]
-# Test method names are backtick-quoted sentences.
+# Test method names are backtick-quoted GIVEN/WHEN/THEN sentences: they can't be wrapped, and
+# shortening them would cost the description that makes a failing test readable.
 ktlint_standard_function-naming = disabled
+ktlint_standard_max-line-length = disabled
 
 [androidApp/src/{test,androidTest}/**/*.kt]
 ktlint_standard_function-naming = disabled

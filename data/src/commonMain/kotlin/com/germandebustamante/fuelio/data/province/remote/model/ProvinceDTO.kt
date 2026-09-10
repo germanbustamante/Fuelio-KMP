@@ -5,9 +5,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ProvinceDTO(
-    @SerialName("IDPovincia") val id: String,
-    @SerialName("Provincia") val name: String,
-)
+data class ProvinceDTO(@SerialName("IDPovincia") val id: String, @SerialName("Provincia") val name: String)
 
 fun ProvinceDTO.toDomain() = ProvinceBO(id = id, name = name)

@@ -5,11 +5,11 @@ import com.germandebustamante.fuelio.data.province.remote.model.ProvinceDTO
 object ProvinceDTOMother {
     fun provinceDTO() = ProvinceDTO(
         id = "1",
-        name = "Madrid"
+        name = "Madrid",
     )
 
     fun provinceDTOList() = listOf(
         provinceDTO(),
-        ProvinceDTO(id = "2", name = "Barcelona")
+        ProvinceDTO(id = "2", name = "Barcelona"),
     )
 }

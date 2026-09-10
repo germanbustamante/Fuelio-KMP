@@ -23,10 +23,7 @@ import org.koin.dsl.includes
  * nothing. Declared **before** [config] so `initKoin { androidContext(this) }` keeps binding its
  * trailing lambda to [config].
  */
-fun initKoin(
-    overrides: List<Module> = emptyList(),
-    config: KoinAppDeclaration? = null,
-): KoinApplication = startKoin {
+fun initKoin(overrides: List<Module> = emptyList(), config: KoinAppDeclaration? = null): KoinApplication = startKoin {
     includes(config)
     modules(
         domainModule,

@@ -36,13 +36,13 @@ class GasStationRepositoryImplTest {
     //region getGasStationsByLocation
     @Test
     fun `getGasStationsByLocation - GIVEN local cache is empty AND remote succeeds WHEN called THEN emit success once with fresh stations`() = runTest {
-        //GIVEN
+        // GIVEN
         givenLocalGasStationsEmpty()
         givenRemoteGetGasStationsByLocationSuccess()
 
-        //WHEN
+        // WHEN
         sut.getGasStationsByLocation(PROVINCE_ID).test {
-            //THEN
+            // THEN
             val result = awaitItem()
             assertTrue(result.isSuccess)
             val gasStations = result.getOrNull()
@@ -55,13 +55,13 @@ class GasStationRepositoryImplTest {
 
     @Test
     fun `getGasStationsByLocation - GIVEN local cache is empty AND remote fails WHEN called THEN emit failure once`() = runTest {
-        //GIVEN
+        // GIVEN
         givenLocalGasStationsEmpty()
         givenRemoteGetGasStationsByLocationFailure()
 
-        //WHEN
+        // WHEN
         sut.getGasStationsByLocation(PROVINCE_ID).test {
-            //THEN
+            // THEN
             val result = awaitItem()
             assertTrue(result.isFailure)
             awaitComplete()
@@ -70,14 +70,14 @@ class GasStationRepositoryImplTest {
 
     @Test
     fun `getGasStationsByLocation - GIVEN local cache has stations AND remote succeeds WHEN called THEN emit cached stations first then fresh stations`() = runTest {
-        //GIVEN
+        // GIVEN
         val cachedEntity = GasStationEntityMother.gasStationEntity(id = CACHED_STATION_ID)
         givenLocalGasStations(listOf(cachedEntity))
         givenRemoteGetGasStationsByLocationSuccess()
 
-        //WHEN
+        // WHEN
         sut.getGasStationsByLocation(PROVINCE_ID).test {
-            //THEN
+            // THEN
             val cachedResult = awaitItem()
             assertTrue(cachedResult.isSuccess)
             val cachedGasStations = cachedResult.getOrNull()
@@ -98,14 +98,14 @@ class GasStationRepositoryImplTest {
 
     @Test
     fun `getGasStationsByLocation - GIVEN local cache has stations AND remote fails WHEN called THEN emit cached stations success then failure`() = runTest {
-        //GIVEN
+        // GIVEN
         val cachedEntity = GasStationEntityMother.gasStationEntity(id = CACHED_STATION_ID)
         givenLocalGasStations(listOf(cachedEntity))
         givenRemoteGetGasStationsByLocationFailure()
 
-        //WHEN
+        // WHEN
         sut.getGasStationsByLocation(PROVINCE_ID).test {
-            //THEN
+            // THEN
             val cachedResult = awaitItem()
             assertTrue(cachedResult.isSuccess)
             assertEquals(true, cachedResult.getOrNull()?.isFromCache)
@@ -119,20 +119,21 @@ class GasStationRepositoryImplTest {
 
     @Test
     fun `getGasStationsByLocation - GIVEN remote succeeds WHEN called THEN local cache is replaced with stations mapped to the requested province`() = runTest {
-        //GIVEN
+        // GIVEN
         givenLocalGasStationsEmpty()
         givenRemoteGetGasStationsByLocationSuccess()
         val expectedEntities = listOf(GasStationDTOMother.gasStationDTO().dtoToDomain().toEntity(PROVINCE_ID))
 
-        //WHEN
+        // WHEN
         sut.getGasStationsByLocation(PROVINCE_ID).test {
             awaitItem()
             awaitComplete()
         }
 
-        //THEN
+        // THEN
         verifySuspend { localDataSource.replaceGasStationsByProvince(PROVINCE_ID, expectedEntities) }
     }
+
     //region Stubs
     private fun givenLocalGasStationsEmpty() {
         everySuspend { localDataSource.getGasStationsByProvince(any()) } returns emptyList()
@@ -156,13 +157,13 @@ class GasStationRepositoryImplTest {
     //region getGasStationById
     @Test
     fun `getGasStationById - GIVEN local emits a matching entity WHEN called THEN emit mapped domain station`() = runTest {
-        //GIVEN
+        // GIVEN
         val entity = GasStationEntityMother.gasStationEntity(id = STATION_ID)
         every { localDataSource.getGasStationById(STATION_ID) } returns flowOf(entity)
 
-        //WHEN
+        // WHEN
         sut.getGasStationById(STATION_ID).test {
-            //THEN
+            // THEN
             assertEquals(entity.toDomain(), awaitItem())
             awaitComplete()
         }
@@ -170,12 +171,12 @@ class GasStationRepositoryImplTest {
 
     @Test
     fun `getGasStationById - GIVEN local has no matching entity WHEN called THEN emit null`() = runTest {
-        //GIVEN
+        // GIVEN
         every { localDataSource.getGasStationById(STATION_ID) } returns flowOf(null)
 
-        //WHEN
+        // WHEN
         sut.getGasStationById(STATION_ID).test {
-            //THEN
+            // THEN
             assertNull(awaitItem())
             awaitComplete()
         }
@@ -183,14 +184,14 @@ class GasStationRepositoryImplTest {
 
     @Test
     fun `getGasStationById - GIVEN local emits several updates over time WHEN called THEN emit each mapped value in order`() = runTest {
-        //GIVEN
+        // GIVEN
         val firstEntity = GasStationEntityMother.gasStationEntity(id = STATION_ID, gasolinePrice95 = 1.5)
         val updatedEntity = GasStationEntityMother.gasStationEntity(id = STATION_ID, gasolinePrice95 = 1.6)
         every { localDataSource.getGasStationById(STATION_ID) } returns flowOf(firstEntity, updatedEntity)
 
-        //WHEN
+        // WHEN
         sut.getGasStationById(STATION_ID).test {
-            //THEN
+            // THEN
             assertEquals(firstEntity.toDomain(), awaitItem())
             assertEquals(updatedEntity.toDomain(), awaitItem())
             awaitComplete()

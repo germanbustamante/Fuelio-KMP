@@ -11,11 +11,7 @@ import com.germandebustamante.fuelio.core.ui.theme.FuelioSpacing
 import com.germandebustamante.fuelio.designsystem.searchbar.FuelioSearchBar
 
 @Composable
-fun GasStationSearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun GasStationSearchBar(query: String, onQueryChange: (String) -> Unit, modifier: Modifier = Modifier) {
     FuelioSearchBar(
         query = query,
         onQueryChange = onQueryChange,
