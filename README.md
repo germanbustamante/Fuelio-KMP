@@ -22,6 +22,34 @@ iosApp (Xcode)       →  SwiftUI UI, consumes the CorePresentation.framework bu
 (`CorePresentation.framework`) for Xcode to link — it has zero Compose/Navigation3 dependencies by
 design (see [ADR 0002](./docs/adr/0002-core-presentation-module-without-compose.md)).
 
+## Setup
+
+Two configuration files are **gitignored**, so a fresh clone will not have them. The build works
+without both — the map renders empty, PostHog stays off and release signing is skipped — but you
+will want at least the first to see the map.
+
+**`thirdparties.properties`** (repo root) holds third-party API keys:
+
+```properties
+MAPS_API_KEY=AIza…       # Google Maps SDK, used as an Android manifest placeholder
+POSTHOG_API_KEY=phc_…    # optional; blank or missing simply keeps PostHog disabled
+```
+
+Both also fall back to environment variables of the same name, which is how CI supplies them.
+
+**`androidApp/keystore.properties`** is only needed to build a signed release:
+
+```properties
+storeFile=/absolute/path/to/fuelio.jks
+storePassword=…
+keyAlias=…
+keyPassword=…
+```
+
+Absent, `assembleRelease` still builds — it just falls back to the debug signing config.
+
+`google-services.json` is committed, so Firebase needs no setup.
+
 ## Build and run — Android
 
 ```shell
@@ -82,6 +110,18 @@ open core/presentation/build/bin/iosSimulatorArm64/debugFramework/CorePresentati
 ./gradlew :data:iosSimulatorArm64Test
 ./gradlew :core:analytics:iosSimulatorArm64Test
 ```
+
+### Screenshots
+
+```shell
+./gradlew :androidApp:verifyRoborazziDebug    # compare against the committed goldens (CI runs this)
+./gradlew :androidApp:recordRoborazziDebug    # re-record after an intentional visual change
+```
+
+Goldens live in `androidApp/src/test/screenshots/` and are committed. They render through Robolectric
+at SDK 36 rather than the app's compileSdk of 37 — see
+[ADR 0006](./docs/adr/0006-ci-pipeline-and-screenshot-testing.md) for why, and for why the JUnit
+vintage engine is a required dependency rather than an optional one.
 
 ### Swift
 
