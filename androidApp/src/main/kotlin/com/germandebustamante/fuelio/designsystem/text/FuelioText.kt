@@ -15,11 +15,21 @@ import com.germandebustamante.fuelio.core.ui.theme.FuelioSpacing
 import com.germandebustamante.fuelio.core.ui.theme.FuelioTheme
 
 enum class FuelioTextStyle {
-    DisplayLarge, DisplayMedium, DisplaySmall,
-    HeadlineLarge, HeadlineMedium, HeadlineSmall,
-    TitleLarge, TitleMedium, TitleSmall,
-    BodyLarge, BodyMedium, BodySmall,
-    LabelLarge, LabelMedium, LabelSmall,
+    DisplayLarge,
+    DisplayMedium,
+    DisplaySmall,
+    HeadlineLarge,
+    HeadlineMedium,
+    HeadlineSmall,
+    TitleLarge,
+    TitleMedium,
+    TitleSmall,
+    BodyLarge,
+    BodyMedium,
+    BodySmall,
+    LabelLarge,
+    LabelMedium,
+    LabelSmall,
 }
 
 @Composable

@@ -34,15 +34,15 @@ object GasStationBOMother {
         gasolinePrice95 = gasolinePrice95,
         gasolinePrice98 = gasolinePrice98,
         dieselPrice = dieselPrice,
-        dieselPremiumPrice = dieselPremiumPrice
+        dieselPremiumPrice = dieselPremiumPrice,
     )
 
     fun gasStationBOList() = listOf(
         gasStationBO(),
-        gasStationBO(id = "2", name = "Fuel Express")
+        gasStationBO(id = "2", name = "Fuel Express"),
     )
 
     fun alwaysOpenSchedule() = listOf(
-        ScheduleSegmentBO(DayOfWeek.MONDAY, DayOfWeek.SUNDAY, null, null)
+        ScheduleSegmentBO(DayOfWeek.MONDAY, DayOfWeek.SUNDAY, null, null),
     )
 }

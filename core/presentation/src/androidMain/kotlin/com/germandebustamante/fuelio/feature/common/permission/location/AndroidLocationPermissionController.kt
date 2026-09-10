@@ -22,10 +22,8 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.Locale
 import kotlin.coroutines.resume
 
-class AndroidLocationPermissionController(
-    private val activity: ComponentActivity,
-    private val launcher: ActivityResultLauncher<String>,
-) : LocationPermissionController {
+class AndroidLocationPermissionController(private val activity: ComponentActivity, private val launcher: ActivityResultLauncher<String>) :
+    LocationPermissionController {
 
     private val fusedLocationProvider: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(activity)
@@ -89,25 +87,29 @@ class AndroidLocationPermissionController(
                 geocoder.getFromLocation(location.latitude, location.longitude, CITY_MAX_RESULTS) { addresses ->
                     continuation.resume(
                         addresses.firstProvince()
-                            ?.let { LocationPermissionController.Location(it, location.latitude, location.longitude) })
+                            ?.let { LocationPermissionController.Location(it, location.latitude, location.longitude) },
+                    )
                 }
             } else {
                 @Suppress("DEPRECATION")
                 val province =
                     geocoder.getFromLocation(location.latitude, location.longitude, CITY_MAX_RESULTS)?.firstProvince()
-                continuation.resume(province?.let {
-                    LocationPermissionController.Location(
-                        it, location.latitude, location.longitude
-                    )
-                })
+                continuation.resume(
+                    province?.let {
+                        LocationPermissionController.Location(
+                            it,
+                            location.latitude,
+                            location.longitude,
+                        )
+                    },
+                )
             }
         }
 
     private fun isPermissionGranted() =
         ContextCompat.checkSelfPermission(activity, LOCATION_PERMISSION) == PackageManager.PERMISSION_GRANTED
 
-    private fun getAlreadyAskedFlag() =
-        activity.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getBoolean(KEY_ALREADY_ASKED, false)
+    private fun getAlreadyAskedFlag() = activity.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getBoolean(KEY_ALREADY_ASKED, false)
 
     private fun setAlreadyAskedFlag() {
         activity.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit { putBoolean(KEY_ALREADY_ASKED, true) }

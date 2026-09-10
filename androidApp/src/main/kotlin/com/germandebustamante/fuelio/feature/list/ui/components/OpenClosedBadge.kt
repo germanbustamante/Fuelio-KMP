@@ -19,10 +19,7 @@ import com.germandebustamante.fuelio.R
 import com.germandebustamante.fuelio.core.ui.theme.FuelioSpacing
 
 @Composable
-fun OpenClosedBadge(
-    isOpen: Boolean,
-    modifier: Modifier = Modifier,
-) {
+fun OpenClosedBadge(isOpen: Boolean, modifier: Modifier = Modifier) {
     val (bgColor, textColor, stringRes) = if (isOpen) {
         Triple(
             MaterialTheme.colorScheme.tertiaryContainer,

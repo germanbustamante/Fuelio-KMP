@@ -40,6 +40,7 @@ class DistanceCalculatorTest {
         // Madrid Puerta del Sol
         const val MADRID_LAT = 40.4168
         const val MADRID_LON = -3.7038
+
         // ~1km north of Puerta del Sol
         const val MADRID_1KM_NORTH_LAT = 40.4258
 

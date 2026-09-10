@@ -18,7 +18,7 @@ data class GasStationBO(
     val dieselPrice: Double?,
     val dieselPremiumPrice: Double?,
 ) {
-     val brand: GasStationBrand? by lazy(LazyThreadSafetyMode.NONE) { GasStationBrand.fromName(name) }
+    val brand: GasStationBrand? by lazy(LazyThreadSafetyMode.NONE) { GasStationBrand.fromName(name) }
 
     val displayName: String by lazy(LazyThreadSafetyMode.NONE) { name.lowercase().replaceFirstChar { it.uppercase() } }
 

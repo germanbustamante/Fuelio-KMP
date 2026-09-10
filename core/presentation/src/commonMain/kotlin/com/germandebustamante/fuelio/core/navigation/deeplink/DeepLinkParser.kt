@@ -15,10 +15,7 @@ internal object DeepLinkRoutes {
  * [host] is a convenience accessor over the first segment (the resource name), for readability
  * at call sites that only care about "what resource is this" (e.g. `parsed.host == RESOURCE_STATION`).
  */
-internal data class ParsedUri(
-    val scheme: String?,
-    val pathSegments: List<String>,
-) {
+internal data class ParsedUri(val scheme: String?, val pathSegments: List<String>) {
     val host: String? get() = pathSegments.firstOrNull()
 }
 

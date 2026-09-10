@@ -8,7 +8,5 @@ object LocalTimeConverter {
     fun toDate(dateString: String?): LocalTime? = dateString?.let { LocalTime.parse(dateString) }
 
     @TypeConverter
-    fun toDateString(date: LocalTime?): String? {
-        return date?.toString()
-    }
+    fun toDateString(date: LocalTime?): String? = date?.toString()
 }

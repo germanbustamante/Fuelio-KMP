@@ -32,8 +32,7 @@ object IosViewModelFactory : KoinComponent {
      * Android injects its own Activity-bound implementation instead, which is why the definition takes
      * it as a parameter rather than resolving it internally.
      */
-    fun gasStations(): GasStationsViewModel =
-        get<GasStationsViewModel> { parametersOf(get<LocationPermissionController>()) }
+    fun gasStations(): GasStationsViewModel = get<GasStationsViewModel> { parametersOf(get<LocationPermissionController>()) }
 
     fun gasStationDetail(gasStationId: String): GasStationDetailViewModel =
         get<GasStationDetailViewModel> { parametersOf(Destination.GasStationDetails(gasStationId)) }

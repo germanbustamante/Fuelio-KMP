@@ -14,10 +14,7 @@ import com.germandebustamante.fuelio.core.ui.theme.FuelioSpacing
 import com.germandebustamante.fuelio.core.ui.theme.FuelioTheme
 
 @Composable
-fun FuelioDivider(
-    modifier: Modifier = Modifier,
-    thickness: Dp = 1.dp,
-) {
+fun FuelioDivider(modifier: Modifier = Modifier, thickness: Dp = 1.dp) {
     HorizontalDivider(
         modifier = modifier,
         thickness = thickness,

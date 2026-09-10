@@ -12,8 +12,7 @@ import kotlin.test.assertFailsWith
 
 class ProvinceRemoteDataSourceImplTest : BaseRemoteDataSourceTest() {
 
-    private fun createSut(engine: MockEngine) =
-        ProvinceRemoteDataSourceImpl(createHttpClient(engine), BASE_URL)
+    private fun createSut(engine: MockEngine) = ProvinceRemoteDataSourceImpl(createHttpClient(engine), BASE_URL)
 
     @Test
     fun given_remote_server_returns_provinces_when_getProvinces_then_return_provinces() = runTest {

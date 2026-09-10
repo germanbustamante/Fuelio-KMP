@@ -5,7 +5,7 @@ import com.germandebustamante.fuelio.core.domain.gasstation.model.ScheduleSegmen
 import com.germandebustamante.fuelio.data.gasstation.local.model.GasStationEntity
 import com.germandebustamante.fuelio.data.gasstation.local.model.ScheduleSegmentEntity
 
-fun GasStationBO.toEntity(provinceId: String) : GasStationEntity = GasStationEntity(
+fun GasStationBO.toEntity(provinceId: String): GasStationEntity = GasStationEntity(
     id = id,
     provinceId = provinceId,
     name = name,

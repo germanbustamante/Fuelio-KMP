@@ -46,12 +46,12 @@ fun ColorSwatch(name: String, color: Color) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             modifier = Modifier
                 .size(40.dp)
-                .background(color, RoundedCornerShape(8.dp))
+                .background(color, RoundedCornerShape(8.dp)),
         )
         Spacer(Modifier.width(12.dp))
         Text(name, style = MaterialTheme.typography.bodyLarge)
