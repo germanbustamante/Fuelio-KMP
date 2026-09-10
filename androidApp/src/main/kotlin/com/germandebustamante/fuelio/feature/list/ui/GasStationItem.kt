@@ -45,6 +45,9 @@ import com.germandebustamante.fuelio.feature.list.state.GasStationItemVO
 import com.germandebustamante.fuelio.feature.list.ui.components.CheapestBadge
 import com.germandebustamante.fuelio.feature.list.ui.components.OpenClosedBadge
 
+/** The unit `NumberFormatter.formatAsEuros()` appends; mirrored by iOS's `FuelioPriceLabel`. */
+private const val EUROS_PER_LITRE_SUFFIX = " €/L"
+
 @Composable
 fun GasStationItem(
     gasStation: GasStationItemVO,
@@ -59,6 +62,11 @@ fun GasStationItem(
     val distanceLabel = gasStation.distanceInKilometers?.let { stringResource(R.string.at_distance, it.formatAsKilometers()) } ?: ""
     val fuelLabel = gasStation.fuelFilterLabel()
     val priceLabel = gasStation.getCurrentFuelPrice()?.formatAsEuros() ?: "N/A"
+    // `formatAsEuros()` already appends the unit, so the number and the unit are split back apart
+    // here to typeset the unit smaller — the same thing iOS's `FuelioPriceLabel` does. `priceLabel`
+    // itself stays whole for the accessibility description, which wants it read out in full.
+    val priceValueLabel = priceLabel.removeSuffix(EUROS_PER_LITRE_SUFFIX)
+    val priceUnitLabel = EUROS_PER_LITRE_SUFFIX.trim().takeIf { priceLabel.endsWith(EUROS_PER_LITRE_SUFFIX) }
     val cheapestLabel = if (gasStation.isCheapest) ", ${stringResource(R.string.cheapest_station)}" else ""
     val a11yDesc =
         "$stationName, $address, $openLabel${if (distanceLabel.isNotEmpty()) ", $distanceLabel" else ""}, $fuelLabel a $priceLabel$cheapestLabel"
@@ -83,17 +91,19 @@ fun GasStationItem(
             ) {
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
-                        text = priceLabel,
+                        text = priceValueLabel,
                         style = MaterialTheme.typography.headlineMedium,
                         color = if (gasStation.isCheapest) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.testTag(A11yIdentifiers.stationPrice(gasStation.station.id)),
                     )
-                    Text(
-                        text = "/L",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = FuelioSpacing.xxs, bottom = FuelioSpacing.xxs),
-                    )
+                    if (priceUnitLabel != null) {
+                        Text(
+                            text = priceUnitLabel,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(start = FuelioSpacing.xxs, bottom = FuelioSpacing.xxs),
+                        )
+                    }
                 }
 
                 Row(
