@@ -21,6 +21,7 @@ import com.germandebustamante.fuelio.core.navigation.destination.DestinationNavK
 import com.germandebustamante.fuelio.core.navigation.destination.buildSyntheticBackStack
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import com.germandebustamante.fuelio.feature.detail.ui.GasStationDetail
+import com.germandebustamante.fuelio.feature.favorites.ui.FavoritesScreen
 import com.germandebustamante.fuelio.feature.list.ui.GasStationsScreen
 import com.germandebustamante.fuelio.feature.settings.ui.SettingsScreen
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -65,6 +66,7 @@ fun FuelioNavHost(locationPermissionController: LocationPermissionController) {
                         GasStationsScreen(locationPermissionController, modifier = Modifier.fillMaxSize())
                     is Destination.GasStationDetails -> GasStationDetail(destination)
                     is Destination.Settings -> SettingsScreen()
+                    is Destination.Favorites -> FavoritesScreen()
                 }
             }
         },

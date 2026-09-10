@@ -22,6 +22,7 @@ import com.germandebustamante.fuelio.feature.common.analytics.ApiCallFailed
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionState
 import com.germandebustamante.fuelio.feature.common.viewmodel.launchStartupTasks
+import com.germandebustamante.fuelio.feature.list.analytics.FavoritesOpened
 import com.germandebustamante.fuelio.feature.list.analytics.GasStationSelected
 import com.germandebustamante.fuelio.feature.list.analytics.GasStationsScreenViewed
 import com.germandebustamante.fuelio.feature.list.analytics.LocationPermissionEvent
@@ -405,6 +406,13 @@ class GasStationsViewModel(
         viewModelScope.launch {
             analyticsManager.track(GasStationSelected(stationId))
             navigator.navigate(Destination.GasStationDetails(stationId))
+        }
+    }
+
+    fun onFavoritesTapped() {
+        viewModelScope.launch {
+            analyticsManager.track(FavoritesOpened)
+            navigator.navigate(Destination.Favorites)
         }
     }
 

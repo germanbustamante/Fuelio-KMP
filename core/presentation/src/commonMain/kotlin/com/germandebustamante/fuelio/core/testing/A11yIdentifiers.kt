@@ -50,6 +50,13 @@ object A11yIdentifiers {
 
     fun themeOption(rawValue: String): String = "theme_option_$rawValue"
 
+    // Favorites
+    const val FAVORITES_BUTTON = "favorites_button"
+    const val FAVORITES_SCREEN = "favorites_screen"
+    const val FAVORITES_BACK_BUTTON = "favorites_back_button"
+    const val FAVORITES_EMPTY = "favorites_empty"
+    const val FAVORITES_UNRESOLVED_BANNER = "favorites_unresolved_banner"
+
     // Permissions
     const val PERMISSION_ALERT_SETTINGS = "permission_alert_settings"
 }

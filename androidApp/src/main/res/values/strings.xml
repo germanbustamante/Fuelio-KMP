@@ -54,4 +54,10 @@
     <string name="settings_theme_dark">Dark</string>
     <string name="settings_default_fuel_title">Default fuel</string>
     <string name="settings_default_fuel_description">The fuel the list is sorted and priced by when the app opens.</string>
+    <!-- Favorites -->
+    <string name="open_favorites">Favorites</string>
+    <string name="favorites_title">Favorites</string>
+    <string name="favorites_back">Back</string>
+    <string name="favorites_empty_title">No favorites yet</string>
+    <string name="favorites_empty_subtitle">Tap the star on any gas station to keep it here and compare prices at a glance.</string>
 </resources>
