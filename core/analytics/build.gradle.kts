@@ -73,6 +73,7 @@ kotlin {
             dependencies {
                 implementation(project.dependencies.platform(libs.firebase.bom))
                 implementation(libs.firebase.analytics)
+                implementation(libs.firebase.crashlytics)
                 implementation(libs.posthog.android)
                 implementation(libs.koin.android)
             }

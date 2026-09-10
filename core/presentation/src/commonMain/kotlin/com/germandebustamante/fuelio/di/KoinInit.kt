@@ -3,7 +3,7 @@ package com.germandebustamante.fuelio.di
 import com.germandebustamante.fuelio.core.analytics.di.analyticsModule
 import com.germandebustamante.fuelio.core.di.coreModule
 import com.germandebustamante.fuelio.core.domain.di.domainModule
-import com.germandebustamante.fuelio.core.logger.AppLogger
+import com.germandebustamante.fuelio.core.logger.CrashReporting
 import com.germandebustamante.fuelio.core.startup.StartupTask
 import com.germandebustamante.fuelio.core.startup.di.startupModule
 import com.germandebustamante.fuelio.data.di.dataModule
@@ -37,11 +37,16 @@ fun initKoin(overrides: List<Module> = emptyList(), config: KoinAppDeclaration? 
     )
     modules(overrides)
 }.also { app ->
+    // Installed synchronously, before any task runs: CrashReporterStartupTask is itself one of the
+    // tasks, and they all launch concurrently, so leaving the install to it would mean a task that
+    // fails first has its failure reported to a no-op reporter.
+    CrashReporting.install(app.koin.get())
+
     val startupTasks = app.koin.get<Set<StartupTask>>()
     MainScope().launch {
         startupTasks.forEach { task ->
             launch {
-                runCatching { task() }.onFailure { AppLogger.e("StartupTask", "Startup task failed", it) }
+                runCatching { task() }.onFailure { CrashReporting.logError("StartupTask", "Startup task failed", it) }
             }
         }
     }

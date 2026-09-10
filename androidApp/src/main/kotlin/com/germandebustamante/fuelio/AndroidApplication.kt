@@ -2,7 +2,7 @@ package com.germandebustamante.fuelio
 
 import android.app.Application
 import android.content.pm.ApplicationInfo
-import com.germandebustamante.fuelio.core.logger.AppLogger
+import com.germandebustamante.fuelio.core.logger.CrashReporting
 import com.germandebustamante.fuelio.di.initKoin
 import com.github.anrwatchdog.ANRWatchDog
 import org.koin.android.ext.koin.androidContext
@@ -22,7 +22,9 @@ class AndroidApplication : Application() {
             ANRWatchDog()
                 .setIgnoreDebugger(true)
                 .setANRListener { error ->
-                    AppLogger.e("ANRWatchDog", "ANR detected", error)
+                    // Goes through CrashReporting so an ANR lands in Crashlytics as a non-fatal with
+                    // its full multi-thread stack trace, not just in Logcat where nobody sees it.
+                    CrashReporting.logError("ANRWatchDog", "ANR detected", error)
                 }
                 .start()
         }
