@@ -21,6 +21,7 @@ private object BuildConstants {
     // gitignored file, same convention as core/analytics/build.gradle.kts's POSTHOG_API_KEY.
     const val THIRD_PARTIES_PROPERTIES_FILE_NAME = "thirdparties.properties"
     const val MAPS_API_KEY_PROPERTY = "MAPS_API_KEY"
+    const val MAPS_API_KEY_ENV_VAR = "MAPS_API_KEY"
     const val MAPS_API_KEY_MANIFEST_PLACEHOLDER = "MAPS_API_KEY"
 
     // keystore.properties is gitignored; release signing is a no-op locally/in CI when it's absent,
@@ -82,9 +83,16 @@ android {
         testInstrumentationRunner = "com.germandebustamante.fuelio.FuelioTestRunner"
 
         // Maps SDK reads its key from this manifest placeholder at runtime, not from Kotlin code,
-        // so it can't go through BuildKonfig like POSTHOG_API_KEY.
+        // so it can't go through BuildKonfig like POSTHOG_API_KEY. thirdparties.properties is
+        // gitignored, so on a clean checkout (CI, a fresh clone) the property is absent: fall back to
+        // the env var and then to blank, exactly like core/analytics/build.gradle.kts does for
+        // POSTHOG_API_KEY. Blank is a supported state — the map renders empty instead of failing the
+        // build.
         manifestPlaceholders[BuildConstants.MAPS_API_KEY_MANIFEST_PLACEHOLDER] =
-            thirdPartiesProperties.getProperty(BuildConstants.MAPS_API_KEY_PROPERTY)
+            (
+                thirdPartiesProperties.getProperty(BuildConstants.MAPS_API_KEY_PROPERTY)
+                    ?: System.getenv(BuildConstants.MAPS_API_KEY_ENV_VAR)
+                ).orEmpty()
     }
 
     packaging {
