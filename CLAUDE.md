@@ -37,7 +37,11 @@ this repo's package/branding to Octana; that name belongs to the other, private 
 ./gradlew :core:domain:iosSimulatorArm64Test
 ./gradlew :data:iosSimulatorArm64Test
 ./gradlew :core:analytics:iosSimulatorArm64Test # Also covers the iosTest tracker-bridge tests
-./gradlew connectedAndroidTest             # Android instrumentation tests
+./gradlew connectedAndroidTest             # Android instrumentation tests (not run on PRs — see ADR 0006)
+
+# Screenshots (Roborazzi; goldens committed under androidApp/src/test/screenshots/)
+./gradlew :androidApp:verifyRoborazziDebug      # compare against the goldens; this is what CI runs
+./gradlew :androidApp:recordRoborazziDebug      # re-record after an intentional visual change
 
 # iOS
 ./gradlew :core:presentation:linkDebugFrameworkIosSimulatorArm64  # sanity-build the CorePresentation.framework outside Xcode
@@ -117,7 +121,14 @@ in `:core:presentation` and is **not** a `NavKey` — Navigation3 is a Compose-a
   `@Serializable sealed interface Destination` (no `NavKey`); each screen is a nested `data object`/
   `data class` (e.g. `Destination.GasStationDetails(val gasStationId: String)`). Keep nav args as plain
   identifiers (IDs), never pass full domain objects — a use case can already resolve them, and the back
-  stack gets serialized on every navigation.
+  stack gets serialized on every navigation. There are four today: `GasStations` (root),
+  `GasStationDetails(id)`, `Settings` and `Favorites`. **Adding a fifth is a cross-cutting change**,
+  because SKIE turns every direct subtype into a case of the generated Swift enum — the compiler will
+  point at each site, but expect to touch, in the same commit: `Destination.kt`,
+  `SyntheticBackStack.kt` (the `parent` `when`), `DeepLinkParser.kt`, `FuelioNavHost.kt`,
+  `Route.swift` (case + `init?`), `RootView.swift`, `KotlinSealed.swift` if it carries a sealed state,
+  the `A11yIdentifiers`/`A11yID`/`UITestSupport` trio, `Localizable.xcstrings` + `LocalizationTests`,
+  and the `SyntheticBackStackTest`/`DeepLinkParserTest`/`NavigationMappingTests` suites.
 - `core/presentation/.../core/navigation/action/Navigator.kt` (in `:core:presentation`) —
   `Navigator`/`DefaultNavigator`, a `Channel`-based one-shot event bus so ViewModels can request
   navigation without depending on Compose (`navigate()`/`navigateUp()`, consumed via `ObserveAsEvent` in
@@ -152,11 +163,11 @@ When adding a new use case or repository, register it explicitly with a `single 
 - `data/di/ContextProvider.kt` (`expect class`) — Android `actual` wraps the real `Context` (`getAndroidContext()` does the one cast in the whole module); iOS `actual` is a no-op.
 - `data/di/DataPlatformModule.kt` (`expect val dataPlatformModule: Module`) — Android provides `single { ContextProvider(androidContext()) }` (relies on `androidContext(this)` already registered in `AndroidApplication.onCreate`); iOS provides `single { ContextProvider(Unit) }`.
 
-Any future class needing platform context takes `ContextProvider` as a constructor dependency — don't add another platform module for it.
+Any future class needing platform context takes `ContextProvider` as a constructor dependency — don't add another platform module for it. The preferences DataStore is the second user of the seam: `expect fun preferencesPath(contextProvider: ContextProvider)` resolves `filesDir` on Android and `NSDocumentDirectory` on iOS, with no new platform module.
 
 ### App startup tasks (`StartupTask`)
 
-`core/startup/StartupTask.kt` — `fun interface StartupTask { suspend operator fun invoke() }`, a contract for work that must run once at app launch and isn't owned by any single screen (e.g. a future background sync or remote-config fetch). `core/startup/di/StartupModule.kt` exposes `startupModule` with a `single<Set<StartupTask>> { setOf(...) }` — currently **empty**, since as of now every startup concern is already screen-scoped inside its own ViewModel's `init {}` (see "State Management Pattern" below). `KoinInit.kt`'s `initKoin()` resolves that `Set` and runs each task on a `MainScope()`, catching failures per-task via `AppLogger` so one broken task can't crash launch or cancel the others — this runs from shared `commonMain`, so it covers both the Android (`AndroidApplication.onCreate`) and iOS (`doInitKoinIos()`) entry points with no platform-specific plumbing.
+`core/startup/StartupTask.kt` — `fun interface StartupTask { suspend operator fun invoke() }`, a contract for work that must run once at app launch and isn't owned by any single screen (e.g. a future background sync or remote-config fetch). `core/startup/di/StartupModule.kt` exposes `startupModule` with a `single<Set<StartupTask>> { setOf(...) }`, currently holding `CrashReporterStartupTask` (enabling/disabling crash collection and seeding platform keys) — everything else is still screen-scoped inside its own ViewModel's `init {}` (see "State Management Pattern" below). `KoinInit.kt`'s `initKoin()` resolves that `Set` and runs each task on a `MainScope()`, catching failures per-task via `AppLogger` so one broken task can't crash launch or cancel the others — this runs from shared `commonMain`, so it covers both the Android (`AndroidApplication.onCreate`) and iOS (`doInitKoinIos()`) entry points with no platform-specific plumbing.
 
 Koin has no Hilt-style `@IntoSet` auto-multibinding, so the `Set<StartupTask>` in `StartupModule.kt` is assembled by hand — when a real cross-cutting startup task is needed, implement `StartupTask`, register it with `single<StartupTask> { ... }`, and add it to that `setOf(...)`. Don't invent a `StartupTask` for something a screen's ViewModel already owns (see `launchStartupTasks` below) — this contract is reserved for work with no natural screen owner.
 
@@ -190,6 +201,28 @@ rather than reaching for an annotation that isn't available.
 
 - `getGasStationsByLocation(provinceId)` returns `Flow<Result<GasStationsResult>>` (`GasStationsResult(stations, isFromCache: Boolean)`, in `core/domain`) and can emit **twice**: cached rows first (`isFromCache = true`) if any exist, then the network result (`isFromCache = false`) after writing it back to Room. `Result` here models genuine network failure — `GasStationsResult`/`isFromCache` is business state, not part of the error channel. In the ViewModel, `notifyError` picks a "hard" error (`withError`, blocks the whole screen) only if `gasStations` is currently empty; if there's already content on screen (from cache or a prior load), a failed refresh goes to `withStaleDataError` instead, which keeps the list and just triggers a transient snackbar — never let a background refresh failure blank out data the user can already see.
 - `getGasStationById(id)` returns a plain `Flow<GasStationBO?>` (no `Result`) sourced directly from a Room `Flow<GasStationEntity?>` query — it's a pure local read with no network path (the upstream MINETUR API has no fetch-by-station-id endpoint, only list-by-province/municipality/CCAA), so `null` is an expected business value ("not cached yet"), not a failure to wrap in `Result`. Being backed by Room's own `Flow` also makes it reactive: if the list screen refreshes that station's row in the background, an open detail screen updates without re-querying.
+
+### Preferences (DataStore) and favourites
+
+Two more things are persisted, both below the presentation layer and both identical on the two
+platforms — see `docs/adr/0005-preferences-and-favorites-persistence.md`:
+
+- **`UserPreferencesRepository`** (`:core:domain`, implemented in `:data`) over
+  `androidx.datastore:datastore-preferences-core`: default fuel, saved province and theme mode,
+  exposed as `Flow<UserPreferencesBO>` with one suspend setter each. The `-core` artifact is the
+  pure-Kotlin one, the only variant that resolves for the iOS targets, and the backing file **must**
+  end in `.preferences_pb`. `GasStationsViewModel` restores the province and fuel from it on launch,
+  guarded by `hasRestoredSavedProvince`/`hasUserSelectedFuel` so a slow disk read can never overwrite
+  a choice the user has already made.
+- **Favourites** live in their own `favorite_stations` table, never as a column on `GasStationEntity`:
+  `replaceGasStationsByProvince` is a `DELETE`+`INSERT` transaction on every refresh and would wipe
+  the column each time. `FavoriteStationDAO.observeFavoriteStations()` is an `INNER JOIN`, so
+  favourites whose province isn't cached right now drop out — hence
+  `FavoriteStationsResult(stations, totalFavoriteCount)`, whose `unresolvedCount` the favourites
+  screen surfaces as a banner rather than hiding.
+
+`FuelioDatabase` is at version 2; `Migration1To2` is the first migration in the project and
+`data/schemas/.../2.json` is committed. Any new entity needs the same pair.
 
 ## Analytics Tracking (`:core:analytics`)
 
@@ -387,4 +420,5 @@ Content rules for both formats:
 ## Debug Tooling
 
 - `AppLogger` (`expect`/`actual` in `core/logger`, per source set) wraps platform logging (`android.util.Log` on Android). Prefer it over direct platform log calls in shared code; avoid calling it from `Composable` getters or other code paths Compose may invoke multiple times per frame.
+- `CrashReporting` (`core/logger`) is the crash-reporting entry point, deliberately **separate** from `AppLogger`: `AppLogger` is a dependency-free `expect object`, so it can't hold a reporter. `CrashReporting.logError(tag, message, throwable)` logs *and* forwards a non-fatal to the `CrashReporter` installed at startup (`FirebaseCrashlytics` on Android; a Swift bridge registered via `registerNativeCrashReporter` on iOS, falling back to `NoOpCrashReporter` if nothing registers). `initKoin` installs it synchronously **before** launching the startup tasks, since those run concurrently and one failing first would otherwise report into a no-op.
 - ANR-WatchDog (`androidMain`, `AndroidApplication.onCreate`) is active only when `FLAG_DEBUGGABLE` is set, with `setIgnoreDebugger(true)` so it still fires while running under the Android Studio debugger. On detection it logs the full multi-thread stack trace via `AppLogger.e("ANRWatchDog", ...)` — filter Logcat by that tag to inspect.
