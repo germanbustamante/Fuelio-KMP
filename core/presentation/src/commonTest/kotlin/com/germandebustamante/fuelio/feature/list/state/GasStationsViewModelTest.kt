@@ -8,6 +8,11 @@ import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationBO
 import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationsResult
 import com.germandebustamante.fuelio.core.domain.gasstation.testing.GasStationBOMother
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationsByLocationUseCase
+import com.germandebustamante.fuelio.core.domain.preferences.model.FuelType
+import com.germandebustamante.fuelio.core.domain.preferences.model.UserPreferencesBO
+import com.germandebustamante.fuelio.core.domain.preferences.usecase.ObserveUserPreferencesUseCase
+import com.germandebustamante.fuelio.core.domain.preferences.usecase.SetDefaultFuelTypeUseCase
+import com.germandebustamante.fuelio.core.domain.preferences.usecase.SetSavedProvinceUseCase
 import com.germandebustamante.fuelio.core.domain.province.testing.ProvinceBOMother
 import com.germandebustamante.fuelio.core.domain.province.usecase.GetProvincesUseCase
 import com.germandebustamante.fuelio.core.domain.province.usecase.ResolveProvinceByLocationUseCase
@@ -32,6 +37,7 @@ import dev.mokkery.matcher.capture.capture
 import dev.mokkery.matcher.capture.get
 import dev.mokkery.mock
 import dev.mokkery.verify
+import dev.mokkery.verify.VerifyMode
 import dev.mokkery.verifySuspend
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -72,6 +78,20 @@ class GasStationsViewModelTest {
     }
 
     private val resolveProvinceByLocationUseCase = ResolveProvinceByLocationUseCase()
+
+    // Defaults to "nothing stored yet", so every pre-existing test keeps the behaviour it was
+    // written against; the tests that care about restoration re-stub this one.
+    private val observeUserPreferencesUseCase: ObserveUserPreferencesUseCase = mock {
+        every { invoke() } returns flowOf(UserPreferencesBO())
+    }
+
+    private val setDefaultFuelTypeUseCase: SetDefaultFuelTypeUseCase = mock {
+        everySuspend { invoke(any()) } returns Unit
+    }
+
+    private val setSavedProvinceUseCase: SetSavedProvinceUseCase = mock {
+        everySuspend { invoke(any()) } returns Unit
+    }
 
     private val navigator: Navigator = mock {
         everySuspend { navigate(any()) } returns Unit
@@ -1311,6 +1331,110 @@ class GasStationsViewModelTest {
 
     private fun locationOf(province: String) = LocationPermissionController.Location(province = province, latitude = TEST_LATITUDE, longitude = TEST_LONGITUDE)
 
+    private fun stubStoredPreferences(preferences: UserPreferencesBO) {
+        every { observeUserPreferencesUseCase() } returns flowOf(preferences)
+    }
+
+    //endregion
+
+    //region Stored preferences
+
+    @Test
+    fun `init - GIVEN a saved province WHEN initialized THEN it is restored instead of the first province`() = runTest {
+        // GIVEN
+        val savedProvince = ProvinceBOMother.provinceBOList()[SECOND_PROVINCE_INDEX]
+        stubStoredPreferences(UserPreferencesBO(savedProvinceId = savedProvince.id))
+
+        // WHEN
+        createSut()
+        advanceUntilIdle()
+
+        // THEN
+        assertEquals(savedProvince, sut.state.value.selectedProvince)
+    }
+
+    @Test
+    fun `init - GIVEN a saved province that no longer exists WHEN initialized THEN it falls back to the first province`() = runTest {
+        // GIVEN — the upstream province list isn't ours, so a stored id can stop resolving
+        stubStoredPreferences(UserPreferencesBO(savedProvinceId = UNKNOWN_PROVINCE_ID))
+
+        // WHEN
+        createSut()
+        advanceUntilIdle()
+
+        // THEN
+        assertEquals(ProvinceBOMother.provinceBOList().first(), sut.state.value.selectedProvince)
+    }
+
+    @Test
+    fun `init - GIVEN a saved province AND location granted WHEN initialized THEN geolocation does not override the choice`() = runTest {
+        // GIVEN
+        val savedProvince = ProvinceBOMother.provinceBOList()[SECOND_PROVINCE_INDEX]
+        stubStoredPreferences(UserPreferencesBO(savedProvinceId = savedProvince.id))
+        everySuspend { locationPermissionController.checkCurrentStatus() } returns LocationPermissionState.Granted
+        everySuspend { locationPermissionController.getCurrentLocation() } returns locationOf(TEST_PROVINCE)
+
+        // WHEN
+        createSut()
+        advanceUntilIdle()
+
+        // THEN — an explicit pick outranks where the phone happens to be
+        assertEquals(savedProvince, sut.state.value.selectedProvince)
+    }
+
+    @Test
+    fun `init - GIVEN a saved default fuel WHEN initialized THEN the filter starts on it`() = runTest {
+        // GIVEN
+        stubStoredPreferences(UserPreferencesBO(defaultFuelType = FuelType.DIESEL_PREMIUM))
+
+        // WHEN
+        createSut()
+        advanceUntilIdle()
+
+        // THEN
+        assertEquals(FuelFilter.DieselPremium, sut.state.value.selectedFuelFilter)
+    }
+
+    @Test
+    fun `init - GIVEN no stored preferences WHEN initialized THEN nothing is written back out`() = runTest {
+        // WHEN
+        createSut()
+        advanceUntilIdle()
+
+        // THEN — restoring the default must not look like the user choosing it
+        verifySuspend(VerifyMode.not) { setDefaultFuelTypeUseCase(any()) }
+        verifySuspend(VerifyMode.not) { setSavedProvinceUseCase(any()) }
+    }
+
+    @Test
+    fun `onProvinceSelected - GIVEN a province WHEN selected THEN it is persisted`() = runTest {
+        // GIVEN
+        createSut()
+        advanceUntilIdle()
+        val province = ProvinceBOMother.provinceBOList()[SECOND_PROVINCE_INDEX]
+
+        // WHEN
+        sut.onProvinceSelected(province)
+        advanceUntilIdle()
+
+        // THEN
+        verifySuspend { setSavedProvinceUseCase(province.id) }
+    }
+
+    @Test
+    fun `onFuelFilterSelected - GIVEN a filter WHEN selected THEN it is persisted as the default fuel`() = runTest {
+        // GIVEN
+        createSut()
+        advanceUntilIdle()
+
+        // WHEN
+        sut.onFuelFilterSelected(FuelFilter.Diesel)
+        advanceUntilIdle()
+
+        // THEN
+        verifySuspend { setDefaultFuelTypeUseCase(FuelType.DIESEL) }
+    }
+
     //endregion
 
     private fun createSut(initialState: GasStationsUIState = GasStationsUIState()) {
@@ -1319,6 +1443,9 @@ class GasStationsViewModelTest {
             getProvincesUseCase = getProvincesUseCase,
             locationPermissionController = locationPermissionController,
             resolveProvinceByLocationUseCase = resolveProvinceByLocationUseCase,
+            observeUserPreferencesUseCase = observeUserPreferencesUseCase,
+            setDefaultFuelTypeUseCase = setDefaultFuelTypeUseCase,
+            setSavedProvinceUseCase = setSavedProvinceUseCase,
             navigator = navigator,
             analyticsManager = analyticsManager,
             defaultDispatcher = testDispatcher,
@@ -1332,6 +1459,7 @@ class GasStationsViewModelTest {
         private const val MATCHING_ADDRESS_QUERY = "Calle Principal"
         private const val NO_MATCH_QUERY = "xyznotexistent"
         private const val UNKNOWN_PROVINCE = "Tokio"
+        private const val UNKNOWN_PROVINCE_ID = "999"
         private const val TEST_PROVINCE = "Madrid"
         private const val TEST_LATITUDE = 40.5
         private const val TEST_LONGITUDE = -3.6
