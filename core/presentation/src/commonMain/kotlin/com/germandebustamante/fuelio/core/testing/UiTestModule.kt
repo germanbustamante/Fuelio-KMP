@@ -4,6 +4,10 @@ import com.germandebustamante.fuelio.core.domain.error.DomainError
 import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationBO
 import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationsResult
 import com.germandebustamante.fuelio.core.domain.gasstation.repository.GasStationRepository
+import com.germandebustamante.fuelio.core.domain.preferences.model.FuelType
+import com.germandebustamante.fuelio.core.domain.preferences.model.ThemeMode
+import com.germandebustamante.fuelio.core.domain.preferences.model.UserPreferencesBO
+import com.germandebustamante.fuelio.core.domain.preferences.repository.UserPreferencesRepository
 import com.germandebustamante.fuelio.core.domain.province.model.ProvinceBO
 import com.germandebustamante.fuelio.core.domain.province.repository.ProvinceRepository
 import com.germandebustamante.fuelio.core.fake.fakeGasStations
@@ -11,7 +15,9 @@ import com.germandebustamante.fuelio.feature.common.permission.location.Location
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionState
 import com.germandebustamante.fuelio.feature.list.state.fakeProvinces
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.update
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -32,6 +38,7 @@ fun uiTestModule(simulateStationFailure: Boolean): Module = module {
         if (simulateStationFailure) FailingGasStationRepository() else InMemoryGasStationRepository()
     }
     single<ProvinceRepository> { InMemoryProvinceRepository() }
+    single<UserPreferencesRepository> { InMemoryUserPreferencesRepository() }
     single<LocationPermissionController> { DeniedLocationPermissionController() }
 }
 
@@ -59,6 +66,30 @@ private class FailingGasStationRepository : GasStationRepository {
 private class InMemoryProvinceRepository : ProvinceRepository {
 
     override fun getProvinces(): Flow<Result<List<ProvinceBO>>> = flowOf(Result.success(fakeProvinces))
+}
+
+/**
+ * Keeps preferences in memory so a UI-test run never writes a real `.preferences_pb`.
+ *
+ * That file would otherwise survive between runs and across tests, so whichever test happened to
+ * change the province or the theme would decide what the next one saw.
+ */
+private class InMemoryUserPreferencesRepository : UserPreferencesRepository {
+    private val preferences = MutableStateFlow(UserPreferencesBO())
+
+    override fun observe(): Flow<UserPreferencesBO> = preferences
+
+    override suspend fun setDefaultFuelType(fuelType: FuelType) {
+        preferences.update { it.copy(defaultFuelType = fuelType) }
+    }
+
+    override suspend fun setSavedProvinceId(provinceId: String) {
+        preferences.update { it.copy(savedProvinceId = provinceId) }
+    }
+
+    override suspend fun setThemeMode(themeMode: ThemeMode) {
+        preferences.update { it.copy(themeMode = themeMode) }
+    }
 }
 
 /**

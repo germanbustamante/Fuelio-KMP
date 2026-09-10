@@ -2,6 +2,7 @@ package com.germandebustamante.fuelio.data.di
 
 import com.germandebustamante.fuelio.core.domain.error.DomainError
 import com.germandebustamante.fuelio.core.domain.gasstation.repository.GasStationRepository
+import com.germandebustamante.fuelio.core.domain.preferences.repository.UserPreferencesRepository
 import com.germandebustamante.fuelio.core.domain.province.repository.ProvinceRepository
 import com.germandebustamante.fuelio.data.engine.httpClientEngine
 import com.germandebustamante.fuelio.data.gasstation.local.datasource.GasStationLocalDataSource
@@ -12,6 +13,11 @@ import com.germandebustamante.fuelio.data.gasstation.repository.GasStationReposi
 import com.germandebustamante.fuelio.data.local.database.FuelioDatabase
 import com.germandebustamante.fuelio.data.local.database.getDatabaseBuilder
 import com.germandebustamante.fuelio.data.local.database.getRoomDatabase
+import com.germandebustamante.fuelio.data.local.datastore.createPreferencesDataStore
+import com.germandebustamante.fuelio.data.local.datastore.preferencesPath
+import com.germandebustamante.fuelio.data.preferences.local.UserPreferencesLocalDataSource
+import com.germandebustamante.fuelio.data.preferences.local.UserPreferencesLocalDataSourceImpl
+import com.germandebustamante.fuelio.data.preferences.repository.UserPreferencesRepositoryImpl
 import com.germandebustamante.fuelio.data.province.remote.datasource.ProvinceRemoteDataSource
 import com.germandebustamante.fuelio.data.province.remote.datasource.ProvinceRemoteDataSourceImpl
 import com.germandebustamante.fuelio.data.province.repository.ProvinceRepositoryImpl
@@ -33,6 +39,11 @@ val dataModule = module {
     single { getRoomDatabase(getDatabaseBuilder(get())) }
     single { get<FuelioDatabase>().gasStationDao() }
     single { ProvinceRepositoryImpl(get()) } bind ProvinceRepository::class
+    // DataStore must be a single: the factory enforces one active instance per file, and a second
+    // one would throw as soon as both are read.
+    single { createPreferencesDataStore { preferencesPath(get()) } }
+    single { UserPreferencesLocalDataSourceImpl(get()) } bind UserPreferencesLocalDataSource::class
+    single { UserPreferencesRepositoryImpl(get()) } bind UserPreferencesRepository::class
     single { ProvinceRemoteDataSourceImpl(get(), BASE_URL) } bind ProvinceRemoteDataSource::class
     single {
         HttpClient(httpClientEngine()) {
