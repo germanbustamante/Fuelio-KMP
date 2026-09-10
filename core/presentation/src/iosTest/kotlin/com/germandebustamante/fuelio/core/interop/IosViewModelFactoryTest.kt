@@ -5,6 +5,10 @@ import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationsRes
 import com.germandebustamante.fuelio.core.domain.gasstation.testing.GasStationBOMother
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationUseCase
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationsByLocationUseCase
+import com.germandebustamante.fuelio.core.domain.preferences.model.UserPreferencesBO
+import com.germandebustamante.fuelio.core.domain.preferences.usecase.ObserveUserPreferencesUseCase
+import com.germandebustamante.fuelio.core.domain.preferences.usecase.SetDefaultFuelTypeUseCase
+import com.germandebustamante.fuelio.core.domain.preferences.usecase.SetSavedProvinceUseCase
 import com.germandebustamante.fuelio.core.domain.province.testing.ProvinceBOMother
 import com.germandebustamante.fuelio.core.domain.province.usecase.GetProvincesUseCase
 import com.germandebustamante.fuelio.core.domain.province.usecase.ResolveProvinceByLocationUseCase
@@ -78,6 +82,18 @@ class IosViewModelFactoryTest {
         every { openAppSettings() } returns Unit
     }
 
+    private val observeUserPreferencesUseCase: ObserveUserPreferencesUseCase = mock {
+        every { invoke() } returns flowOf(UserPreferencesBO())
+    }
+
+    private val setDefaultFuelTypeUseCase: SetDefaultFuelTypeUseCase = mock {
+        everySuspend { invoke(any()) } returns Unit
+    }
+
+    private val setSavedProvinceUseCase: SetSavedProvinceUseCase = mock {
+        everySuspend { invoke(any()) } returns Unit
+    }
+
     private val analyticsTracking: AnalyticsTracking = mock {
         everySuspend { track(any()) } returns Unit
     }
@@ -87,6 +103,9 @@ class IosViewModelFactoryTest {
         single { getProvincesUseCase }
         single { getGasStationUseCase }
         single { ResolveProvinceByLocationUseCase() }
+        single { observeUserPreferencesUseCase }
+        single { setDefaultFuelTypeUseCase }
+        single { setSavedProvinceUseCase }
         single<Navigator> { navigator }
         single<AnalyticsTracking> { analyticsTracking }
         single<LocationPermissionController> { locationPermissionController }
