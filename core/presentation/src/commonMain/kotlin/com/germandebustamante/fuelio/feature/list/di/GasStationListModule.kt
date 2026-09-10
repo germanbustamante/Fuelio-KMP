@@ -12,6 +12,9 @@ val gasStationListModule = module {
             getProvincesUseCase = get(),
             locationPermissionController = permissionController,
             resolveProvinceByLocationUseCase = get(),
+            observeUserPreferencesUseCase = get(),
+            setDefaultFuelTypeUseCase = get(),
+            setSavedProvinceUseCase = get(),
             navigator = get(),
             analyticsManager = get(),
         )

@@ -6,6 +6,10 @@ import com.germandebustamante.fuelio.core.domain.error.toDomainError
 import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationBO
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationsByLocationUseCase
 import com.germandebustamante.fuelio.core.domain.location.distanceBetween
+import com.germandebustamante.fuelio.core.domain.preferences.model.UserPreferencesBO
+import com.germandebustamante.fuelio.core.domain.preferences.usecase.ObserveUserPreferencesUseCase
+import com.germandebustamante.fuelio.core.domain.preferences.usecase.SetDefaultFuelTypeUseCase
+import com.germandebustamante.fuelio.core.domain.preferences.usecase.SetSavedProvinceUseCase
 import com.germandebustamante.fuelio.core.domain.province.model.ProvinceBO
 import com.germandebustamante.fuelio.core.domain.province.usecase.GetProvincesUseCase
 import com.germandebustamante.fuelio.core.domain.province.usecase.ResolveProvinceByLocationUseCase
@@ -53,6 +57,9 @@ class GasStationsViewModel(
     private val getProvincesUseCase: GetProvincesUseCase,
     private val locationPermissionController: LocationPermissionController,
     private val resolveProvinceByLocationUseCase: ResolveProvinceByLocationUseCase,
+    private val observeUserPreferencesUseCase: ObserveUserPreferencesUseCase,
+    private val setDefaultFuelTypeUseCase: SetDefaultFuelTypeUseCase,
+    private val setSavedProvinceUseCase: SetSavedProvinceUseCase,
     private val navigator: Navigator,
     private val analyticsManager: AnalyticsTracking,
     private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
@@ -67,6 +74,22 @@ class GasStationsViewModel(
     private val _refreshTrigger = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     private var rawGasStations: List<GasStationBO> = emptyList()
     private var allGasStations: List<GasStationItemVO> = emptyList()
+
+    /**
+     * Whether the province on screen came from the user's stored choice.
+     *
+     * An explicit pick outranks geolocation: someone who chose Madrid while driving through
+     * Guadalajara should not have it swapped out from under them on the next launch. Location is
+     * still read either way — it is what the distance column needs.
+     */
+    private var hasRestoredSavedProvince: Boolean = false
+
+    /**
+     * Read once and cached. Preferences are needed at two points during startup that race each other
+     * (picking the initial province, and applying the default fuel), and re-collecting the flow in
+     * both would be two separate reads of the same file.
+     */
+    private var storedPreferences: UserPreferencesBO? = null
 
     // MutableStateFlow(viewModelScope, …) is the KMP-ObservableViewModel overload: it is what
     // notifies SwiftUI on every emission. The private flows above stay plain kotlinx flows — they
@@ -87,6 +110,7 @@ class GasStationsViewModel(
     init {
         launchStartupTasks(
             { analyticsManager.track(GasStationsScreenViewed) },
+            { applyStoredFuelPreference() },
             { fetchProvinces() },
             { fetchProvinceGasStations() },
             {
@@ -96,6 +120,13 @@ class GasStationsViewModel(
             },
             { observeSearchQuery() },
         )
+    }
+
+    private suspend fun readStoredPreferences(): UserPreferencesBO =
+        storedPreferences ?: observeUserPreferencesUseCase().first().also { storedPreferences = it }
+
+    private suspend fun applyStoredFuelPreference() {
+        applyFuelFilter(readStoredPreferences().defaultFuelType.toFuelFilter())
     }
 
     @OptIn(FlowPreview::class)
@@ -161,7 +192,11 @@ class GasStationsViewModel(
     private suspend fun updateLocationAndProvince() {
         val location = locationPermissionController.getCurrentLocation()
         _userLocation.update { location }
-        _selectedProvince.update { resolveProvinceByLocationUseCase(_state.value.provinces, location?.province) }
+        // The location is always applied — distances need it — but the province only when the user
+        // has no stored choice to override.
+        if (!hasRestoredSavedProvince) {
+            _selectedProvince.update { resolveProvinceByLocationUseCase(_state.value.provinces, location?.province) }
+        }
         rebuildStationsWithCurrentLocation()
     }
 
@@ -187,7 +222,13 @@ class GasStationsViewModel(
 
     fun onProvinceSelected(province: ProvinceBO) {
         _selectedProvince.update { province }
-        viewModelScope.launch { analyticsManager.track(ProvinceChanged(province.id, province.name)) }
+        // An explicit pick is what makes the choice stick across launches, so from here on
+        // geolocation must not override it.
+        hasRestoredSavedProvince = true
+        viewModelScope.launch {
+            setSavedProvinceUseCase(province.id)
+            analyticsManager.track(ProvinceChanged(province.id, province.name))
+        }
     }
 
     //endregion
@@ -196,15 +237,24 @@ class GasStationsViewModel(
 
     fun onFuelFilterSelected(filter: FuelFilter) {
         viewModelScope.launch {
-            val currentState = _state.value
-            val stations = withContext(defaultDispatcher) {
-                allGasStations
-                    .map { it.withFuelFilter(filter) }
-                    .applySearchQuery(currentState.searchQuery)
-                    .markCheapest()
-            }
-            updateState { it.withFuelFilter(filter, stations) }
+            applyFuelFilter(filter)
+            setDefaultFuelTypeUseCase(filter.toFuelType())
         }
+    }
+
+    /**
+     * Shared by the user's selection and by restoring the stored default at startup — the latter
+     * must not write the preference straight back out.
+     */
+    private suspend fun applyFuelFilter(filter: FuelFilter) {
+        val currentState = _state.value
+        val stations = withContext(defaultDispatcher) {
+            allGasStations
+                .map { it.withFuelFilter(filter) }
+                .applySearchQuery(currentState.searchQuery)
+                .markCheapest()
+        }
+        updateState { it.withFuelFilter(filter, stations) }
     }
 
     fun onSearchQueryChanged(query: String) {
@@ -222,7 +272,7 @@ class GasStationsViewModel(
             result.fold(
                 onSuccess = { provinces ->
                     updateState { it.withProvinces(provinces) }
-                    _selectedProvince.update { resolveProvinceByLocationUseCase(provinces, null) }
+                    _selectedProvince.update { selectInitialProvince(provinces) }
                 },
                 onFailure = { notifyError(OPERATION_FETCH_PROVINCES, it) },
             )
@@ -258,6 +308,20 @@ class GasStationsViewModel(
                     onFailure = { notifyError(OPERATION_FETCH_STATIONS, it) },
                 )
             }
+    }
+
+    /**
+     * The stored province wins when it still exists in the list; otherwise this falls back to the
+     * previous behaviour of picking the first one, which the location task may then refine.
+     *
+     * A stored id that no longer resolves is a real case — the upstream province list is not ours —
+     * and silently falling back beats showing an empty screen.
+     */
+    private suspend fun selectInitialProvince(provinces: List<ProvinceBO>): ProvinceBO? {
+        val savedProvinceId = readStoredPreferences().savedProvinceId
+        val savedProvince = provinces.firstOrNull { it.id == savedProvinceId }
+        hasRestoredSavedProvince = savedProvince != null
+        return savedProvince ?: resolveProvinceByLocationUseCase(provinces, null)
     }
 
     private enum class FetchTrigger { ProvinceSelected, ManualRefresh }
