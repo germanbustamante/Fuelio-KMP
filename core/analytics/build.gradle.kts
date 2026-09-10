@@ -38,6 +38,11 @@ kotlin {
         namespace = "com.germandebustamante.fuelio.core.analytics"
         compileSdk = libs.versions.android.targetSdk.get().toInt()
         minSdk = libs.versions.android.minSdk.get().toInt()
+
+        // Runs commonTest on the JVM as `:core:analytics:testAndroidHostTest`. Without it these tests
+        // are only reachable through iosSimulatorArm64Test, which needs a macOS machine.
+        withHostTestBuilder {
+        }
     }
 
     val xcfName = "coreAnalyticsKit"
