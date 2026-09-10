@@ -65,7 +65,9 @@ data class GasStationsUIState(
 
     fun withRefreshing() = copy(isRefreshing = true, error = null)
 
-    fun withFavoriteToggled(stationId: String) = copy(
-        favorites = if (stationId in favorites) favorites - stationId else favorites + stationId,
-    )
+    /**
+     * Replaces the whole set rather than toggling one id: since favourites are persisted, the state
+     * mirrors what the repository emits instead of owning the toggle itself.
+     */
+    fun withFavorites(favorites: Set<String>) = copy(favorites = favorites)
 }

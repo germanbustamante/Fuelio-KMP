@@ -8,6 +8,8 @@ import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationBO
 import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationsResult
 import com.germandebustamante.fuelio.core.domain.gasstation.testing.GasStationBOMother
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationsByLocationUseCase
+import com.germandebustamante.fuelio.core.domain.gasstation.usecase.ObserveFavoriteStationIdsUseCase
+import com.germandebustamante.fuelio.core.domain.gasstation.usecase.ToggleFavoriteStationUseCase
 import com.germandebustamante.fuelio.core.domain.preferences.model.FuelType
 import com.germandebustamante.fuelio.core.domain.preferences.model.UserPreferencesBO
 import com.germandebustamante.fuelio.core.domain.preferences.usecase.ObserveUserPreferencesUseCase
@@ -42,6 +44,7 @@ import dev.mokkery.verifySuspend
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -79,6 +82,14 @@ class GasStationsViewModelTest {
     }
 
     private val resolveProvinceByLocationUseCase = ResolveProvinceByLocationUseCase()
+
+    private val observeFavoriteStationIdsUseCase: ObserveFavoriteStationIdsUseCase = mock {
+        every { invoke() } returns flowOf(emptySet())
+    }
+
+    private val toggleFavoriteStationUseCase: ToggleFavoriteStationUseCase = mock {
+        everySuspend { invoke(any()) } returns Unit
+    }
 
     // Defaults to "nothing stored yet", so every pre-existing test keeps the behaviour it was
     // written against; the tests that care about restoration re-stub this one.
@@ -915,36 +926,50 @@ class GasStationsViewModelTest {
     //region onToggleFavorite
 
     @Test
-    fun `onToggleFavorite - GIVEN station not in favorites WHEN toggled THEN station is added to favorites`() = runTest {
+    fun `onToggleFavorite - GIVEN a station WHEN toggled THEN the toggle is delegated to the repository`() = runTest {
         // GIVEN
         createSut()
         advanceUntilIdle()
 
         // WHEN
         sut.onToggleFavorite(STATION_ID_1)
+        advanceUntilIdle()
 
-        // THEN
-        sut.state.test {
-            assertTrue(STATION_ID_1 in awaitItem().favorites)
-            cancelAndIgnoreRemainingEvents()
-        }
+        // THEN — the ViewModel no longer owns the toggle; the favorites table does
+        verifySuspend { toggleFavoriteStationUseCase(STATION_ID_1) }
     }
 
     @Test
-    fun `onToggleFavorite - GIVEN station in favorites WHEN toggled again THEN station is removed from favorites`() = runTest {
+    fun `onToggleFavorite - GIVEN a station WHEN toggled THEN the state does not change until the repository emits`() = runTest {
         // GIVEN
+        val favorites = MutableStateFlow(emptySet<String>())
+        every { observeFavoriteStationIdsUseCase() } returns favorites
         createSut()
         advanceUntilIdle()
-        sut.onToggleFavorite(STATION_ID_1)
 
         // WHEN
         sut.onToggleFavorite(STATION_ID_1)
+        advanceUntilIdle()
+
+        // THEN — no optimistic update: a failed write must not leave a star the store never saved
+        assertFalse(STATION_ID_1 in sut.state.value.favorites)
+
+        favorites.value = setOf(STATION_ID_1)
+        advanceUntilIdle()
+        assertTrue(STATION_ID_1 in sut.state.value.favorites)
+    }
+
+    @Test
+    fun `init - GIVEN stored favorites WHEN initialized THEN the stars are lit on a cold start`() = runTest {
+        // GIVEN
+        every { observeFavoriteStationIdsUseCase() } returns flowOf(setOf(STATION_ID_1))
+
+        // WHEN
+        createSut()
+        advanceUntilIdle()
 
         // THEN
-        sut.state.test {
-            assertFalse(STATION_ID_1 in awaitItem().favorites)
-            cancelAndIgnoreRemainingEvents()
-        }
+        assertEquals(setOf(STATION_ID_1), sut.state.value.favorites)
     }
 
     //endregion
@@ -1458,6 +1483,8 @@ class GasStationsViewModelTest {
             getProvincesUseCase = getProvincesUseCase,
             locationPermissionController = locationPermissionController,
             resolveProvinceByLocationUseCase = resolveProvinceByLocationUseCase,
+            observeFavoriteStationIdsUseCase = observeFavoriteStationIdsUseCase,
+            toggleFavoriteStationUseCase = toggleFavoriteStationUseCase,
             observeUserPreferencesUseCase = observeUserPreferencesUseCase,
             setDefaultFuelTypeUseCase = setDefaultFuelTypeUseCase,
             setSavedProvinceUseCase = setSavedProvinceUseCase,
