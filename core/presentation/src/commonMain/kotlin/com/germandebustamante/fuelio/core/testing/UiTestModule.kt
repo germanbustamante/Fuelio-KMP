@@ -1,8 +1,10 @@
 package com.germandebustamante.fuelio.core.testing
 
 import com.germandebustamante.fuelio.core.domain.error.DomainError
+import com.germandebustamante.fuelio.core.domain.gasstation.model.FavoriteStationsResult
 import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationBO
 import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationsResult
+import com.germandebustamante.fuelio.core.domain.gasstation.repository.FavoriteStationRepository
 import com.germandebustamante.fuelio.core.domain.gasstation.repository.GasStationRepository
 import com.germandebustamante.fuelio.core.domain.preferences.model.FuelType
 import com.germandebustamante.fuelio.core.domain.preferences.model.ThemeMode
@@ -17,6 +19,7 @@ import com.germandebustamante.fuelio.feature.list.state.fakeProvinces
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -39,6 +42,7 @@ fun uiTestModule(simulateStationFailure: Boolean): Module = module {
     }
     single<ProvinceRepository> { InMemoryProvinceRepository() }
     single<UserPreferencesRepository> { InMemoryUserPreferencesRepository() }
+    single<FavoriteStationRepository> { InMemoryFavoriteStationRepository() }
     single<LocationPermissionController> { DeniedLocationPermissionController() }
 }
 
@@ -66,6 +70,25 @@ private class FailingGasStationRepository : GasStationRepository {
 private class InMemoryProvinceRepository : ProvinceRepository {
 
     override fun getProvinces(): Flow<Result<List<ProvinceBO>>> = flowOf(Result.success(fakeProvinces))
+}
+
+/**
+ * Same reasoning as the preferences fake: favourites are persisted in Room, so without this a
+ * favourite starred by one test would still be starred in the next one, and in the next run.
+ */
+private class InMemoryFavoriteStationRepository : FavoriteStationRepository {
+    private val favorites = MutableStateFlow(emptySet<String>())
+
+    override fun observeFavoriteIds(): Flow<Set<String>> = favorites
+
+    override fun observeFavoriteStations(): Flow<FavoriteStationsResult> = favorites.map { ids ->
+        val stations = fakeGasStations.filter { it.id in ids }
+        FavoriteStationsResult(stations = stations, totalFavoriteCount = ids.size)
+    }
+
+    override suspend fun toggleFavorite(gasStationId: String) {
+        favorites.update { ids -> if (gasStationId in ids) ids - gasStationId else ids + gasStationId }
+    }
 }
 
 /**
