@@ -16,6 +16,7 @@ struct iOSApp: App {
         if !isRunningForPreviews {
             FirebaseApp.configure()
             FirebaseTracker_iosKt.registerNativeFirebaseTracker(tracker: FirebaseTrackerBridge())
+            CrashReporter_iosKt.registerNativeCrashReporter(reporter: CrashReporterBridge())
 
             let postHogApiKey = AnalyticsSecrets.shared.POSTHOG_API_KEY
             if !postHogApiKey.isEmpty {

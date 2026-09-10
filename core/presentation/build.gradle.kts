@@ -21,6 +21,11 @@ kotlin {
         minSdk = libs.versions.android.minSdk.get().toInt()
 
         withHostTestBuilder {
+        }.configure {
+            // AppLogger's Android actual delegates to android.util.Log, which throws
+            // "not mocked" on the JVM. Anything that logs — CrashReporting included — is otherwise
+            // untestable on the host, and the iOS actual (NSLog) has no such problem.
+            isReturnDefaultValues = true
         }
     }
 
