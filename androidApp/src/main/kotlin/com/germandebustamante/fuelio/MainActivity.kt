@@ -14,7 +14,7 @@ import com.germandebustamante.fuelio.feature.common.permission.location.Permissi
 class MainActivity : ComponentActivity() {
 
     private val locationPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
+        ActivityResultContracts.RequestPermission(),
     ) { isGranted -> PermissionResultBridge.deliverResult(isGranted) }
 
     private val locationPermissionController: LocationPermissionController by lazy {

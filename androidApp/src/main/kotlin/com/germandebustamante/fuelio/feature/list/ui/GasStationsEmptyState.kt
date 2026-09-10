@@ -26,10 +26,7 @@ import com.germandebustamante.fuelio.designsystem.emptystate.FuelioEmptyState
  * state is only reachable via a search with no name/address match.
  */
 @Composable
-fun GasStationsEmptyState(
-    onChangeFilters: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun GasStationsEmptyState(onChangeFilters: () -> Unit, modifier: Modifier = Modifier) {
     FuelioEmptyState(
         title = stringResource(R.string.empty_state_search_title),
         subtitle = stringResource(R.string.empty_state_search_subtitle),

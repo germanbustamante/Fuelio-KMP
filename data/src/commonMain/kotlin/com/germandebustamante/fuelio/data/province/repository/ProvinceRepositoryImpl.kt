@@ -10,9 +10,7 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 
-class ProvinceRepositoryImpl(
-    private val remoteDataSource: ProvinceRemoteDataSource,
-) : ProvinceRepository {
+class ProvinceRepositoryImpl(private val remoteDataSource: ProvinceRemoteDataSource) : ProvinceRepository {
     override fun getProvinces(): Flow<Result<List<ProvinceBO>>> =
         resultFlow { remoteDataSource.getProvinces().map { it.toDomain() } }.flowOn(Dispatchers.IO)
 }

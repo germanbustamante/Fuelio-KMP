@@ -4,9 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class GasStationResponseDTO(
-    @SerialName("ListaEESSPrecio") val stations: List<GasStationDTO>,
-)
+data class GasStationResponseDTO(@SerialName("ListaEESSPrecio") val stations: List<GasStationDTO>)
 
 @Serializable
 data class GasStationDTO(

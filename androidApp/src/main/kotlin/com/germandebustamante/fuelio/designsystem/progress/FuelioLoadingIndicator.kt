@@ -17,10 +17,7 @@ import com.germandebustamante.fuelio.core.ui.theme.FuelioTheme
 enum class FuelioIndicatorSize(val size: Dp) { Small(20.dp), Medium(32.dp), Large(48.dp) }
 
 @Composable
-fun FuelioLoadingIndicator(
-    modifier: Modifier = Modifier,
-    size: FuelioIndicatorSize = FuelioIndicatorSize.Medium,
-) {
+fun FuelioLoadingIndicator(modifier: Modifier = Modifier, size: FuelioIndicatorSize = FuelioIndicatorSize.Medium) {
     CircularProgressIndicator(
         modifier = modifier,
         color = MaterialTheme.colorScheme.primary,

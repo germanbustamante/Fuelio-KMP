@@ -14,7 +14,7 @@ val analyticsModule = module {
             listOfNotNull(
                 getFirebaseTracker(),
                 getPostHogTracker(apiKey = AnalyticsSecrets.POSTHOG_API_KEY.ifBlank { null }, contextProvider = get()),
-            )
+            ),
         )
     }
 }

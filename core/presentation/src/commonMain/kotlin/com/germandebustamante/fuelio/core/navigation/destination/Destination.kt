@@ -12,8 +12,8 @@ import kotlinx.serialization.Serializable
 sealed interface Destination {
 
     @Serializable
-    data object GasStations: Destination
+    data object GasStations : Destination
 
     @Serializable
-    data class GasStationDetails(val gasStationId: String): Destination
+    data class GasStationDetails(val gasStationId: String) : Destination
 }

@@ -40,8 +40,7 @@ private class InMemoryGasStationRepository : GasStationRepository {
     override fun getGasStationsByLocation(provinceId: String): Flow<Result<GasStationsResult>> =
         flowOf(Result.success(GasStationsResult(fakeGasStations, isFromCache = false)))
 
-    override fun getGasStationById(id: String): Flow<GasStationBO?> =
-        flowOf(fakeGasStations.firstOrNull { it.id == id })
+    override fun getGasStationById(id: String): Flow<GasStationBO?> = flowOf(fakeGasStations.firstOrNull { it.id == id })
 }
 
 /**

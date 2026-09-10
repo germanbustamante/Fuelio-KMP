@@ -27,9 +27,7 @@ expect object AppDatabaseConstructor : RoomDatabaseConstructor<FuelioDatabase> {
     override fun initialize(): FuelioDatabase
 }
 
-fun getRoomDatabase(
-    builder: RoomDatabase.Builder<FuelioDatabase>
-): FuelioDatabase = builder
+fun getRoomDatabase(builder: RoomDatabase.Builder<FuelioDatabase>): FuelioDatabase = builder
     .setDriver(BundledSQLiteDriver())
     .setQueryCoroutineContext(Dispatchers.IO)
     .build()

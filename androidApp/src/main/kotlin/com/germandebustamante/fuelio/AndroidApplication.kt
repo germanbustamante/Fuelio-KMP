@@ -8,7 +8,7 @@ import com.github.anrwatchdog.ANRWatchDog
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 
-class AndroidApplication: Application() {
+class AndroidApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
@@ -28,7 +28,5 @@ class AndroidApplication: Application() {
         }
     }
 
-    private fun isDebuggable(): Boolean =
-        (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
-
+    private fun isDebuggable(): Boolean = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
 }

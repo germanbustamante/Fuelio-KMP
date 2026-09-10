@@ -46,8 +46,7 @@ class IosLocationPermissionController : LocationPermissionController {
         }
     }
 
-    override suspend fun checkCurrentStatus(): LocationPermissionState =
-        mapStatus(locationManager.authorizationStatus)
+    override suspend fun checkCurrentStatus(): LocationPermissionState = mapStatus(locationManager.authorizationStatus)
 
     override suspend fun getCurrentLocation(): LocationPermissionController.Location? {
         val clLocation = requestCurrentLocation() ?: return null
@@ -68,14 +67,23 @@ class IosLocationPermissionController : LocationPermissionController {
     }
 
     @OptIn(ExperimentalForeignApi::class)
-    private suspend fun reverseGeocode(location: CLLocation): LocationPermissionController.Location? = suspendCancellableCoroutine { continuation ->
-        CLGeocoder().reverseGeocodeLocation(location) { placemarks, _ ->
-            val province = (placemarks?.firstOrNull() as? CLPlacemark)?.administrativeArea
-            continuation.resume(province?.let {
-                LocationPermissionController.Location(it, location.coordinate.useContents { latitude }, location.coordinate.useContents { longitude })
-            })
+    private suspend fun reverseGeocode(location: CLLocation): LocationPermissionController.Location? =
+        suspendCancellableCoroutine { continuation ->
+            CLGeocoder().reverseGeocodeLocation(location) { placemarks, _ ->
+                val province = (placemarks?.firstOrNull() as? CLPlacemark)?.administrativeArea
+                continuation.resume(
+                    province?.let {
+                        LocationPermissionController.Location(
+                            it,
+                            location.coordinate.useContents {
+                                latitude
+                            },
+                            location.coordinate.useContents { longitude },
+                        )
+                    },
+                )
+            }
         }
-    }
 
     override fun openAppSettings() {
         val url = NSURL.URLWithString(UIApplicationOpenSettingsURLString) ?: return
@@ -89,9 +97,11 @@ class IosLocationPermissionController : LocationPermissionController {
     private fun mapStatus(status: CLAuthorizationStatus): LocationPermissionState = when (status) {
         kCLAuthorizationStatusNotDetermined -> LocationPermissionState.NotDetermined
         kCLAuthorizationStatusAuthorizedWhenInUse,
-        kCLAuthorizationStatusAuthorizedAlways -> LocationPermissionState.Granted
+        kCLAuthorizationStatusAuthorizedAlways,
+        -> LocationPermissionState.Granted
         kCLAuthorizationStatusDenied,
-        kCLAuthorizationStatusRestricted -> LocationPermissionState.DeniedAlways
+        kCLAuthorizationStatusRestricted,
+        -> LocationPermissionState.DeniedAlways
         else -> LocationPermissionState.DeniedAlways
     }
 }
@@ -99,17 +109,16 @@ class IosLocationPermissionController : LocationPermissionController {
 private class LocationDelegate(
     private var continuation: CancellableContinuation<LocationPermissionState>?,
     private val onDone: () -> Unit,
-) : NSObject(), CLLocationManagerDelegateProtocol {
+) : NSObject(),
+    CLLocationManagerDelegateProtocol {
 
-    override fun locationManager(
-        manager: CLLocationManager,
-        didChangeAuthorizationStatus: CLAuthorizationStatus,
-    ) {
+    override fun locationManager(manager: CLLocationManager, didChangeAuthorizationStatus: CLAuthorizationStatus) {
         if (didChangeAuthorizationStatus == kCLAuthorizationStatusNotDetermined) return
 
         val state = when (didChangeAuthorizationStatus) {
             kCLAuthorizationStatusAuthorizedWhenInUse,
-            kCLAuthorizationStatusAuthorizedAlways -> LocationPermissionState.Granted
+            kCLAuthorizationStatusAuthorizedAlways,
+            -> LocationPermissionState.Granted
             else -> LocationPermissionState.DeniedAlways
         }
 
@@ -120,10 +129,9 @@ private class LocationDelegate(
     }
 }
 
-private class LocationRequestDelegate(
-    private var continuation: CancellableContinuation<CLLocation?>?,
-    private val onDone: () -> Unit,
-) : NSObject(), CLLocationManagerDelegateProtocol {
+private class LocationRequestDelegate(private var continuation: CancellableContinuation<CLLocation?>?, private val onDone: () -> Unit) :
+    NSObject(),
+    CLLocationManagerDelegateProtocol {
 
     override fun locationManager(manager: CLLocationManager, didUpdateLocations: List<*>) {
         val location = didUpdateLocations.lastOrNull() as? CLLocation

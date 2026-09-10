@@ -1,5 +1,7 @@
 package com.germandebustamante.fuelio.designsystem.button
 
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,10 +17,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.annotation.StringRes
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.annotation.DrawableRes
 import com.germandebustamante.fuelio.R
 import com.germandebustamante.fuelio.core.ui.theme.FuelioTheme
 import com.germandebustamante.fuelio.designsystem.button.config.icon.IconButtonConfig
@@ -46,7 +46,7 @@ fun FuelioIconButton(
         Icon(
             painterResource(drawableRes),
             contentDescription,
-            modifier = Modifier.size(config.size.iconSize)
+            modifier = Modifier.size(config.size.iconSize),
         )
     }
 
@@ -106,7 +106,7 @@ fun FuelioIconButtonPreview() {
                     size = IconButtonSize.LARGE,
                     shape = IconButtonShape.CIRCLE,
                     variant = IconButtonVariant.Standard,
-                )
+                ),
             )
 
             FuelioIconButton(
@@ -116,7 +116,7 @@ fun FuelioIconButtonPreview() {
                     size = IconButtonSize.LARGE,
                     shape = IconButtonShape.CIRCLE,
                     variant = IconButtonVariant.Filled,
-                )
+                ),
             )
 
             FuelioIconButton(
@@ -126,7 +126,7 @@ fun FuelioIconButtonPreview() {
                     size = IconButtonSize.MEDIUM,
                     shape = IconButtonShape.CIRCLE,
                     variant = IconButtonVariant.FilledTonal,
-                )
+                ),
             )
 
             FuelioIconButton(
@@ -136,7 +136,7 @@ fun FuelioIconButtonPreview() {
                     size = IconButtonSize.MEDIUM,
                     shape = IconButtonShape.CIRCLE,
                     variant = IconButtonVariant.Outlined,
-                )
+                ),
             )
 
             FuelioIconButton(
@@ -145,7 +145,7 @@ fun FuelioIconButtonPreview() {
                 config = IconButtonConfig(
                     size = IconButtonSize.SMALL,
                     shape = IconButtonShape.CIRCLE,
-                )
+                ),
             )
 
             FuelioIconButton(
@@ -154,7 +154,7 @@ fun FuelioIconButtonPreview() {
                 config = IconButtonConfig(
                     size = IconButtonSize.EXTRA_SMALL,
                     shape = IconButtonShape.CIRCLE,
-                )
+                ),
             )
         }
     }

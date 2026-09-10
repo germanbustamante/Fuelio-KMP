@@ -37,8 +37,7 @@ class GasStationRepositoryImpl(
         }
     }.flowOn(Dispatchers.IO)
 
-    override fun getGasStationById(id: String): Flow<GasStationBO?> =
-        localDataSource.getGasStationById(id)
-            .map { entity -> entity?.toDomain() }
-            .flowOn(Dispatchers.IO)
+    override fun getGasStationById(id: String): Flow<GasStationBO?> = localDataSource.getGasStationById(id)
+        .map { entity -> entity?.toDomain() }
+        .flowOn(Dispatchers.IO)
 }

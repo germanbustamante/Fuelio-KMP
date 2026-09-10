@@ -44,12 +44,7 @@ private val nonInteractiveMapUiSettings = MapUiSettings(
 private val nonInteractiveMapProperties = MapProperties(isIndoorEnabled = false)
 
 @Composable
-fun GasStationMapPreview(
-    stationName: String,
-    latitude: Double,
-    longitude: Double,
-    modifier: Modifier = Modifier,
-) {
+fun GasStationMapPreview(stationName: String, latitude: Double, longitude: Double, modifier: Modifier = Modifier) {
     val markerState = rememberUpdatedMarkerState(position = LatLng(latitude, longitude))
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(LatLng(latitude, longitude), 16f)

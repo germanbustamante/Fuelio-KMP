@@ -58,7 +58,7 @@ fun FuelioTextButton(
         modifier = modifier,
         config = config.copy(state = isLoading.toTextButtonState()),
         isEnabled = isEnabled,
-        drawable = drawable
+        drawable = drawable,
     )
 }
 
@@ -77,7 +77,7 @@ fun FuelioTextButton(
     val shape = RoundedCornerShape(50)
     val contentPadding = PaddingValues(
         horizontal = config.size.horizontalPadding,
-        vertical = config.size.verticalPadding
+        vertical = config.size.verticalPadding,
     )
     val buttonEnabled = isEnabled && config.state != TextButtonState.LOADING
     val buttonModifier = modifier.defaultMinSize(minWidth = config.size.minWidth, minHeight = config.size.minHeight)
@@ -87,7 +87,7 @@ fun FuelioTextButton(
                 text = text,
                 drawable = drawable,
                 config = config,
-                isPressed = isPressed
+                isPressed = isPressed,
             )
 
             if (config.state == TextButtonState.LOADING) {
@@ -149,18 +149,13 @@ fun FuelioTextButton(
 }
 
 @Composable
-private fun ButtonContent(
-    text: String,
-    drawable: TextButtonDrawable?,
-    config: TextButtonConfig,
-    isPressed: Boolean,
-) {
+private fun ButtonContent(text: String, drawable: TextButtonDrawable?, config: TextButtonConfig, isPressed: Boolean) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(FuelioSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.alpha(
-            if (config.state == TextButtonState.LOADING) 0f else 1f
-        )
+            if (config.state == TextButtonState.LOADING) 0f else 1f,
+        ),
     ) {
         if (drawable?.alignment == TextButtonDrawableAlignment.START) {
             Icon(
@@ -173,7 +168,7 @@ private fun ButtonContent(
             text = text,
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
 
         if (drawable?.alignment == TextButtonDrawableAlignment.END) {
@@ -194,7 +189,7 @@ private fun ButtonPreview() {
     FuelioTheme {
         Column(
             verticalArrangement = Arrangement.spacedBy(FuelioSpacing.xs),
-            modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+            modifier = Modifier.background(MaterialTheme.colorScheme.surface),
         ) {
             Text("All 5 MDC3 variants")
 
@@ -211,7 +206,7 @@ private fun ButtonPreview() {
                     size = TextButtonSize.LARGE,
                     state = state,
                     variant = TextButtonVariant.Filled,
-                )
+                ),
             )
 
             FuelioTextButton(
@@ -220,7 +215,7 @@ private fun ButtonPreview() {
                 config = TextButtonConfig(
                     size = TextButtonSize.LARGE,
                     variant = TextButtonVariant.FilledTonal,
-                )
+                ),
             )
 
             FuelioTextButton(
@@ -229,7 +224,7 @@ private fun ButtonPreview() {
                 config = TextButtonConfig(
                     size = TextButtonSize.LARGE,
                     variant = TextButtonVariant.Outlined,
-                )
+                ),
             )
 
             FuelioTextButton(
@@ -238,7 +233,7 @@ private fun ButtonPreview() {
                 config = TextButtonConfig(
                     size = TextButtonSize.LARGE,
                     variant = TextButtonVariant.Text,
-                )
+                ),
             )
 
             FuelioTextButton(
@@ -247,7 +242,7 @@ private fun ButtonPreview() {
                 config = TextButtonConfig(
                     size = TextButtonSize.LARGE,
                     variant = TextButtonVariant.Elevated,
-                )
+                ),
             )
 
             Text("Disabled states")
@@ -256,14 +251,14 @@ private fun ButtonPreview() {
                 onClick = {},
                 text = "Filled disabled",
                 isEnabled = false,
-                config = TextButtonConfig(variant = TextButtonVariant.Filled)
+                config = TextButtonConfig(variant = TextButtonVariant.Filled),
             )
 
             FuelioTextButton(
                 onClick = {},
                 text = "Outlined disabled",
                 isEnabled = false,
-                config = TextButtonConfig(variant = TextButtonVariant.Outlined)
+                config = TextButtonConfig(variant = TextButtonVariant.Outlined),
             )
         }
     }

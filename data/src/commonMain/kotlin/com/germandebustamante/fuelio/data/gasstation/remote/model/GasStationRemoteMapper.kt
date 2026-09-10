@@ -24,18 +24,17 @@ fun GasStationDTO.toDomain() = GasStationBO(
 
 private fun String.parseToDoubleOrNull(): Double? = replace(",", ".").toDoubleOrNull()
 
-internal fun String.parseSchedule(): List<ScheduleSegmentBO> =
-    split(";").mapNotNull { segment ->
-        runCatching {
-            val colonIndex = segment.indexOf(':')
-            if (colonIndex == -1) return@mapNotNull null
-            val daysPart = segment.substring(0, colonIndex).trim()
-            val timePart = segment.substring(colonIndex + 1).trim()
-            val (startDay, endDay) = parseDayRange(daysPart) ?: return@mapNotNull null
-            val (startTime, endTime) = parseTimeRange(timePart)
-            ScheduleSegmentBO(startDay, endDay, startTime, endTime)
-        }.getOrNull()
-    }
+internal fun String.parseSchedule(): List<ScheduleSegmentBO> = split(";").mapNotNull { segment ->
+    runCatching {
+        val colonIndex = segment.indexOf(':')
+        if (colonIndex == -1) return@mapNotNull null
+        val daysPart = segment.substring(0, colonIndex).trim()
+        val timePart = segment.substring(colonIndex + 1).trim()
+        val (startDay, endDay) = parseDayRange(daysPart) ?: return@mapNotNull null
+        val (startTime, endTime) = parseTimeRange(timePart)
+        ScheduleSegmentBO(startDay, endDay, startTime, endTime)
+    }.getOrNull()
+}
 
 private val dayMap = mapOf(
     "L" to DayOfWeek.MONDAY,

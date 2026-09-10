@@ -18,16 +18,13 @@ data class GasStationItemVO(
     }
 }
 
-fun GasStationBO.toGasStationItemVO(
-    isOpen: Boolean,
-    distanceInKilometers: Double?,
-    fuelFilter: FuelFilter = FuelFilter.Gasoline95,
-) = GasStationItemVO(
-    station = this,
-    fuelFilter = fuelFilter,
-    isOpen = isOpen,
-    distanceInKilometers = distanceInKilometers,
-)
+fun GasStationBO.toGasStationItemVO(isOpen: Boolean, distanceInKilometers: Double?, fuelFilter: FuelFilter = FuelFilter.Gasoline95) =
+    GasStationItemVO(
+        station = this,
+        fuelFilter = fuelFilter,
+        isOpen = isOpen,
+        distanceInKilometers = distanceInKilometers,
+    )
 
 fun GasStationItemVO.withFuelFilter(filter: FuelFilter) = copy(fuelFilter = filter)
 

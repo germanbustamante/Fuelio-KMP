@@ -53,12 +53,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.AndroidUiModes
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.germandebustamante.fuelio.R
 import com.germandebustamante.fuelio.core.domain.province.model.ProvinceBO
 import com.germandebustamante.fuelio.core.testing.A11yIdentifiers
 import com.germandebustamante.fuelio.core.ui.theme.FuelioSpacing
@@ -83,10 +86,7 @@ import com.germandebustamante.fuelio.feature.list.state.fakeGasStationsUIStatePe
 import com.germandebustamante.fuelio.feature.list.state.fakeGasStationsUIStateShowModalSheet
 import com.germandebustamante.fuelio.feature.list.ui.state.GasStationsErrorState
 import com.germandebustamante.fuelio.feature.list.ui.state.GasStationsLoadingSkeleton
-import com.germandebustamante.fuelio.R
 import kotlinx.coroutines.launch
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -247,7 +247,8 @@ private fun GasStationsScreen(
                 ) { contentState ->
                     when (contentState) {
                         ContentState.Initial,
-                        ContentState.Loading -> GasStationsLoadingSkeleton()
+                        ContentState.Loading,
+                        -> GasStationsLoadingSkeleton()
 
                         is ContentState.Success -> LazyColumn(
                             state = listState,
@@ -332,8 +333,11 @@ private fun ProvinceBottomSheetDialog(
     val bottomSheetState = rememberModalBottomSheetState()
     var provinceSearchQuery by rememberSaveable { mutableStateOf("") }
     val filteredProvinces = remember(provinces, provinceSearchQuery) {
-        if (provinceSearchQuery.isBlank()) provinces
-        else provinces.filter { it.name.contains(provinceSearchQuery, ignoreCase = true) }
+        if (provinceSearchQuery.isBlank()) {
+            provinces
+        } else {
+            provinces.filter { it.name.contains(provinceSearchQuery, ignoreCase = true) }
+        }
     }
 
     if (showBottomSheet) {

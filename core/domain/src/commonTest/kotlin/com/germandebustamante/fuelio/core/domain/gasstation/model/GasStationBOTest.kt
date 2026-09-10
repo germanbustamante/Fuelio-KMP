@@ -15,7 +15,7 @@ class GasStationBOTest {
     @Test
     fun `isOpen - GIVEN L-D 24H schedule WHEN any day and time THEN returns true`() {
         val station = GasStationBOMother.gasStationBO(
-            schedule = listOf(ScheduleSegmentBO(DayOfWeek.MONDAY, DayOfWeek.SUNDAY, null, null))
+            schedule = listOf(ScheduleSegmentBO(DayOfWeek.MONDAY, DayOfWeek.SUNDAY, null, null)),
         )
 
         assertTrue(station.isOpen(monday(10, 0)))
@@ -162,8 +162,13 @@ class GasStationBOTest {
     }
 
     private val dayMap = mapOf(
-        "L" to DayOfWeek.MONDAY, "M" to DayOfWeek.TUESDAY, "X" to DayOfWeek.WEDNESDAY,
-        "J" to DayOfWeek.THURSDAY, "V" to DayOfWeek.FRIDAY, "S" to DayOfWeek.SATURDAY, "D" to DayOfWeek.SUNDAY,
+        "L" to DayOfWeek.MONDAY,
+        "M" to DayOfWeek.TUESDAY,
+        "X" to DayOfWeek.WEDNESDAY,
+        "J" to DayOfWeek.THURSDAY,
+        "V" to DayOfWeek.FRIDAY,
+        "S" to DayOfWeek.SATURDAY,
+        "D" to DayOfWeek.SUNDAY,
     )
 
     private fun parseDayRange(daysPart: String): Pair<DayOfWeek, DayOfWeek>? {

@@ -6,8 +6,12 @@ import com.germandebustamante.fuelio.core.fake.fakeGasStations
 
 val fakeProvince = ProvinceBO("1", "Sevilla")
 val fakeProvinces = listOf(
-    fakeProvince, ProvinceBO("2", "Madrid"), ProvinceBO("3", "Barcelona"),
-    ProvinceBO("4", "Valencia"), ProvinceBO("5", "Zaragoza"), ProvinceBO("6", "Málaga"),
+    fakeProvince,
+    ProvinceBO("2", "Madrid"),
+    ProvinceBO("3", "Barcelona"),
+    ProvinceBO("4", "Valencia"),
+    ProvinceBO("5", "Zaragoza"),
+    ProvinceBO("6", "Málaga"),
 )
 
 val fakeGasStationItemVOs = fakeGasStations.map { GasStationItemVO(it) }
@@ -16,15 +20,15 @@ val fakeGasStationsUIState = GasStationsUIState(
     gasStations = fakeGasStationItemVOs,
     provinces = fakeProvinces,
     selectedProvince = fakeProvince,
-    isLoading = false
+    isLoading = false,
 )
 
 val fakeGasStationsUIStateError = fakeGasStationsUIState.copy(
-    error = DomainError.ServerError(403)
+    error = DomainError.ServerError(403),
 )
 
 val fakeGasStationsUIStateLoading = fakeGasStationsUIState.copy(
-    isLoading = true
+    isLoading = true,
 )
 
 val fakeGasStationsUIStateShowModalSheet = fakeGasStationsUIState.copy(

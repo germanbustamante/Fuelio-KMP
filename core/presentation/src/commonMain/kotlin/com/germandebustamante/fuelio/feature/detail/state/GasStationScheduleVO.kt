@@ -10,11 +10,7 @@ sealed interface ScheduleDayStatus {
     data class Hours(val start: String, val end: String) : ScheduleDayStatus
 }
 
-data class ScheduleDayVO(
-    val dayOfWeek: DayOfWeek,
-    val isToday: Boolean,
-    val status: ScheduleDayStatus,
-)
+data class ScheduleDayVO(val dayOfWeek: DayOfWeek, val isToday: Boolean, val status: ScheduleDayStatus)
 
 private val weekDayOrder = listOf(
     DayOfWeek.MONDAY,

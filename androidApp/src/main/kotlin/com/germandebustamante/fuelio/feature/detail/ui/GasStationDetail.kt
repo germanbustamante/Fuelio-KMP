@@ -76,11 +76,7 @@ fun GasStationDetail(
 }
 
 @Composable
-private fun GasStationDetail(
-    state: GasStationDetailUIState,
-    onBackClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun GasStationDetail(state: GasStationDetailUIState, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
     FuelioScaffold(
         modifier = modifier,
         topBar = {
@@ -135,11 +131,7 @@ private fun GasStationDetail(
 }
 
 @Composable
-private fun GasStationDetailContent(
-    gasStation: GasStationBO,
-    scheduleDays: List<ScheduleDayVO>,
-    modifier: Modifier = Modifier,
-) {
+private fun GasStationDetailContent(gasStation: GasStationBO, scheduleDays: List<ScheduleDayVO>, modifier: Modifier = Modifier) {
     val stationName = gasStation.displayName
 
     LazyColumn(

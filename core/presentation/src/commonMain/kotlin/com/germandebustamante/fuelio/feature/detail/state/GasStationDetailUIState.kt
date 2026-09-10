@@ -13,11 +13,7 @@ sealed interface ContentState {
     data object NotFound : ContentState
 }
 
-data class GasStationDetailUIState(
-    val gasStation: GasStationBO? = null,
-    val today: DayOfWeek? = null,
-    val isLoading: Boolean = true,
-) {
+data class GasStationDetailUIState(val gasStation: GasStationBO? = null, val today: DayOfWeek? = null, val isLoading: Boolean = true) {
     val contentState: ContentState
         get() = when {
             isLoading -> ContentState.Loading
@@ -25,6 +21,5 @@ data class GasStationDetailUIState(
             else -> ContentState.NotFound
         }
 
-    fun withGasStationLoaded(gasStation: GasStationBO?, today: DayOfWeek) =
-        copy(gasStation = gasStation, today = today, isLoading = false)
+    fun withGasStationLoaded(gasStation: GasStationBO?, today: DayOfWeek) = copy(gasStation = gasStation, today = today, isLoading = false)
 }

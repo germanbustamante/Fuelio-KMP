@@ -28,11 +28,7 @@ private val allFuelFilters = listOf(
 )
 
 @Composable
-fun FuelFilterSelector(
-    selectedFilter: FuelFilter,
-    onFilterSelected: (FuelFilter) -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun FuelFilterSelector(selectedFilter: FuelFilter, onFilterSelected: (FuelFilter) -> Unit, modifier: Modifier = Modifier) {
     val haptic = LocalHapticFeedback.current
 
     Row(

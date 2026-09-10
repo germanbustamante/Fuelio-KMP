@@ -119,7 +119,7 @@ android {
             isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
             if (hasReleaseKeystore) {
                 signingConfig = signingConfigs.getByName(BuildConstants.RELEASE_SIGNING_CONFIG_NAME)

@@ -11,6 +11,5 @@ class GasStationLocalDataSourceImpl(private val gasStationDAO: GasStationDAO) : 
     override suspend fun getGasStationsByProvince(provinceId: String): List<GasStationEntity> =
         gasStationDAO.getGasStationsByProvince(provinceId)
 
-    override fun getGasStationById(id: String): Flow<GasStationEntity?> =
-        gasStationDAO.getGasStationById(id)
+    override fun getGasStationById(id: String): Flow<GasStationEntity?> = gasStationDAO.getGasStationById(id)
 }

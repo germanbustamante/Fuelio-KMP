@@ -17,20 +17,19 @@ abstract class BaseRemoteDataSourceTest {
 
     protected val json = Json { ignoreUnknownKeys = true }
 
-    protected fun createHttpClient(engine: MockEngine): HttpClient =
-        HttpClient(engine) {
-            install(ContentNegotiation) {
-                json(json)
-            }
-            HttpResponseValidator {
-                validateResponse { response ->
-                    val statusCode = response.status.value
-                    if (statusCode in 400..599) {
-                        throw DomainError.ServerError(statusCode)
-                    }
+    protected fun createHttpClient(engine: MockEngine): HttpClient = HttpClient(engine) {
+        install(ContentNegotiation) {
+            json(json)
+        }
+        HttpResponseValidator {
+            validateResponse { response ->
+                val statusCode = response.status.value
+                if (statusCode in 400..599) {
+                    throw DomainError.ServerError(statusCode)
                 }
             }
         }
+    }
 
     protected fun mockEngine(
         content: String,
@@ -40,15 +39,11 @@ abstract class BaseRemoteDataSourceTest {
         respond(
             content = content,
             status = status,
-            headers = headersOf(HttpHeaders.ContentType, contentType.toString())
+            headers = headersOf(HttpHeaders.ContentType, contentType.toString()),
         )
     }
 
-    protected fun mockEngineWithJson(
-        content: String,
-        status: HttpStatusCode = HttpStatusCode.OK,
-    ): MockEngine = mockEngine(content, status, ContentType.Application.Json)
+    protected fun mockEngineWithJson(content: String, status: HttpStatusCode = HttpStatusCode.OK): MockEngine = mockEngine(content, status, ContentType.Application.Json)
 
-    protected fun mockEngineWithError(status: HttpStatusCode): MockEngine =
-        mockEngine(content = "", status = status)
+    protected fun mockEngineWithError(status: HttpStatusCode): MockEngine = mockEngine(content = "", status = status)
 }

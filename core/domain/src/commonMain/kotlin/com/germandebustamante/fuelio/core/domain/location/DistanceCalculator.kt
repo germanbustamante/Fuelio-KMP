@@ -14,7 +14,7 @@ fun distanceBetween(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Dou
     val dLat = (lat2 - lat1).toRadians()
     val dLon = (lon2 - lon1).toRadians()
     val a = sin(dLat / 2) * sin(dLat / 2) +
-            cos(lat1.toRadians()) * cos(lat2.toRadians()) *
-            sin(dLon / 2) * sin(dLon / 2)
+        cos(lat1.toRadians()) * cos(lat2.toRadians()) *
+        sin(dLon / 2) * sin(dLon / 2)
     return EARTH_RADIUS_KM * 2 * atan2(sqrt(a), sqrt(1 - a))
 }

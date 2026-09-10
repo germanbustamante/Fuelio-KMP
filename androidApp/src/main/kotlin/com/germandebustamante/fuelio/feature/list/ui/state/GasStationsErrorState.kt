@@ -15,11 +15,7 @@ import com.germandebustamante.fuelio.designsystem.button.FuelioTextButton
 import com.germandebustamante.fuelio.designsystem.emptystate.FuelioEmptyState
 
 @Composable
-fun GasStationsErrorState(
-    message: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun GasStationsErrorState(message: String, onRetry: () -> Unit, modifier: Modifier = Modifier) {
     FuelioEmptyState(
         title = stringResource(R.string.error_state_title),
         subtitle = message.ifBlank { null },
