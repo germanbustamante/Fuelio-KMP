@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.googleServices)
     alias(libs.plugins.firebaseCrashlytics)
+    alias(libs.plugins.roborazzi)
 }
 
 //region Constants
@@ -64,8 +65,35 @@ android {
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     testOptions {
-        unitTests.all {
-            it.useJUnitPlatform()
+        unitTests {
+            // Roborazzi renders real Composables through Robolectric, which needs the merged
+            // resources and assets of the app under test.
+            isIncludeAndroidResources = true
+
+            all {
+                it.useJUnitPlatform()
+                // Robolectric refuses to open an SDK 37 sandbox on anything below Java 21, and
+                // compileSdk/targetSdk are 37. Only the test VM moves: the compiled bytecode stays
+                // on JVM 11 like every other module.
+                it.javaLauncher.set(
+                    javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(21)) },
+                )
+                // Robolectric reaches into internal JDK APIs that the module system closes off from
+                // Java 17 onwards; this is the set its own documentation prescribes.
+                it.jvmArgs(
+                    "--add-opens=java.base/java.lang=ALL-UNNAMED",
+                    "--add-opens=java.base/java.util=ALL-UNNAMED",
+                    "--add-opens=java.base/java.io=ALL-UNNAMED",
+                    "--add-opens=java.base/java.net=ALL-UNNAMED",
+                    "--add-opens=java.base/java.security=ALL-UNNAMED",
+                    "--add-opens=java.base/java.text=ALL-UNNAMED",
+                    "--add-opens=java.base/jdk.internal.access=ALL-UNNAMED",
+                    "--add-opens=java.desktop/java.awt.font=ALL-UNNAMED",
+                    "--add-opens=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
+                )
+                // Rendering at Pixel sizes needs more than the default heap.
+                it.maxHeapSize = "2g"
+            }
         }
     }
 
@@ -187,6 +215,14 @@ dependencies {
     debugImplementation(compose.uiTooling)
 
     testImplementation(libs.kotlin.test)
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.testExt.junit)
+    testImplementation(libs.ui.test.junit4)
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
+    testImplementation(libs.roborazzi.junit.rule)
+    testRuntimeOnly(libs.junit.vintage.engine)
 
     androidTestImplementation(libs.ui.test.junit4)
     androidTestImplementation(libs.androidx.runner)
