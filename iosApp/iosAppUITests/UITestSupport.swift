@@ -54,6 +54,15 @@ enum UITestSupport {
     static let detailPricesSection = "detail_prices_section"
 
     static let permissionAlertSettings = "permission_alert_settings"
+
+    // Settings
+    static let settingsButton = "settings_button"
+    static let settingsScreen = "settings_screen"
+    static let settingsBackButton = "settings_back_button"
+    static let themePicker = "theme_picker"
+    static let defaultFuelPicker = "default_fuel_picker"
+
+    static func themeOption(_ rawValue: String) -> String { "theme_option_\(rawValue)" }
 }
 
 extension XCTestCase {

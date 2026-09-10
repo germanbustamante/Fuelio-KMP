@@ -31,4 +31,14 @@ class SyntheticBackStackTest {
     fun `parent - GIVEN a detail destination THEN is the list`() {
         assertEquals(Destination.GasStations, Destination.GasStationDetails("station-1").parent)
     }
+
+    @Test
+    fun `parent - GIVEN settings THEN back lands on the list`() {
+        assertEquals(Destination.GasStations, Destination.Settings.parent)
+    }
+
+    @Test
+    fun `buildSyntheticBackStack - GIVEN settings THEN the list sits underneath it`() {
+        assertEquals(listOf(Destination.GasStations, Destination.Settings), buildSyntheticBackStack(Destination.Settings))
+    }
 }

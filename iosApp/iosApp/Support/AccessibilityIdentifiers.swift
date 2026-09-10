@@ -34,6 +34,15 @@ enum A11yID {
     static let detailScheduleSection = "detail_schedule_section"
     static let detailPricesSection = "detail_prices_section"
 
+    // Settings
+    static let settingsButton = "settings_button"
+    static let settingsScreen = "settings_screen"
+    static let settingsBackButton = "settings_back_button"
+    static let themePicker = "theme_picker"
+    static let defaultFuelPicker = "default_fuel_picker"
+
+    static func themeOption(_ rawValue: String) -> String { "theme_option_\(rawValue)" }
+
     // Permissions
     static let permissionAlertSettings = "permission_alert_settings"
 }

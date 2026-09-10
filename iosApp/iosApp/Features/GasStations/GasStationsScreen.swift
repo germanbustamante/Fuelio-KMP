@@ -31,7 +31,8 @@ struct GasStationsScreen: View {
             onToggleFavorite: { viewModel.onToggleFavorite(stationId: $0) },
             onItemClick: { viewModel.onItemClick(stationId: $0) },
             onRetry: { viewModel.onRetry() },
-            onDetectLocationTapped: { viewModel.onDetectLocationTapped() }
+            onDetectLocationTapped: { viewModel.onDetectLocationTapped() },
+            onSettingsTapped: { viewModel.onSettingsTapped() }
         )
     }
 }
@@ -53,6 +54,7 @@ struct GasStationsScreenBody: View {
     let onItemClick: (String) -> Void
     let onRetry: () -> Void
     let onDetectLocationTapped: () -> Void
+    let onSettingsTapped: () -> Void
 
     var body: some View {
         content
@@ -213,6 +215,15 @@ struct GasStationsScreenBody: View {
             }
             .accessibilityIdentifier(A11yID.detectLocationButton)
         }
+
+        ToolbarItem(placement: .topBarTrailing) {
+            Button {
+                onSettingsTapped()
+            } label: {
+                Label("Settings", systemImage: "gearshape")
+            }
+            .accessibilityIdentifier(A11yID.settingsButton)
+        }
     }
 
     // MARK: - Bindings
@@ -271,7 +282,8 @@ struct GasStationsScreenBody: View {
             onToggleFavorite: { _ in },
             onItemClick: { _ in },
             onRetry: {},
-            onDetectLocationTapped: {}
+            onDetectLocationTapped: {},
+            onSettingsTapped: {}
         )
     }
 }
@@ -291,7 +303,8 @@ struct GasStationsScreenBody: View {
             onToggleFavorite: { _ in },
             onItemClick: { _ in },
             onRetry: {},
-            onDetectLocationTapped: {}
+            onDetectLocationTapped: {},
+            onSettingsTapped: {}
         )
     }
     .dynamicTypeSize(.accessibility3)
@@ -312,7 +325,8 @@ struct GasStationsScreenBody: View {
             onToggleFavorite: { _ in },
             onItemClick: { _ in },
             onRetry: {},
-            onDetectLocationTapped: {}
+            onDetectLocationTapped: {},
+            onSettingsTapped: {}
         )
     }
     .preferredColorScheme(.dark)
@@ -333,7 +347,8 @@ struct GasStationsScreenBody: View {
             onToggleFavorite: { _ in },
             onItemClick: { _ in },
             onRetry: {},
-            onDetectLocationTapped: {}
+            onDetectLocationTapped: {},
+            onSettingsTapped: {}
         )
     }
 }
