@@ -5,6 +5,8 @@ import com.germandebustamante.fuelio.core.domain.error.DomainError
 import com.germandebustamante.fuelio.core.domain.error.toDomainError
 import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationBO
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationsByLocationUseCase
+import com.germandebustamante.fuelio.core.domain.gasstation.usecase.ObserveFavoriteStationIdsUseCase
+import com.germandebustamante.fuelio.core.domain.gasstation.usecase.ToggleFavoriteStationUseCase
 import com.germandebustamante.fuelio.core.domain.location.distanceBetween
 import com.germandebustamante.fuelio.core.domain.preferences.model.UserPreferencesBO
 import com.germandebustamante.fuelio.core.domain.preferences.usecase.ObserveUserPreferencesUseCase
@@ -58,6 +60,8 @@ class GasStationsViewModel(
     private val getProvincesUseCase: GetProvincesUseCase,
     private val locationPermissionController: LocationPermissionController,
     private val resolveProvinceByLocationUseCase: ResolveProvinceByLocationUseCase,
+    private val observeFavoriteStationIdsUseCase: ObserveFavoriteStationIdsUseCase,
+    private val toggleFavoriteStationUseCase: ToggleFavoriteStationUseCase,
     private val observeUserPreferencesUseCase: ObserveUserPreferencesUseCase,
     private val setDefaultFuelTypeUseCase: SetDefaultFuelTypeUseCase,
     private val setSavedProvinceUseCase: SetSavedProvinceUseCase,
@@ -129,7 +133,18 @@ class GasStationsViewModel(
                 initLocationPermission()
             },
             { observeSearchQuery() },
+            { observeFavorites() },
         )
+    }
+
+    /**
+     * The favourites table is the source of truth, so the star reflects what is stored rather than
+     * what was tapped — and it lights up correctly on a cold start.
+     */
+    private suspend fun observeFavorites() {
+        observeFavoriteStationIdsUseCase().collect { favoriteIds ->
+            updateState { it.withFavorites(favoriteIds) }
+        }
     }
 
     private suspend fun readStoredPreferences(): UserPreferencesBO =
@@ -401,7 +416,7 @@ class GasStationsViewModel(
     }
 
     fun onToggleFavorite(stationId: String) {
-        updateState { it.withFavoriteToggled(stationId) }
+        viewModelScope.launch { toggleFavoriteStationUseCase(stationId) }
     }
 
     private fun notifyError(operation: String, error: Throwable) {
