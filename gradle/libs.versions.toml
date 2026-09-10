@@ -33,6 +33,13 @@ jetbrainsKotlinJvm = "2.4.0"
 ktlintPlugin = "14.2.0"
 ktlint = "1.7.1"
 
+#Screenshot testing
+roborazzi = "1.74.0"
+# 4.17 is the first Robolectric line that ships an SDK 37 sandbox, and compileSdk/targetSdk are 37
+# here. It is still a beta, but the alternative is pinning the tests to an older SDK than the app is
+# built against, which is the thing screenshot tests are least useful for.
+robolectric = "4.17-beta-4"
+
 #DI
 koinBom = "4.2.2"
 koin_plugin = "1.0.1"
@@ -105,8 +112,15 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 
 # Testing
 junit = { module = "junit:junit", version.ref = "junit" }
+# Robolectric is JUnit 4 only, and androidApp runs on the JUnit Platform (see its testOptions), so
+# without the vintage engine these tests are silently not discovered and the build passes green.
+junit-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine", version.ref = "junit5" }
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit5" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit5" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi" }
+roborazzi-compose = { module = "io.github.takahirom.roborazzi:roborazzi-compose", version.ref = "roborazzi" }
+roborazzi-junit-rule = { module = "io.github.takahirom.roborazzi:roborazzi-junit-rule", version.ref = "roborazzi" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 
 # Ktor
@@ -181,3 +195,4 @@ buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig"
 kmpNativeCoroutines = { id = "com.rickclephas.kmp.nativecoroutines", version.ref = "kmpNativeCoroutines" }
 skie = { id = "co.touchlab.skie", version.ref = "skie" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlintPlugin" }
+roborazzi = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }
