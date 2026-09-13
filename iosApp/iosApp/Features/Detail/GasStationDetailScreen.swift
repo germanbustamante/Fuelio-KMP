@@ -84,7 +84,7 @@ struct GasStationDetailScreenBody: View {
             ScrollView { FuelioDetailSkeleton() }
 
         case .success(let station, let scheduleDays):
-            loaded(station: station, scheduleDays: scheduleDays)
+            loaded(station: station, scheduleDays: scheduleDays, priceTrend: state.priceTrend)
 
         case .notFound:
             // `getGasStationById` is a local-only read, so this means "not cached yet", not a failure
@@ -98,12 +98,19 @@ struct GasStationDetailScreenBody: View {
         }
     }
 
-    private func loaded(station: DomainGasStationBO, scheduleDays: [ScheduleDayVO]) -> some View {
+    private func loaded(
+        station: DomainGasStationBO,
+        scheduleDays: [ScheduleDayVO],
+        priceTrend: PriceTrendVO?
+    ) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: FuelioSpacing.lg) {
                 header(station)
                 StationMapSection(station: station, onDirectionsTapped: onDirectionsTapped)
                 StationPricesSection(station: station)
+                if let priceTrend {
+                    PriceTrendChartView(trend: priceTrend)
+                }
                 StationScheduleSection(days: scheduleDays)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
