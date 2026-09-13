@@ -56,6 +56,10 @@ enum UITestSupport {
     static let detailFavoriteButton = "detail_favorite_button"
     static let detailPriceTrendChart = "detail_price_trend_chart"
 
+    static let mapButton = "map_button"
+    static let mapScreen = "map_screen"
+    static let mapBackButton = "map_back_button"
+
     static let permissionAlertSettings = "permission_alert_settings"
 
     // Onboarding

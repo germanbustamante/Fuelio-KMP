@@ -13,6 +13,7 @@ enum Route: Hashable {
     case gasStationDetail(id: String)
     case settings
     case favorites
+    case map
 
     init?(_ destination: Destination) {
         switch onEnum(of: destination) {
@@ -22,6 +23,8 @@ enum Route: Hashable {
             self = .settings
         case .favorites:
             self = .favorites
+        case .map:
+            self = .map
         case .gasStations:
             return nil
         }

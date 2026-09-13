@@ -25,6 +25,7 @@ import com.germandebustamante.fuelio.feature.common.analytics.DeepLinkOpened
 import com.germandebustamante.fuelio.feature.detail.ui.GasStationDetail
 import com.germandebustamante.fuelio.feature.favorites.ui.FavoritesScreen
 import com.germandebustamante.fuelio.feature.list.ui.GasStationsScreen
+import com.germandebustamante.fuelio.feature.map.ui.MapScreen
 import com.germandebustamante.fuelio.feature.settings.ui.SettingsScreen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -75,6 +76,7 @@ fun FuelioNavHost() {
                     is Destination.GasStationDetails -> GasStationDetail(destination)
                     is Destination.Settings -> SettingsScreen()
                     is Destination.Favorites -> FavoritesScreen()
+                    is Destination.Map -> MapScreen()
                 }
             }
         },

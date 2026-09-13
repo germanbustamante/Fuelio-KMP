@@ -535,6 +535,23 @@
         }
       }
     },
+    "Map": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Map"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mapa"
+          }
+        }
+      }
+    },
     "Map showing %@": {
       "extractionState": "manual",
       "localizations": {
@@ -616,6 +633,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "No hay coincidencias"
+          }
+        }
+      }
+    },
+    "No stations to show": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No stations to show"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay gasolineras que mostrar"
           }
         }
       }
@@ -824,6 +858,23 @@
         }
       }
     },
+    "Select a province from the list to see its gas stations on the map.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select a province from the list to see its gas stations on the map."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona una provincia en la lista para ver sus gasolineras en el mapa."
+          }
+        }
+      }
+    },
     "Settings": {
       "extractionState": "manual",
       "localizations": {
@@ -854,6 +905,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Algo salió mal"
+          }
+        }
+      }
+    },
+    "Stations map": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stations map"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mapa de gasolineras"
           }
         }
       }

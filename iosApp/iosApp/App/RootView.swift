@@ -43,6 +43,8 @@ struct RootView: View {
                         SettingsScreen()
                     case .favorites:
                         FavoritesScreen()
+                    case .map:
+                        MapScreen()
                     }
                 }
         }
