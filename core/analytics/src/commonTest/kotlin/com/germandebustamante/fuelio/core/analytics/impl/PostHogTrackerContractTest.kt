@@ -36,9 +36,26 @@ class PostHogTrackerContractTest {
         assertNull(sut.trackedEvent)
     }
 
+    /**
+     * Regression guard: `PostHogTracker.android.kt`/`.ios.kt` did not override `onTrackError` at
+     * all, so every `Trace.Error` (e.g. `ApiCallFailed`) silently vanished on PostHog despite every
+     * `Trace` declaring both `FIREBASE` and `POSTHOG` as targets — errors only ever reached Firebase.
+     */
+    @Test
+    fun `track - GIVEN an Error trace WHEN track THEN onTrackError is called`() = runTest {
+        val trace = Trace.Error("fetch_stations_failed", targets = listOf(AnalyticsProviderType.POSTHOG))
+
+        sut.track(trace)
+
+        assertEquals(trace, sut.trackedError)
+        assertNull(sut.trackedEvent)
+        assertNull(sut.trackedScreen)
+    }
+
     private class FakePostHogTracker : PostHogTracker() {
         var trackedEvent: Trace.Event? = null
         var trackedScreen: Trace.Screen? = null
+        var trackedError: Trace.Error? = null
 
         override fun onTrackEvent(trace: Trace.Event) {
             trackedEvent = trace
@@ -46,6 +63,10 @@ class PostHogTrackerContractTest {
 
         override fun onTrackScreen(trace: Trace.Screen) {
             trackedScreen = trace
+        }
+
+        override fun onTrackError(trace: Trace.Error) {
+            trackedError = trace
         }
     }
 }
