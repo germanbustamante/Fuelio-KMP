@@ -2,9 +2,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [development]
+    branches: [development, master]
   push:
-    branches: [development]
+    branches: [development, master]
   workflow_dispatch:
 
 # A new push to a PR makes the in-flight run pointless.
@@ -32,7 +32,7 @@ jobs:
           java-version: '21'
       - uses: gradle/actions/setup-gradle@v4
         with:
-          cache-read-only: ${{ github.ref != 'refs/heads/development' }}
+          cache-read-only: ${{ github.ref != 'refs/heads/development' && github.ref != 'refs/heads/master' }}
           gradle-home-cache-cleanup: true
       - run: ./gradlew ktlintCheck
       - uses: actions/upload-artifact@v4
@@ -52,7 +52,7 @@ jobs:
           java-version: '21'
       - uses: gradle/actions/setup-gradle@v4
         with:
-          cache-read-only: ${{ github.ref != 'refs/heads/development' }}
+          cache-read-only: ${{ github.ref != 'refs/heads/development' && github.ref != 'refs/heads/master' }}
           gradle-home-cache-cleanup: true
 
       # Every KMP module's commonTest runs on the JVM, so the only thing that needs a macOS runner
@@ -104,7 +104,7 @@ jobs:
           java-version: '21'
       - uses: gradle/actions/setup-gradle@v4
         with:
-          cache-read-only: ${{ github.ref != 'refs/heads/development' }}
+          cache-read-only: ${{ github.ref != 'refs/heads/development' && github.ref != 'refs/heads/master' }}
           gradle-home-cache-cleanup: true
 
       # The Kotlin/Native toolchain is a ~1.5GB download; caching it is by far the biggest win on
