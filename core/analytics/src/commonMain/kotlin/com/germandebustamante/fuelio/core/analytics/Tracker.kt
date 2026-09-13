@@ -21,4 +21,12 @@ abstract class Tracker : Trackable {
     protected open fun onTrackError(trace: Trace.Error) {
         // Empty implementation for not forcing every tracker to implement it
     }
+
+    final override suspend fun identify(distinctId: String, properties: Map<String, Any>) {
+        onIdentify(distinctId, properties)
+    }
+
+    protected open fun onIdentify(distinctId: String, properties: Map<String, Any>) {
+        // Empty implementation for not forcing every tracker to implement it
+    }
 }

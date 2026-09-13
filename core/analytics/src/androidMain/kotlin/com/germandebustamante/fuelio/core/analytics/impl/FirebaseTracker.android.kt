@@ -24,6 +24,11 @@ class AndroidFirebaseTracker : FirebaseTracker() {
     override fun onTrackError(trace: Trace.Error) {
         Firebase.analytics.logEvent(trace.eventName) { trace.params?.forEach { (key, value) -> addParam(key, value) } }
     }
+
+    override fun onIdentify(distinctId: String, properties: Map<String, Any>) {
+        Firebase.analytics.setUserId(distinctId)
+        properties.forEach { (key, value) -> Firebase.analytics.setUserProperty(key, value.toString()) }
+    }
 }
 
 private fun com.google.firebase.analytics.ParametersBuilder.addParam(key: String, value: Any) {

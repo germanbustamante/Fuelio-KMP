@@ -56,13 +56,28 @@ class IosFirebaseTrackerTest {
         assertEquals(mapOf("code" to "500"), nativeTracker.loggedParams)
     }
 
+    @Test
+    fun `onIdentify - GIVEN a distinct id and properties THEN they are forwarded to the native tracker as-is`() = runTest {
+        sut.identify("installation-1", mapOf("platform" to "ios"))
+
+        assertEquals("installation-1", nativeTracker.identifiedDistinctId)
+        assertEquals(mapOf("platform" to "ios"), nativeTracker.identifiedProperties)
+    }
+
     private class FakeNativeFirebaseTracker : NativeFirebaseTracker {
         var loggedName: String? = null
         var loggedParams: Map<String, Any>? = null
+        var identifiedDistinctId: String? = null
+        var identifiedProperties: Map<String, Any>? = null
 
         override fun logEvent(name: String, params: Map<String, Any>) {
             loggedName = name
             loggedParams = params
+        }
+
+        override fun logIdentify(distinctId: String, properties: Map<String, Any>) {
+            identifiedDistinctId = distinctId
+            identifiedProperties = properties
         }
     }
 }

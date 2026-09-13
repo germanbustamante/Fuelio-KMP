@@ -18,6 +18,7 @@ fun registerNativePostHogTracker(tracker: NativePostHogTracker) {
 interface NativePostHogTracker {
     fun logEvent(name: String, params: Map<String, Any>)
     fun logScreen(name: String, params: Map<String, Any>)
+    fun logIdentify(distinctId: String, properties: Map<String, Any>)
 }
 
 class IosPostHogTracker(private val nativeTracker: NativePostHogTracker) : PostHogTracker() {
@@ -32,5 +33,9 @@ class IosPostHogTracker(private val nativeTracker: NativePostHogTracker) : PostH
 
     override fun onTrackError(trace: Trace.Error) {
         nativeTracker.logEvent(trace.eventName, trace.params.orEmpty())
+    }
+
+    override fun onIdentify(distinctId: String, properties: Map<String, Any>) {
+        nativeTracker.logIdentify(distinctId, properties)
     }
 }
