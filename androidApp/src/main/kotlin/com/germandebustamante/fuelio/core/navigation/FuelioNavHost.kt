@@ -19,7 +19,6 @@ import com.germandebustamante.fuelio.core.navigation.deeplink.parseDeepLink
 import com.germandebustamante.fuelio.core.navigation.destination.Destination
 import com.germandebustamante.fuelio.core.navigation.destination.DestinationNavKey
 import com.germandebustamante.fuelio.core.navigation.destination.buildSyntheticBackStack
-import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import com.germandebustamante.fuelio.feature.detail.ui.GasStationDetail
 import com.germandebustamante.fuelio.feature.favorites.ui.FavoritesScreen
 import com.germandebustamante.fuelio.feature.list.ui.GasStationsScreen
@@ -31,7 +30,7 @@ import kotlinx.serialization.modules.subclass
 import org.koin.compose.koinInject
 
 @Composable
-fun FuelioNavHost(locationPermissionController: LocationPermissionController) {
+fun FuelioNavHost() {
     val navigator = koinInject<Navigator>()
     val backStack = rememberNavBackStack(navBackStackConfig, DestinationNavKey(Destination.GasStations))
 
@@ -63,7 +62,7 @@ fun FuelioNavHost(locationPermissionController: LocationPermissionController) {
             entry<DestinationNavKey> { key ->
                 when (val destination = key.destination) {
                     is Destination.GasStations ->
-                        GasStationsScreen(locationPermissionController, modifier = Modifier.fillMaxSize())
+                        GasStationsScreen(modifier = Modifier.fillMaxSize())
                     is Destination.GasStationDetails -> GasStationDetail(destination)
                     is Destination.Settings -> SettingsScreen()
                     is Destination.Favorites -> FavoritesScreen()
