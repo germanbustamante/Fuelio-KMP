@@ -14,17 +14,19 @@ pair in `iosApp/Configuration/Config.xcconfig`, with nothing tying the two toget
 beta means a tag can produce signed, distributable builds on both platforms from one version number.
 
 Nothing has shipped publicly yet, so there is no existing user base to version against — the first
-release is `v1.0.0-beta01`, not a `1.1.0` bump off a prior public release.
+release is `v1.0.0`, not a `1.1.0` bump off a prior public release.
 
 ## Decision
 
 ### Branch model
 
 `feature/*` branches (this project's convention, `FE-X.Y.Z` per branch) merge into `development` —
-gated by `ci.yml`. `development` merges into `master` only for a release; `master` never takes a
-direct commit. Pushing a `v*` tag on `master` triggers `release.yml`. The README's CI badge points at
-`master`, not `development`, since that is the branch whose green state actually matters to someone
-evaluating the project.
+gated by `ci.yml`, which now also gates the `development → master` pull request itself (extended to
+target `master` alongside `development`). `development` merges into `master` only for a release, via
+that PR, merged as a real merge commit rather than squashed — `master` never takes a direct commit.
+Pushing to `master` (i.e. merging that PR) triggers `release.yml` directly; there is no separate git
+tag to push by hand. The README's CI badge points at `master`, not `development`, since that is the
+branch whose green state actually matters to someone evaluating the project.
 
 ### Version: one property pair, two consumers
 
@@ -48,34 +50,43 @@ evaluating the project.
 Not the version catalog: `libs.versions.toml` is dependency coordinates; `libs.versions.fuelio` would
 be a semantically confusing neighbor for "this app's own version" among "these libraries' versions."
 
-The beta marker (`-beta01`) lives only in the git tag, never in `fuelio.versionName` — there is
-nothing to disambiguate against yet, and the moment a second beta or a stable `1.0.0` ships, the tag
-is what changes, not a property every consumer already reads.
+There is no beta/rc marker in either the version or the tag: `fuelio.versionName` (`1.0.0` today) is
+the whole story, and the tag `release.yml` creates (`v1.0.0`) is derived from it verbatim. Bumping the
+version is a normal PR to `development` like any other change — the repo owner's own responsibility,
+not something the pipeline infers from a suffix.
 
-### `release.yml`: four gated stages
+### `release.yml`: four gated stages, triggered by the release PR itself
 
-Triggered by `push: tags: ['v*']`, modeled on `ci.yml` (`setup-java@v4` + `gradle/actions/setup-gradle@v4`,
-`~/.konan` cache):
+Triggered by `push: branches: [master]` (plus `workflow_dispatch` as a manual escape hatch), modeled
+on `ci.yml` (`setup-java@v4` + `gradle/actions/setup-gradle@v4`, `~/.konan` cache). There is
+deliberately no tag-push trigger: since `master` only ever moves via the `development → master` PR,
+that merge *is* the release action, and requiring a second manual step (pushing a tag) afterward would
+just be an easy step to forget.
 
-1. **`validate`** — parses the tag (`v1.0.0-beta01` → `1.0.0`) and fails with an explicit message if
-   it doesn't match `fuelio.versionName`, so a mistagged release stops before anything builds. Then
-   `ktlintCheck`, the five JVM test tasks, and `verifyRoborazziDebug` — the same gate `ci.yml` already
-   applies to `development`, re-run here because a tag can in principle be pushed without every commit
-   between it and the last green `development` run having been re-verified.
+1. **`validate`** — reads `fuelio.versionName` straight out of `gradle.properties` (no tag to parse
+   against it) and derives the release tag as `v$versionName`. Then `ktlintCheck`, the five JVM test
+   tasks, and `verifyRoborazziDebug` — the same gate `ci.yml` already applies to `development` (and,
+   since `ci.yml`'s `pull_request` trigger was extended to `master`, to the release PR itself), re-run
+   here because a merge commit isn't guaranteed to be byte-for-byte what that PR's check last ran
+   against.
 2. **`ios`** — the four `iosSimulatorArm64Test` tasks plus `xcodebuild test`, then `xcodebuild archive`
    with `CODE_SIGNING_ALLOWED=NO` to prove the app still *packages*. No signed `.ipa`: that needs an
    Apple Developer Program membership and provisioning profiles this project doesn't have, and
    simulating them would misrepresent what the pipeline actually verifies.
 3. **`android-release`** — restores a keystore from the `KEYSTORE_BASE64` secret into `androidApp/`,
    runs `assembleRelease` + `bundleRelease`, uploads both as artifacts. Gated behind `validate`
-   passing, not run in parallel with it, since a version mismatch should stop a signed build from
-   happening at all.
-4. **`publish`** — a GitHub Release via `softprops/action-gh-release`, attaching the APK and AAB,
-   `prerelease: true` for any `-beta`/`-rc` tag, plus a Firebase App Distribution upload of the APK.
+   passing, not run in parallel with it, since a broken build shouldn't get anywhere near signing.
+4. **`publish`** — a GitHub Release via `softprops/action-gh-release`, given `tag_name: v$versionName`
+   explicitly so it creates that tag on this push's commit (there was none before) and attaches the
+   APK and AAB, plus a Firebase App Distribution upload of the APK. Pushing to `master` again without
+   bumping `fuelio.versionName` re-targets the same tag and **overwrites** the previous Release rather
+   than failing — an accepted trade-off for "the repo owner controls versioning entirely through one
+   property," not a pipeline that second-guesses whether this push is "really" a new release.
 
-Secrets this needs, none of which exist yet: `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`,
-`KEY_PASSWORD`, `FIREBASE_APP_DISTRIBUTION_SERVICE_ACCOUNT`, `FIREBASE_ANDROID_APP_ID`.
-`MAPS_API_KEY`/`POSTHOG_API_KEY` are already configured for `ci.yml` and are reused as-is.
+Secrets this needs: `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`,
+`FIREBASE_APP_DISTRIBUTION_SERVICE_ACCOUNT`, `FIREBASE_ANDROID_APP_ID`.
+`MAPS_API_KEY`/`POSTHOG_API_KEY` are shared with `ci.yml` and must exist for either workflow to build
+a usable app (absent, the map renders empty and PostHog stays off — a supported but degraded state).
 
 ## Alternatives considered
 
@@ -89,16 +100,24 @@ Secrets this needs, none of which exist yet: `KEYSTORE_BASE64`, `KEYSTORE_PASSWO
   gives — that the app packages cleanly for App Store submission once real credentials exist.
 - **Keeping `master` unused and tagging directly on `development`.** Rejected: `development` takes a
   merge on every PR, so a tag on it can move out from under a release the moment the next PR lands.
-  `master` only ever moving via an explicit `development → master` merge is what makes "this tag's
-  commit is what shipped" a stable claim.
+  `master` only ever moving via an explicit `development → master` merge is what makes "this
+  release's commit is what shipped" a stable claim.
+- **Triggering `release.yml` on a manually pushed `v*` tag** (the original design) instead of on the
+  push to `master` itself. Rejected on the repo owner's own call: the `development → master` PR is
+  already the one deliberate "ship this" action, so a second manual step afterward (compute the right
+  tag, push it) is one more thing to forget, not an extra safety check — nothing about a hand-pushed
+  tag would have caught a mistake the PR review didn't already.
 
 ## Consequences
 
 - A version bump is now: edit `fuelio.versionName`/`versionCode` in `gradle.properties`, run
-  `./gradlew generateIosVersionXcconfig`, commit both. Forgetting the second step is exactly the
-  failure mode `release.yml`'s `validate` stage catches before anything ships.
+  `./gradlew generateIosVersionXcconfig`, commit both, and get that PR merged to `development` like
+  any other change. There is no automated check that the `Version.xcconfig` regeneration step wasn't
+  skipped — forgetting it just means iOS's About row shows a stale version until the next bump.
 - `androidApp/build.gradle.kts` and `Config.xcconfig` no longer contain a version literal at all —
   the only place a version number is typed by hand is `gradle.properties`.
-- Creating `master`, uploading the six signing/distribution secrets, and pushing the first
-  `v1.0.0-beta01` tag are follow-up actions for whoever owns this repo's GitHub settings — not
-  something a code change can do on its own.
+- Pushing to `master` without bumping `fuelio.versionName` re-publishes the same tag and Release,
+  overwriting it — there is no guard against an accidental duplicate release, by design (see
+  `release.yml`'s `publish` job above).
+- Creating `master` and uploading the six signing/distribution secrets are follow-up actions for
+  whoever owns this repo's GitHub settings — not something a code change can do on its own.

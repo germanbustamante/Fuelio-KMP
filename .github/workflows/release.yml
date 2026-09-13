@@ -1,24 +1,33 @@
 name: Release
 
+# Every push to master is a release: master only ever moves via an explicit development -> master
+# pull request (docs/adr/0009-release-pipeline-and-versioning.md), so merging that PR is the release
+# action — there is no separate tag to push by hand. The tag/GitHub Release name is derived from
+# whatever `fuelio.versionName` already is at that commit; bumping it is a normal PR to development
+# like any other change. `workflow_dispatch` is kept as a manual escape hatch (e.g. re-running after
+# a transient infra failure without an empty commit).
 on:
   push:
-    tags: ['v*']
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 env:
   MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
   POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
 
 jobs:
-  # Parses the tag and checks it against fuelio.versionName before anything else runs — a mistagged
-  # release should fail here, not after signing a build with the wrong number on it. Also runs the
-  # same gate ci.yml applies to development, since a tag isn't guaranteed to sit on a commit that gate
-  # already ran against.
+  # Reads the version this commit ships as before anything else runs, and re-runs the same gate
+  # ci.yml applies to development — a push to master isn't guaranteed to be the exact commit that
+  # gate last ran against (e.g. a merge commit).
   validate:
-    name: Validate tag and run the CI gate
+    name: Read the version and run the CI gate
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.parse-tag.outputs.version }}
-      prerelease: ${{ steps.parse-tag.outputs.prerelease }}
+      version: ${{ steps.read-version.outputs.version }}
+      tag: ${{ steps.read-version.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -29,23 +38,12 @@ jobs:
         with:
           cache-read-only: true
 
-      - name: Parse tag and compare against fuelio.versionName
-        id: parse-tag
+      - name: Read fuelio.versionName
+        id: read-version
         run: |
-          TAG="${GITHUB_REF_NAME#v}"
-          VERSION="${TAG%%-*}"
-          PROPERTY=$(grep '^fuelio.versionName=' gradle.properties | cut -d= -f2)
-
-          if [ "$VERSION" != "$PROPERTY" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME parses to version $VERSION, but fuelio.versionName is $PROPERTY. Bump gradle.properties (and run ./gradlew generateIosVersionXcconfig) before retagging."
-            exit 1
-          fi
-
+          VERSION=$(grep '^fuelio.versionName=' gradle.properties | cut -d= -f2)
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          case "$TAG" in
-            *-*) echo "prerelease=true" >> "$GITHUB_OUTPUT" ;;
-            *) echo "prerelease=false" >> "$GITHUB_OUTPUT" ;;
-          esac
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
 
       - run: ./gradlew ktlintCheck
 
@@ -186,9 +184,15 @@ jobs:
           name: fuelio-release-aab
           path: release-artifacts
 
+      # Creates the tag on this push's commit (there is none yet — the version lives only in
+      # gradle.properties) and either creates or updates the Release matching it, so re-pushing
+      # master without bumping the version overwrites the previous build instead of failing on a
+      # tag that already exists.
       - uses: softprops/action-gh-release@v2
         with:
-          prerelease: ${{ needs.validate.outputs.prerelease }}
+          tag_name: ${{ needs.validate.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: ${{ needs.validate.outputs.tag }}
           generate_release_notes: true
           files: release-artifacts/**
 
