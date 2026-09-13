@@ -1,6 +1,7 @@
 package com.germandebustamante.fuelio.feature.settings.state
 
 import com.germandebustamante.fuelio.core.analytics.AnalyticsTracking
+import com.germandebustamante.fuelio.core.build.BuildEnvironment
 import com.germandebustamante.fuelio.core.domain.preferences.model.FuelType
 import com.germandebustamante.fuelio.core.domain.preferences.model.ThemeMode
 import com.germandebustamante.fuelio.core.domain.preferences.usecase.ObserveUserPreferencesUseCase
@@ -25,10 +26,14 @@ class SettingsViewModel(
     private val setDefaultFuelTypeUseCase: SetDefaultFuelTypeUseCase,
     private val navigator: Navigator,
     private val analyticsManager: AnalyticsTracking,
+    private val buildEnvironment: BuildEnvironment,
     initialState: SettingsUIState = SettingsUIState(),
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(viewModelScope, initialState)
+    private val _state = MutableStateFlow(
+        viewModelScope,
+        initialState.copy(versionLabel = "${buildEnvironment.versionName} (${buildEnvironment.versionCode})"),
+    )
 
     @NativeCoroutinesState
     val state: StateFlow<SettingsUIState> = _state.asStateFlow()

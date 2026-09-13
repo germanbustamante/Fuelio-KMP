@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.AndroidUiModes
@@ -28,11 +29,14 @@ import com.germandebustamante.fuelio.core.domain.preferences.model.ThemeMode
 import com.germandebustamante.fuelio.core.testing.A11yIdentifiers
 import com.germandebustamante.fuelio.core.ui.theme.FuelioSpacing
 import com.germandebustamante.fuelio.core.ui.theme.FuelioTheme
+import com.germandebustamante.fuelio.designsystem.button.FuelioTextButton
 import com.germandebustamante.fuelio.designsystem.scaffold.FuelioScaffold
 import com.germandebustamante.fuelio.designsystem.topbar.FuelioTopBar
 import com.germandebustamante.fuelio.feature.settings.state.SettingsUIState
 import com.germandebustamante.fuelio.feature.settings.state.SettingsViewModel
 import org.koin.compose.viewmodel.koinViewModel
+
+private const val REPO_URL = "https://github.com/germanbustamante/Fuelio-KMP"
 
 @Composable
 fun SettingsScreen(modifier: Modifier = Modifier, viewModel: SettingsViewModel = koinViewModel()) {
@@ -56,6 +60,8 @@ private fun SettingsScreen(
     onBackTapped: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val uriHandler = LocalUriHandler.current
+
     FuelioScaffold(
         modifier = modifier.testTag(A11yIdentifiers.SETTINGS_SCREEN),
         topBar = {
@@ -99,6 +105,20 @@ private fun SettingsScreen(
                     onFuelTypeSelected = onDefaultFuelSelected,
                 )
             }
+
+            SettingsSection(title = stringResource(R.string.settings_about_title)) {
+                Text(
+                    text = stringResource(R.string.settings_about_version, state.versionLabel),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.testTag(A11yIdentifiers.SETTINGS_ABOUT_VERSION),
+                )
+                FuelioTextButton(
+                    text = stringResource(R.string.settings_about_source_link),
+                    onClick = { uriHandler.openUri(REPO_URL) },
+                    modifier = Modifier.testTag(A11yIdentifiers.SETTINGS_ABOUT_SOURCE_LINK),
+                )
+            }
         }
     }
 }
@@ -127,7 +147,12 @@ private fun SettingsSection(title: String, modifier: Modifier = Modifier, descri
 private fun SettingsScreenPreview() {
     FuelioTheme {
         SettingsScreen(
-            state = SettingsUIState(themeMode = ThemeMode.DARK, defaultFuelType = FuelType.DIESEL, isLoading = false),
+            state = SettingsUIState(
+                themeMode = ThemeMode.DARK,
+                defaultFuelType = FuelType.DIESEL,
+                isLoading = false,
+                versionLabel = "1.0.0 (1)",
+            ),
             onThemeModeSelected = {},
             onDefaultFuelSelected = {},
             onBackTapped = {},
@@ -140,7 +165,12 @@ private fun SettingsScreenPreview() {
 private fun SettingsScreenAccessibilityPreview() {
     FuelioTheme {
         SettingsScreen(
-            state = SettingsUIState(themeMode = ThemeMode.DARK, defaultFuelType = FuelType.DIESEL, isLoading = false),
+            state = SettingsUIState(
+                themeMode = ThemeMode.DARK,
+                defaultFuelType = FuelType.DIESEL,
+                isLoading = false,
+                versionLabel = "1.0.0 (1)",
+            ),
             onThemeModeSelected = {},
             onDefaultFuelSelected = {},
             onBackTapped = {},

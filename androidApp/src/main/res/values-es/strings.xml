@@ -53,6 +53,9 @@
     <string name="settings_theme_dark">Oscuro</string>
     <string name="settings_default_fuel_title">Combustible por defecto</string>
     <string name="settings_default_fuel_description">El combustible con el que se ordena y se muestra el precio al abrir la app.</string>
+    <string name="settings_about_title">Acerca de</string>
+    <string name="settings_about_version">Versión %1$s</string>
+    <string name="settings_about_source_link">Ver el código en GitHub</string>
     <!-- Favoritos -->
     <string name="open_favorites">Favoritos</string>
     <string name="favorites_title">Favoritos</string>

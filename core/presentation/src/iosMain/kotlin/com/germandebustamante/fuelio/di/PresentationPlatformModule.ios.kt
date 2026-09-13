@@ -1,5 +1,6 @@
 package com.germandebustamante.fuelio.di
 
+import com.germandebustamante.fuelio.core.build.AppVersion
 import com.germandebustamante.fuelio.core.build.BuildEnvironment
 import com.germandebustamante.fuelio.feature.common.permission.location.IosLocationPermissionController
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
@@ -19,6 +20,8 @@ actual val presentationPlatformModule = module {
         BuildEnvironment(
             isDebug = Platform.isDebugBinary,
             platform = BuildEnvironment.PLATFORM_IOS,
+            versionName = AppVersion.VERSION_NAME,
+            versionCode = AppVersion.VERSION_CODE,
         )
     }
 }

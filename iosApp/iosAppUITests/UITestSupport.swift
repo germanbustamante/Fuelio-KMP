@@ -60,6 +60,9 @@ enum UITestSupport {
     static let mapScreen = "map_screen"
     static let mapBackButton = "map_back_button"
 
+    static let settingsAboutVersion = "settings_about_version"
+    static let settingsAboutSourceLink = "settings_about_source_link"
+
     static let permissionAlertSettings = "permission_alert_settings"
 
     // Onboarding

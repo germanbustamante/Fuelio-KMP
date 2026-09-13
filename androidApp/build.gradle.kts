@@ -101,8 +101,8 @@ android {
         applicationId = BuildConstants.APPLICATION_ID
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = providers.gradleProperty("fuelio.versionCode").get().toInt()
+        versionName = providers.gradleProperty("fuelio.versionName").get()
 
         // FuelioTestRunner swaps in FuelioTestApplication, which starts Koin with the shared
         // uiTestModule fakes — the Android mirror of iOS's initKoinIosForUiTests, so the
