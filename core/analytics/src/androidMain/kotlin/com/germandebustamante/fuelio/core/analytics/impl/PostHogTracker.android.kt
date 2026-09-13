@@ -30,4 +30,8 @@ class AndroidPostHogTracker(context: Context, apiKey: String) : PostHogTracker()
     override fun onTrackScreen(trace: Trace.Screen) {
         PostHog.screen(screenTitle = trace.eventName, properties = trace.params)
     }
+
+    override fun onTrackError(trace: Trace.Error) {
+        PostHog.capture(event = trace.eventName, properties = trace.params)
+    }
 }
