@@ -18,6 +18,9 @@ data class GasStationDetailUIState(
     val today: DayOfWeek? = null,
     val isLoading: Boolean = true,
     val isFavorite: Boolean = false,
+    /** `null` while loading, or when the `price_trend_chart` flag is off — either way, the UI hides the chart. */
+    val priceTrend: PriceTrendVO? = null,
+    val isTrendLoading: Boolean = false,
 ) {
     val contentState: ContentState
         get() = when {
@@ -29,4 +32,8 @@ data class GasStationDetailUIState(
     fun withGasStationLoaded(gasStation: GasStationBO?, today: DayOfWeek) = copy(gasStation = gasStation, today = today, isLoading = false)
 
     fun withFavorite(isFavorite: Boolean) = copy(isFavorite = isFavorite)
+
+    fun withPriceTrend(priceTrend: PriceTrendVO?) = copy(priceTrend = priceTrend, isTrendLoading = false)
+
+    fun withTrendLoading() = copy(isTrendLoading = true)
 }

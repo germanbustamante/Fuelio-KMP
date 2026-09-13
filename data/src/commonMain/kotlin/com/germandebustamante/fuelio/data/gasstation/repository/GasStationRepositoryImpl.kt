@@ -3,6 +3,7 @@ package com.germandebustamante.fuelio.data.gasstation.repository
 import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationBO
 import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationsResult
 import com.germandebustamante.fuelio.core.domain.gasstation.repository.GasStationRepository
+import com.germandebustamante.fuelio.data.gasstation.PriceHistoryRecorder
 import com.germandebustamante.fuelio.data.gasstation.local.datasource.GasStationLocalDataSource
 import com.germandebustamante.fuelio.data.gasstation.local.mapper.toDomain
 import com.germandebustamante.fuelio.data.gasstation.local.mapper.toEntity
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.map
 class GasStationRepositoryImpl(
     private val remoteDataSource: GasStationRemoteDataSource,
     private val localDataSource: GasStationLocalDataSource,
+    private val priceHistoryRecorder: PriceHistoryRecorder,
 ) : GasStationRepository {
     override fun getGasStationsByLocation(provinceId: String): Flow<Result<GasStationsResult>> = flow {
         val cachedStations = localDataSource.getGasStationsByProvince(provinceId).map { it.toDomain() }
@@ -29,6 +31,7 @@ class GasStationRepositoryImpl(
         try {
             val remoteStations = remoteDataSource.getGasStationsByLocation(provinceId).map { it.toDomain() }
             localDataSource.replaceGasStationsByProvince(provinceId, remoteStations.map { it.toEntity(provinceId) })
+            priceHistoryRecorder.record(remoteStations)
             emit(Result.success(GasStationsResult(remoteStations, isFromCache = false)))
         } catch (e: CancellationException) {
             throw e

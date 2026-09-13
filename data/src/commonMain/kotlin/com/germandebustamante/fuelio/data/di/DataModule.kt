@@ -3,18 +3,23 @@ package com.germandebustamante.fuelio.data.di
 import com.germandebustamante.fuelio.core.domain.error.DomainError
 import com.germandebustamante.fuelio.core.domain.gasstation.repository.FavoriteStationRepository
 import com.germandebustamante.fuelio.core.domain.gasstation.repository.GasStationRepository
+import com.germandebustamante.fuelio.core.domain.gasstation.repository.PriceHistoryRepository
 import com.germandebustamante.fuelio.core.domain.installation.repository.InstallationIdRepository
 import com.germandebustamante.fuelio.core.domain.preferences.repository.UserPreferencesRepository
 import com.germandebustamante.fuelio.core.domain.province.repository.ProvinceRepository
 import com.germandebustamante.fuelio.data.engine.httpClientEngine
+import com.germandebustamante.fuelio.data.gasstation.PriceHistoryRecorder
 import com.germandebustamante.fuelio.data.gasstation.local.datasource.FavoriteStationLocalDataSource
 import com.germandebustamante.fuelio.data.gasstation.local.datasource.FavoriteStationLocalDataSourceImpl
 import com.germandebustamante.fuelio.data.gasstation.local.datasource.GasStationLocalDataSource
 import com.germandebustamante.fuelio.data.gasstation.local.datasource.GasStationLocalDataSourceImpl
+import com.germandebustamante.fuelio.data.gasstation.local.datasource.PriceHistoryLocalDataSource
+import com.germandebustamante.fuelio.data.gasstation.local.datasource.PriceHistoryLocalDataSourceImpl
 import com.germandebustamante.fuelio.data.gasstation.remote.datasource.GasStationRemoteDataSource
 import com.germandebustamante.fuelio.data.gasstation.remote.datasource.GasStationRemoteDataSourceImpl
 import com.germandebustamante.fuelio.data.gasstation.repository.FavoriteStationRepositoryImpl
 import com.germandebustamante.fuelio.data.gasstation.repository.GasStationRepositoryImpl
+import com.germandebustamante.fuelio.data.gasstation.repository.PriceHistoryRepositoryImpl
 import com.germandebustamante.fuelio.data.installation.repository.InstallationIdRepositoryImpl
 import com.germandebustamante.fuelio.data.local.database.FuelioDatabase
 import com.germandebustamante.fuelio.data.local.database.getDatabaseBuilder
@@ -39,14 +44,18 @@ private const val BASE_URL = "https://sedeaplicaciones.minetur.gob.es"
 
 val dataModule = module {
     includes(dataPlatformModule)
-    single { GasStationRepositoryImpl(get(), get()) } bind GasStationRepository::class
+    single { GasStationRepositoryImpl(get(), get(), get()) } bind GasStationRepository::class
     single { GasStationRemoteDataSourceImpl(get(), BASE_URL) } bind GasStationRemoteDataSource::class
     single { GasStationLocalDataSourceImpl(get()) } bind GasStationLocalDataSource::class
     single { getRoomDatabase(getDatabaseBuilder(get())) }
     single { get<FuelioDatabase>().gasStationDao() }
     single { get<FuelioDatabase>().favoriteStationDao() }
+    single { get<FuelioDatabase>().priceSnapshotDao() }
     single { FavoriteStationLocalDataSourceImpl(get()) } bind FavoriteStationLocalDataSource::class
     single { FavoriteStationRepositoryImpl(get()) } bind FavoriteStationRepository::class
+    single { PriceHistoryLocalDataSourceImpl(get()) } bind PriceHistoryLocalDataSource::class
+    single { PriceHistoryRepositoryImpl(get()) } bind PriceHistoryRepository::class
+    single { PriceHistoryRecorder(get()) }
     single { ProvinceRepositoryImpl(get()) } bind ProvinceRepository::class
     // DataStore must be a single: the factory enforces one active instance per file, and a second
     // one would throw as soon as both are read.
