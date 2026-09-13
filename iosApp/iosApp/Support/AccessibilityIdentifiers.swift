@@ -51,6 +51,8 @@ enum A11yID {
     static let defaultFuelPicker = "default_fuel_picker"
 
     static func themeOption(_ rawValue: String) -> String { "theme_option_\(rawValue)" }
+    static let settingsAboutVersion = "settings_about_version"
+    static let settingsAboutSourceLink = "settings_about_source_link"
 
     // Map
     static let mapButton = "map_button"

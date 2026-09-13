@@ -55,6 +55,9 @@
     <string name="settings_theme_dark">Dark</string>
     <string name="settings_default_fuel_title">Default fuel</string>
     <string name="settings_default_fuel_description">The fuel the list is sorted and priced by when the app opens.</string>
+    <string name="settings_about_title">About</string>
+    <string name="settings_about_version">Version %1$s</string>
+    <string name="settings_about_source_link">View source on GitHub</string>
     <!-- Favorites -->
     <string name="open_favorites">Favorites</string>
     <string name="favorites_title">Favorites</string>

@@ -42,6 +42,15 @@ struct SettingsScreenBody: View {
             } footer: {
                 Text("The fuel the list is sorted and priced by when the app opens.")
             }
+
+            Section {
+                Text("Version \(state.versionLabel)")
+                    .accessibilityIdentifier(A11yID.settingsAboutVersion)
+                Link("View source on GitHub", destination: URL(string: "https://github.com/germanbustamante/Fuelio-KMP")!)
+                    .accessibilityIdentifier(A11yID.settingsAboutSourceLink)
+            } header: {
+                Text("About")
+            }
         }
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
@@ -65,7 +74,7 @@ struct SettingsScreenBody: View {
 #Preview {
     NavigationStack {
         SettingsScreenBody(
-            state: SettingsUIState(themeMode: .dark, defaultFuelType: .diesel, isLoading: false),
+            state: SettingsUIState(themeMode: .dark, defaultFuelType: .diesel, isLoading: false, versionLabel: "1.0.0 (1)"),
             onThemeModeSelected: { _ in },
             onDefaultFuelSelected: { _ in },
             onBackTapped: {}

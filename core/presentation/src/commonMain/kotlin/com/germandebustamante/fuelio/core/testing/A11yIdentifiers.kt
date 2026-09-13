@@ -49,6 +49,8 @@ object A11yIdentifiers {
     const val SETTINGS_BACK_BUTTON = "settings_back_button"
     const val THEME_PICKER = "theme_picker"
     const val DEFAULT_FUEL_PICKER = "default_fuel_picker"
+    const val SETTINGS_ABOUT_VERSION = "settings_about_version"
+    const val SETTINGS_ABOUT_SOURCE_LINK = "settings_about_source_link"
 
     fun themeOption(rawValue: String): String = "theme_option_$rawValue"
 

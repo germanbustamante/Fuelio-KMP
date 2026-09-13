@@ -1,6 +1,7 @@
 package com.germandebustamante.fuelio.feature.settings.state
 
 import com.germandebustamante.fuelio.core.analytics.AnalyticsTracking
+import com.germandebustamante.fuelio.core.build.BuildEnvironment
 import com.germandebustamante.fuelio.core.domain.preferences.model.FuelType
 import com.germandebustamante.fuelio.core.domain.preferences.model.ThemeMode
 import com.germandebustamante.fuelio.core.domain.preferences.model.UserPreferencesBO
@@ -150,6 +151,7 @@ class SettingsViewModelTest {
             setDefaultFuelTypeUseCase = setDefaultFuelTypeUseCase,
             navigator = navigator,
             analyticsManager = analyticsManager,
+            buildEnvironment = BuildEnvironment(isDebug = true, platform = BuildEnvironment.PLATFORM_ANDROID),
             initialState = initialState,
         )
     }
