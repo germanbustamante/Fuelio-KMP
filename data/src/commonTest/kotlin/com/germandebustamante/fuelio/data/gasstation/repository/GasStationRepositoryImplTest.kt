@@ -1,6 +1,7 @@
 package com.germandebustamante.fuelio.data.gasstation.repository
 
 import app.cash.turbine.test
+import com.germandebustamante.fuelio.data.gasstation.PriceHistoryRecorder
 import com.germandebustamante.fuelio.data.gasstation.local.datasource.GasStationLocalDataSource
 import com.germandebustamante.fuelio.data.gasstation.local.mapper.toDomain
 import com.germandebustamante.fuelio.data.gasstation.local.mapper.toEntity
@@ -14,6 +15,7 @@ import dev.mokkery.every
 import dev.mokkery.everySuspend
 import dev.mokkery.matcher.any
 import dev.mokkery.mock
+import dev.mokkery.verify.VerifyMode
 import dev.mokkery.verifySuspend
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -31,7 +33,11 @@ class GasStationRepositoryImplTest {
 
     private val localDataSource: GasStationLocalDataSource = mock()
 
-    private val sut: GasStationRepositoryImpl = GasStationRepositoryImpl(remoteDataSource, localDataSource)
+    private val priceHistoryRecorder: PriceHistoryRecorder = mock {
+        everySuspend { record(any()) } returns Unit
+    }
+
+    private val sut: GasStationRepositoryImpl = GasStationRepositoryImpl(remoteDataSource, localDataSource, priceHistoryRecorder)
 
     //region getGasStationsByLocation
     @Test
@@ -132,6 +138,40 @@ class GasStationRepositoryImplTest {
 
         // THEN
         verifySuspend { localDataSource.replaceGasStationsByProvince(PROVINCE_ID, expectedEntities) }
+    }
+
+    @Test
+    fun `getGasStationsByLocation - GIVEN remote succeeds WHEN called THEN the fresh stations are recorded for price history`() = runTest {
+        // GIVEN
+        givenLocalGasStationsEmpty()
+        givenRemoteGetGasStationsByLocationSuccess()
+        val expectedStations = listOf(GasStationDTOMother.gasStationDTO().dtoToDomain())
+
+        // WHEN
+        sut.getGasStationsByLocation(PROVINCE_ID).test {
+            awaitItem()
+            awaitComplete()
+        }
+
+        // THEN
+        verifySuspend { priceHistoryRecorder.record(expectedStations) }
+    }
+
+    @Test
+    fun `getGasStationsByLocation - GIVEN local cache has stations AND remote fails WHEN called THEN price history is never recorded`() = runTest {
+        // GIVEN
+        givenLocalGasStations(listOf(GasStationEntityMother.gasStationEntity(id = CACHED_STATION_ID)))
+        givenRemoteGetGasStationsByLocationFailure()
+
+        // WHEN
+        sut.getGasStationsByLocation(PROVINCE_ID).test {
+            awaitItem()
+            awaitItem()
+            awaitComplete()
+        }
+
+        // THEN
+        verifySuspend(VerifyMode.not) { priceHistoryRecorder.record(any()) }
     }
 
     //region Stubs

@@ -4,9 +4,11 @@ import app.cash.turbine.test
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationsByLocationUseCase
 import com.germandebustamante.fuelio.data.gasstation.local.datasource.GasStationDAO
 import com.germandebustamante.fuelio.data.gasstation.local.datasource.GasStationLocalDataSourceImpl
+import com.germandebustamante.fuelio.data.gasstation.local.datasource.PriceHistoryLocalDataSource
 import com.germandebustamante.fuelio.data.gasstation.local.mapper.toDomain
 import com.germandebustamante.fuelio.data.gasstation.local.model.GasStationEntity
 import com.germandebustamante.fuelio.data.gasstation.local.model.GasStationEntityMother
+import com.germandebustamante.fuelio.data.gasstation.local.model.PriceSnapshotEntity
 import com.germandebustamante.fuelio.data.gasstation.model.GasStationDTOMother
 import com.germandebustamante.fuelio.data.gasstation.remote.datasource.GasStationRemoteDataSourceImpl
 import com.germandebustamante.fuelio.data.gasstation.remote.model.GasStationResponseDTO
@@ -44,7 +46,7 @@ class GasStationVerticalIntegrationTest : BaseRemoteDataSourceTest() {
     private fun createSut(engine: MockEngine): GetGasStationsByLocationUseCase {
         val remoteDataSource = GasStationRemoteDataSourceImpl(createHttpClient(engine), BASE_URL)
         val localDataSource = GasStationLocalDataSourceImpl(fakeDao)
-        val repository = GasStationRepositoryImpl(remoteDataSource, localDataSource)
+        val repository = GasStationRepositoryImpl(remoteDataSource, localDataSource, PriceHistoryRecorder(NoOpPriceHistoryLocalDataSource))
         return GetGasStationsByLocationUseCase(repository)
     }
 
@@ -137,6 +139,14 @@ class GasStationVerticalIntegrationTest : BaseRemoteDataSourceTest() {
         override suspend fun getGasStationsByProvince(provinceId: String): List<GasStationEntity> = stationsByProvince[provinceId]?.toList().orEmpty()
 
         override fun getGasStationById(id: String): Flow<GasStationEntity?> = stationById.getOrPut(id) { MutableStateFlow(null) }.map { it }
+    }
+
+    /** Price history isn't this test's concern — a no-op keeps `createSut` from needing a real Room DAO for it. */
+    private object NoOpPriceHistoryLocalDataSource : PriceHistoryLocalDataSource {
+        override suspend fun getLatest(gasStationId: String): PriceSnapshotEntity? = null
+        override suspend fun insert(snapshot: PriceSnapshotEntity) = Unit
+        override fun observeHistory(gasStationId: String): Flow<List<PriceSnapshotEntity>> = MutableStateFlow(emptyList())
+        override suspend fun deleteOlderThan(cutoffEpochDay: Long) = Unit
     }
 
     companion object {

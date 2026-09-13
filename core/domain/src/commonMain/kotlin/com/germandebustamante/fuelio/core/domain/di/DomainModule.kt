@@ -4,6 +4,8 @@ import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStatio
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationsByLocationUseCase
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.ObserveFavoriteStationIdsUseCase
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.ObserveFavoriteStationsUseCase
+import com.germandebustamante.fuelio.core.domain.gasstation.usecase.ObservePriceHistoryUseCase
+import com.germandebustamante.fuelio.core.domain.gasstation.usecase.PrunePriceHistoryUseCase
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.ToggleFavoriteStationUseCase
 import com.germandebustamante.fuelio.core.domain.preferences.usecase.ObserveUserPreferencesUseCase
 import com.germandebustamante.fuelio.core.domain.preferences.usecase.SetDefaultFuelTypeUseCase
@@ -27,4 +29,6 @@ val domainModule = module {
     factory { ObserveFavoriteStationIdsUseCase(get()) }
     factory { ObserveFavoriteStationsUseCase(get()) }
     factory { ToggleFavoriteStationUseCase(get()) }
+    factory { ObservePriceHistoryUseCase(get()) }
+    factory { PrunePriceHistoryUseCase(get()) }
 }

@@ -2,10 +2,12 @@ package com.germandebustamante.fuelio.core.interop
 
 import com.germandebustamante.fuelio.core.analytics.AnalyticsTracking
 import com.germandebustamante.fuelio.core.domain.gasstation.model.GasStationsResult
+import com.germandebustamante.fuelio.core.domain.gasstation.model.PriceHistoryBO
 import com.germandebustamante.fuelio.core.domain.gasstation.testing.GasStationBOMother
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationUseCase
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationsByLocationUseCase
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.ObserveFavoriteStationIdsUseCase
+import com.germandebustamante.fuelio.core.domain.gasstation.usecase.ObservePriceHistoryUseCase
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.ToggleFavoriteStationUseCase
 import com.germandebustamante.fuelio.core.domain.preferences.model.UserPreferencesBO
 import com.germandebustamante.fuelio.core.domain.preferences.usecase.ObserveUserPreferencesUseCase
@@ -14,6 +16,7 @@ import com.germandebustamante.fuelio.core.domain.preferences.usecase.SetSavedPro
 import com.germandebustamante.fuelio.core.domain.province.testing.ProvinceBOMother
 import com.germandebustamante.fuelio.core.domain.province.usecase.GetProvincesUseCase
 import com.germandebustamante.fuelio.core.domain.province.usecase.ResolveProvinceByLocationUseCase
+import com.germandebustamante.fuelio.core.featureflag.FeatureFlags
 import com.germandebustamante.fuelio.core.navigation.action.DefaultNavigator
 import com.germandebustamante.fuelio.core.navigation.action.Navigator
 import com.germandebustamante.fuelio.di.presentationPlatformModule
@@ -108,6 +111,14 @@ class IosViewModelFactoryTest {
         everySuspend { track(any()) } returns Unit
     }
 
+    private val observePriceHistoryUseCase: ObservePriceHistoryUseCase = mock {
+        every { invoke(any()) } returns flowOf(PriceHistoryBO("", emptyList()))
+    }
+
+    private val featureFlags: FeatureFlags = mock {
+        every { observe(any(), any()) } returns flowOf(false)
+    }
+
     private val testModule = module {
         single { getGasStationsByLocationUseCase }
         single { getProvincesUseCase }
@@ -118,9 +129,11 @@ class IosViewModelFactoryTest {
         single { observeUserPreferencesUseCase }
         single { setDefaultFuelTypeUseCase }
         single { setSavedProvinceUseCase }
+        single { observePriceHistoryUseCase }
         single<Navigator> { navigator }
         single<AnalyticsTracking> { analyticsTracking }
         single<LocationPermissionController> { locationPermissionController }
+        single<FeatureFlags> { featureFlags }
     }
 
     @BeforeTest
