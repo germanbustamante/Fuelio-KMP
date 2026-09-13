@@ -1,0 +1,203 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+env:
+  MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+  POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+
+jobs:
+  # Parses the tag and checks it against fuelio.versionName before anything else runs — a mistagged
+  # release should fail here, not after signing a build with the wrong number on it. Also runs the
+  # same gate ci.yml applies to development, since a tag isn't guaranteed to sit on a commit that gate
+  # already ran against.
+  validate:
+    name: Validate tag and run the CI gate
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.parse-tag.outputs.version }}
+      prerelease: ${{ steps.parse-tag.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
+
+      - name: Parse tag and compare against fuelio.versionName
+        id: parse-tag
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          VERSION="${TAG%%-*}"
+          PROPERTY=$(grep '^fuelio.versionName=' gradle.properties | cut -d= -f2)
+
+          if [ "$VERSION" != "$PROPERTY" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME parses to version $VERSION, but fuelio.versionName is $PROPERTY. Bump gradle.properties (and run ./gradlew generateIosVersionXcconfig) before retagging."
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          case "$TAG" in
+            *-*) echo "prerelease=true" >> "$GITHUB_OUTPUT" ;;
+            *) echo "prerelease=false" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - run: ./gradlew ktlintCheck
+
+      - name: Run JVM tests
+        run: |
+          ./gradlew \
+            :core:domain:testAndroidHostTest \
+            :core:analytics:testAndroidHostTest \
+            :data:testAndroidHostTest \
+            :core:presentation:testAndroidHostTest \
+            :androidApp:testDebugUnitTest
+
+      - name: Verify screenshots
+        run: ./gradlew :androidApp:verifyRoborazziDebug
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: release-ci-reports
+          path: |
+            **/build/reports/ktlint/**
+            **/build/reports/tests/**
+            androidApp/build/outputs/roborazzi/**
+          if-no-files-found: ignore
+
+  ios:
+    name: iOS tests and archive
+    needs: validate
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
+
+      - name: Cache Kotlin/Native toolchain
+        uses: actions/cache@v4
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
+          restore-keys: konan-${{ runner.os }}-
+
+      - name: Run Kotlin/Native tests
+        run: |
+          ./gradlew \
+            :core:domain:iosSimulatorArm64Test \
+            :core:analytics:iosSimulatorArm64Test \
+            :data:iosSimulatorArm64Test \
+            :core:presentation:iosSimulatorArm64Test
+
+      - name: List available simulators
+        run: xcrun simctl list devices available
+
+      - name: Run Swift tests
+        env:
+          SIMULATOR_NAME: iPhone 17
+        run: |
+          xcodebuild test \
+            -project iosApp/iosApp.xcodeproj \
+            -scheme iosApp \
+            -destination "platform=iOS Simulator,name=${SIMULATOR_NAME},OS=latest" \
+            -resultBundlePath build/iosApp.xcresult \
+            -retry-tests-on-failure -test-iterations 2 \
+            CODE_SIGNING_ALLOWED=NO
+
+      # No signed .ipa: that needs an Apple Developer Program membership and provisioning profiles
+      # this project doesn't have (ADR 0009). This proves the app packages cleanly for App Store
+      # submission the moment real credentials exist, without pretending to ship one now.
+      - name: Archive (unsigned, proves the app packages)
+        run: |
+          xcodebuild archive \
+            -project iosApp/iosApp.xcodeproj \
+            -scheme iosApp \
+            -archivePath build/Fuelio.xcarchive \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: ios-release-test-results
+          path: build/iosApp.xcresult
+
+  android-release:
+    name: Build signed Android release
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
+
+      - name: Restore keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > androidApp/release.keystore.jks
+          cat > androidApp/keystore.properties <<EOF
+          storeFile=release.keystore.jks
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          EOF
+
+      - name: Build signed release
+        run: ./gradlew :androidApp:assembleRelease :androidApp:bundleRelease
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fuelio-release-apk
+          path: androidApp/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fuelio-release-aab
+          path: androidApp/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub Release
+    needs: [validate, ios, android-release]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: fuelio-release-apk
+          path: release-artifacts
+      - uses: actions/download-artifact@v4
+        with:
+          name: fuelio-release-aab
+          path: release-artifacts
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          prerelease: ${{ needs.validate.outputs.prerelease }}
+          generate_release_notes: true
+          files: release-artifacts/**
+
+      # Firebase App Distribution keeps beta builds reachable without going through Google Play's
+      # review, which is what testers on this project use before anything is public.
+      - name: Upload to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_APP_DISTRIBUTION_SERVICE_ACCOUNT }}
+          groups: testers
+          file: release-artifacts/*.apk
