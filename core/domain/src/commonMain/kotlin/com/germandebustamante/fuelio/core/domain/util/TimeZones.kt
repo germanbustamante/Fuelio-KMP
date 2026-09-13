@@ -1,4 +1,4 @@
-package com.germandebustamante.fuelio.core.util
+package com.germandebustamante.fuelio.core.domain.util
 
 import kotlinx.datetime.TimeZone
 
