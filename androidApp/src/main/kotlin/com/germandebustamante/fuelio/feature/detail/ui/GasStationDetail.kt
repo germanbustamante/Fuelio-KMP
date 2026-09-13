@@ -71,12 +71,18 @@ fun GasStationDetail(
     GasStationDetail(
         state = state,
         onBackClick = viewModel::onBackClick,
+        onDirectionsTapped = viewModel::onDirectionsTapped,
         modifier = modifier,
     )
 }
 
 @Composable
-private fun GasStationDetail(state: GasStationDetailUIState, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun GasStationDetail(
+    state: GasStationDetailUIState,
+    onBackClick: () -> Unit,
+    onDirectionsTapped: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     FuelioScaffold(
         modifier = modifier,
         topBar = {
@@ -110,6 +116,7 @@ private fun GasStationDetail(state: GasStationDetailUIState, onBackClick: () -> 
                 is ContentState.Success -> GasStationDetailContent(
                     gasStation = contentState.gasStation,
                     scheduleDays = contentState.scheduleDays,
+                    onDirectionsTapped = onDirectionsTapped,
                     modifier = Modifier.fillMaxSize(),
                 )
 
@@ -131,7 +138,12 @@ private fun GasStationDetail(state: GasStationDetailUIState, onBackClick: () -> 
 }
 
 @Composable
-private fun GasStationDetailContent(gasStation: GasStationBO, scheduleDays: List<ScheduleDayVO>, modifier: Modifier = Modifier) {
+private fun GasStationDetailContent(
+    gasStation: GasStationBO,
+    scheduleDays: List<ScheduleDayVO>,
+    onDirectionsTapped: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val stationName = gasStation.displayName
 
     LazyColumn(
@@ -160,6 +172,7 @@ private fun GasStationDetailContent(gasStation: GasStationBO, scheduleDays: List
             GasStationDirectionsButton(
                 gasStation,
                 modifier = Modifier.testTag(A11yIdentifiers.DETAIL_DIRECTIONS_BUTTON),
+                onDirectionsTapped = onDirectionsTapped,
             )
         }
 
@@ -300,6 +313,7 @@ private fun GasStationDetailContentPreview() {
         GasStationDetailContent(
             gasStation = gasStation,
             scheduleDays = gasStation.schedule.toScheduleDays(DayOfWeek.MONDAY),
+            onDirectionsTapped = {},
         )
     }
 }

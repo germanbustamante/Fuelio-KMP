@@ -12,6 +12,7 @@ import com.germandebustamante.fuelio.core.fake.fakeGasStations
 import com.germandebustamante.fuelio.core.navigation.action.Navigator
 import com.germandebustamante.fuelio.core.navigation.destination.Destination
 import com.germandebustamante.fuelio.feature.favorites.analytics.FavoritesScreenViewed
+import com.germandebustamante.fuelio.feature.list.analytics.FavoriteToggled
 import com.germandebustamante.fuelio.feature.list.analytics.GasStationSelected
 import dev.mokkery.answering.returns
 import dev.mokkery.every
@@ -177,6 +178,17 @@ class FavoritesViewModelTest {
         advanceUntilIdle()
 
         verifySuspend { toggleFavoriteStationUseCase("cheap-95") }
+    }
+
+    @Test
+    fun `onToggleFavorite - GIVEN a station WHEN untoggled THEN it is tracked as no longer a favorite`() = runTest {
+        createSut()
+        advanceUntilIdle()
+
+        sut.onToggleFavorite("cheap-95")
+        advanceUntilIdle()
+
+        verifySuspend { analyticsManager.track(FavoriteToggled("cheap-95", isFavorite = false)) }
     }
 
     @Test

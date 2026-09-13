@@ -10,6 +10,7 @@ import CorePresentation
 struct StationMapSection: View {
 
     let station: DomainGasStationBO
+    var onDirectionsTapped: () -> Void = {}
 
     private var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: station.latitude, longitude: station.longitude)
@@ -30,6 +31,7 @@ struct StationMapSection: View {
             .accessibilityLabel(String(localized: "Map showing \(station.displayName)"))
 
             Button {
+                onDirectionsTapped()
                 openDirections()
             } label: {
                 Label("Get directions", systemImage: "arrow.triangle.turn.up.right.circle")

@@ -9,6 +9,7 @@ import com.germandebustamante.fuelio.core.navigation.destination.Destination
 import com.germandebustamante.fuelio.core.util.SPAIN_TIMEZONE
 import com.germandebustamante.fuelio.feature.common.viewmodel.launchStartupTasks
 import com.germandebustamante.fuelio.feature.favorites.analytics.FavoritesScreenViewed
+import com.germandebustamante.fuelio.feature.list.analytics.FavoriteToggled
 import com.germandebustamante.fuelio.feature.list.analytics.GasStationSelected
 import com.germandebustamante.fuelio.feature.list.state.GasStationItemVO
 import com.germandebustamante.fuelio.feature.list.state.toFuelFilter
@@ -87,8 +88,12 @@ class FavoritesViewModel(
         }
     }
 
+    // Every station shown here is already a favourite, so toggling always removes it.
     fun onToggleFavorite(stationId: String) {
-        viewModelScope.launch { toggleFavoriteStationUseCase(stationId) }
+        viewModelScope.launch {
+            toggleFavoriteStationUseCase(stationId)
+            analyticsManager.track(FavoriteToggled(stationId, isFavorite = false))
+        }
     }
 
     fun onBackTapped() {

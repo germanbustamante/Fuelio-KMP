@@ -6,6 +6,7 @@ import com.germandebustamante.fuelio.core.navigation.action.Navigator
 import com.germandebustamante.fuelio.core.navigation.destination.Destination
 import com.germandebustamante.fuelio.core.util.SPAIN_TIMEZONE
 import com.germandebustamante.fuelio.feature.common.viewmodel.launchStartupTasks
+import com.germandebustamante.fuelio.feature.detail.analytics.DirectionsRequested
 import com.germandebustamante.fuelio.feature.detail.analytics.GasStationDetailScreenViewed
 import com.rickclephas.kmp.nativecoroutines.NativeCoroutinesState
 import com.rickclephas.kmp.observableviewmodel.MutableStateFlow
@@ -48,5 +49,9 @@ class GasStationDetailViewModel(
 
     fun onBackClick() {
         viewModelScope.launch { navigator.navigateUp() }
+    }
+
+    fun onDirectionsTapped() {
+        viewModelScope.launch { analyticsManager.track(DirectionsRequested(route.gasStationId)) }
     }
 }
