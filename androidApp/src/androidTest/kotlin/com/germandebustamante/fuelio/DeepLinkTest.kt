@@ -2,9 +2,7 @@ package com.germandebustamante.fuelio
 
 import android.Manifest
 import android.content.Intent
-import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
-import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.core.net.toUri
@@ -49,10 +47,6 @@ class DeepLinkTest {
     private fun deepLinkIntent(uri: String): Intent {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         return Intent(Intent.ACTION_VIEW, uri.toUri(), context, MainActivity::class.java)
-    }
-
-    private fun ComposeTestRule.waitUntilTagExists(tag: String, timeoutMillis: Long = 5_000) {
-        waitUntil(timeoutMillis = timeoutMillis) { onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty() }
     }
 
     @Test
