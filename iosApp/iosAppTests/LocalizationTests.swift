@@ -33,6 +33,7 @@ struct LocalizationTests {
         "Price trend",
         "Stations map", "Map", "No stations to show",
         "Select a province from the list to see its gas stations on the map.",
+        "About", "Version %@", "View source on GitHub",
         "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
         "Settings", "Appearance", "System", "Light", "Dark", "Default fuel",
         "The fuel the list is sorted and priced by when the app opens.",

@@ -1,3 +1,6 @@
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.INT
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidKotlinMultiplatformLibrary)
@@ -6,6 +9,23 @@ plugins {
     alias(libs.plugins.mokkery)
     alias(libs.plugins.kmpNativeCoroutines)
     alias(libs.plugins.skie)
+    alias(libs.plugins.buildkonfig)
+}
+
+// `fuelio.versionName`/`fuelio.versionCode` in the root gradle.properties are the single source of
+// truth for the app version (see docs/adr/0009-release-pipeline-and-versioning.md) — Android's own
+// versionName/versionCode read the same properties in androidApp/build.gradle.kts. Surfacing them
+// here through BuildKonfig, the same mechanism :core:analytics already uses for AnalyticsSecrets, is
+// what lets BuildEnvironment (filled by both PresentationPlatformModule actuals) expose the version
+// to Settings' About row on both platforms without either one hardcoding it.
+buildkonfig {
+    packageName = "com.germandebustamante.fuelio.core.build"
+    exposeObjectWithName = "AppVersion"
+
+    defaultConfigs {
+        buildConfigField(STRING, "VERSION_NAME", providers.gradleProperty("fuelio.versionName").get())
+        buildConfigField(INT, "VERSION_CODE", providers.gradleProperty("fuelio.versionCode").get())
+    }
 }
 
 kotlin {

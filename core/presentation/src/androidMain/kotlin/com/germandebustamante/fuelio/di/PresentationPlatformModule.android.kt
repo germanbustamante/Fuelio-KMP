@@ -1,6 +1,7 @@
 package com.germandebustamante.fuelio.di
 
 import android.content.pm.ApplicationInfo
+import com.germandebustamante.fuelio.core.build.AppVersion
 import com.germandebustamante.fuelio.core.build.BuildEnvironment
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionControllerHolder
@@ -25,6 +26,8 @@ actual val presentationPlatformModule = module {
         BuildEnvironment(
             isDebug = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0,
             platform = BuildEnvironment.PLATFORM_ANDROID,
+            versionName = AppVersion.VERSION_NAME,
+            versionCode = AppVersion.VERSION_CODE,
         )
     }
     single<LocationPermissionController> { LocationPermissionControllerHolder.controller }

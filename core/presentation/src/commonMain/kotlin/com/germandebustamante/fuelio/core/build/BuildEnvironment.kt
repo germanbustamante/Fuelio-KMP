@@ -11,6 +11,8 @@ package com.germandebustamante.fuelio.core.build
 data class BuildEnvironment(
     val isDebug: Boolean,
     val platform: String,
+    val versionName: String = "0.0.0",
+    val versionCode: Int = 0,
 ) {
     companion object {
         const val PLATFORM_ANDROID = "android"

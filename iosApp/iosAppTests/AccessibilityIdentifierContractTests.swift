@@ -34,6 +34,8 @@ struct AccessibilityIdentifierContractTests {
         #expect(A11yID.mapButton == "map_button")
         #expect(A11yID.mapScreen == "map_screen")
         #expect(A11yID.mapBackButton == "map_back_button")
+        #expect(A11yID.settingsAboutVersion == "settings_about_version")
+        #expect(A11yID.settingsAboutSourceLink == "settings_about_source_link")
         #expect(A11yID.permissionAlertSettings == "permission_alert_settings")
         #expect(A11yID.favoritesButton == "favorites_button")
         #expect(A11yID.favoritesScreen == "favorites_screen")

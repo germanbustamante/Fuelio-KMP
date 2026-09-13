@@ -8,6 +8,7 @@ data class SettingsUIState(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val defaultFuelType: FuelType = FuelType.GASOLINE_95,
     val isLoading: Boolean = true,
+    val versionLabel: String = "",
 ) {
     /**
      * No sealed `ContentState` here, unlike the list and detail screens: preferences are read from
