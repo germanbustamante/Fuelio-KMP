@@ -3,7 +3,7 @@ package com.germandebustamante.fuelio.feature.list.analytics
 import com.germandebustamante.fuelio.core.analytics.AnalyticsProviderType
 import com.germandebustamante.fuelio.core.analytics.Trace
 
-/** Shared by the list and Favorites screens — both toggle the same favourite, just from different rows. */
+/** Shared by the list, Favorites and detail screens — all toggle the same favourite, just from different surfaces. */
 data class FavoriteToggled(val gasStationId: String, val isFavorite: Boolean) :
     Trace.Event(
         eventName = EVENT_NAME,

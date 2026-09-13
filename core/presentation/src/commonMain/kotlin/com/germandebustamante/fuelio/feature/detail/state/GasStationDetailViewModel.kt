@@ -2,12 +2,15 @@ package com.germandebustamante.fuelio.feature.detail.state
 
 import com.germandebustamante.fuelio.core.analytics.AnalyticsTracking
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationUseCase
+import com.germandebustamante.fuelio.core.domain.gasstation.usecase.ObserveFavoriteStationIdsUseCase
+import com.germandebustamante.fuelio.core.domain.gasstation.usecase.ToggleFavoriteStationUseCase
 import com.germandebustamante.fuelio.core.navigation.action.Navigator
 import com.germandebustamante.fuelio.core.navigation.destination.Destination
 import com.germandebustamante.fuelio.core.util.SPAIN_TIMEZONE
 import com.germandebustamante.fuelio.feature.common.viewmodel.launchStartupTasks
 import com.germandebustamante.fuelio.feature.detail.analytics.DirectionsRequested
 import com.germandebustamante.fuelio.feature.detail.analytics.GasStationDetailScreenViewed
+import com.germandebustamante.fuelio.feature.list.analytics.FavoriteToggled
 import com.rickclephas.kmp.nativecoroutines.NativeCoroutinesState
 import com.rickclephas.kmp.observableviewmodel.MutableStateFlow
 import com.rickclephas.kmp.observableviewmodel.ViewModel
@@ -24,6 +27,8 @@ class GasStationDetailViewModel(
     private val getGasStation: GetGasStationUseCase,
     private val navigator: Navigator,
     private val analyticsManager: AnalyticsTracking,
+    private val observeFavoriteStationIdsUseCase: ObserveFavoriteStationIdsUseCase,
+    private val toggleFavoriteStationUseCase: ToggleFavoriteStationUseCase,
     initialState: GasStationDetailUIState = GasStationDetailUIState(),
 ) : ViewModel() {
 
@@ -44,6 +49,13 @@ class GasStationDetailViewModel(
                     _state.update { it.withGasStationLoaded(gasStation, today) }
                 }
             },
+            {
+                // The favourites table is the source of truth, same as the list screen — this star
+                // reflects what is stored, not what was last tapped.
+                observeFavoriteStationIdsUseCase().collect { favoriteIds ->
+                    _state.update { it.withFavorite(route.gasStationId in favoriteIds) }
+                }
+            },
         )
     }
 
@@ -53,5 +65,13 @@ class GasStationDetailViewModel(
 
     fun onDirectionsTapped() {
         viewModelScope.launch { analyticsManager.track(DirectionsRequested(route.gasStationId)) }
+    }
+
+    fun onToggleFavorite() {
+        val willBeFavorite = !_state.value.isFavorite
+        viewModelScope.launch {
+            toggleFavoriteStationUseCase(route.gasStationId)
+            analyticsManager.track(FavoriteToggled(route.gasStationId, willBeFavorite))
+        }
     }
 }
