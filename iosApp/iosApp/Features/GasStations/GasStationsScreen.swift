@@ -33,7 +33,8 @@ struct GasStationsScreen: View {
             onRetry: { viewModel.onRetry() },
             onDetectLocationTapped: { viewModel.onDetectLocationTapped() },
             onSettingsTapped: { viewModel.onSettingsTapped() },
-            onFavoritesTapped: { viewModel.onFavoritesTapped() }
+            onFavoritesTapped: { viewModel.onFavoritesTapped() },
+            onMapTapped: { viewModel.onMapTapped() }
         )
     }
 }
@@ -57,6 +58,7 @@ struct GasStationsScreenBody: View {
     let onDetectLocationTapped: () -> Void
     let onSettingsTapped: () -> Void
     let onFavoritesTapped: () -> Void
+    let onMapTapped: () -> Void
 
     var body: some View {
         content
@@ -235,6 +237,15 @@ struct GasStationsScreenBody: View {
             }
             .accessibilityIdentifier(A11yID.favoritesButton)
         }
+
+        ToolbarItem(placement: .topBarTrailing) {
+            Button {
+                onMapTapped()
+            } label: {
+                Label("Map", systemImage: "map")
+            }
+            .accessibilityIdentifier(A11yID.mapButton)
+        }
     }
 
     // MARK: - Bindings
@@ -295,7 +306,8 @@ struct GasStationsScreenBody: View {
             onRetry: {},
             onDetectLocationTapped: {},
             onSettingsTapped: {},
-            onFavoritesTapped: {}
+            onFavoritesTapped: {},
+            onMapTapped: {}
         )
     }
 }
@@ -317,7 +329,8 @@ struct GasStationsScreenBody: View {
             onRetry: {},
             onDetectLocationTapped: {},
             onSettingsTapped: {},
-            onFavoritesTapped: {}
+            onFavoritesTapped: {},
+            onMapTapped: {}
         )
     }
     .dynamicTypeSize(.accessibility3)
@@ -340,7 +353,8 @@ struct GasStationsScreenBody: View {
             onRetry: {},
             onDetectLocationTapped: {},
             onSettingsTapped: {},
-            onFavoritesTapped: {}
+            onFavoritesTapped: {},
+            onMapTapped: {}
         )
     }
     .preferredColorScheme(.dark)
@@ -363,7 +377,8 @@ struct GasStationsScreenBody: View {
             onRetry: {},
             onDetectLocationTapped: {},
             onSettingsTapped: {},
-            onFavoritesTapped: {}
+            onFavoritesTapped: {},
+            onMapTapped: {}
         )
     }
 }

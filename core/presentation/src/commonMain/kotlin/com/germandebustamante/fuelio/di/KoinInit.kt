@@ -11,6 +11,7 @@ import com.germandebustamante.fuelio.feature.app.di.appModule
 import com.germandebustamante.fuelio.feature.detail.di.gasStationDetailModule
 import com.germandebustamante.fuelio.feature.favorites.di.favoritesModule
 import com.germandebustamante.fuelio.feature.list.di.gasStationListModule
+import com.germandebustamante.fuelio.feature.map.di.mapModule
 import com.germandebustamante.fuelio.feature.onboarding.di.onboardingModule
 import com.germandebustamante.fuelio.feature.settings.di.settingsModule
 import kotlinx.coroutines.MainScope
@@ -36,6 +37,7 @@ fun initKoin(overrides: List<Module> = emptyList(), config: KoinAppDeclaration? 
         gasStationDetailModule,
         settingsModule,
         favoritesModule,
+        mapModule,
         appModule,
         onboardingModule,
         analyticsModule,

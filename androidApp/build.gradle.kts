@@ -208,6 +208,7 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.play.services.maps)
     implementation(libs.maps.compose)
+    implementation(libs.maps.compose.utils)
     implementation(libs.anr.watchdog)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.crashlytics)

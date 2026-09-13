@@ -29,6 +29,7 @@ import com.germandebustamante.fuelio.feature.list.analytics.GasStationSelected
 import com.germandebustamante.fuelio.feature.list.analytics.GasStationsScreenViewed
 import com.germandebustamante.fuelio.feature.list.analytics.LocationPermissionEvent
 import com.germandebustamante.fuelio.feature.list.analytics.LocationPermissionOutcome
+import com.germandebustamante.fuelio.feature.list.analytics.MapOpened
 import com.germandebustamante.fuelio.feature.list.analytics.ProvinceChanged
 import com.germandebustamante.fuelio.feature.list.analytics.RefreshRequested
 import com.germandebustamante.fuelio.feature.list.analytics.RetryTapped
@@ -434,6 +435,13 @@ class GasStationsViewModel(
         viewModelScope.launch {
             analyticsManager.track(SettingsOpened)
             navigator.navigate(Destination.Settings)
+        }
+    }
+
+    fun onMapTapped() {
+        viewModelScope.launch {
+            analyticsManager.track(MapOpened)
+            navigator.navigate(Destination.Map)
         }
     }
 

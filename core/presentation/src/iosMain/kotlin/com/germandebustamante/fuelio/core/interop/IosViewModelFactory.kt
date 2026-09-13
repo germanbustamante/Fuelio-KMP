@@ -9,6 +9,7 @@ import com.germandebustamante.fuelio.feature.common.analytics.DeepLinkOpened
 import com.germandebustamante.fuelio.feature.detail.state.GasStationDetailViewModel
 import com.germandebustamante.fuelio.feature.favorites.state.FavoritesViewModel
 import com.germandebustamante.fuelio.feature.list.state.GasStationsViewModel
+import com.germandebustamante.fuelio.feature.map.state.MapViewModel
 import com.germandebustamante.fuelio.feature.onboarding.state.OnboardingViewModel
 import com.germandebustamante.fuelio.feature.settings.state.SettingsViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -49,6 +50,8 @@ object IosViewModelFactory : KoinComponent {
     fun favorites(): FavoritesViewModel = get()
 
     fun onboarding(): OnboardingViewModel = get()
+
+    fun map(): MapViewModel = get()
 
     fun gasStationDetail(gasStationId: String): GasStationDetailViewModel =
         get<GasStationDetailViewModel> { parametersOf(Destination.GasStationDetails(gasStationId)) }

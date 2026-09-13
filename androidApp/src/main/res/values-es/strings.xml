@@ -59,6 +59,12 @@
     <string name="favorites_back">Atrás</string>
     <string name="favorites_empty_title">Todavía no hay favoritos</string>
     <string name="favorites_empty_subtitle">Toca la estrella de cualquier gasolinera para guardarla aquí y comparar precios de un vistazo.</string>
+    <!-- Mapa -->
+    <string name="open_map">Mapa</string>
+    <string name="map_title">Mapa de gasolineras</string>
+    <string name="map_back">Atrás</string>
+    <string name="map_empty_title">No hay gasolineras que mostrar</string>
+    <string name="map_empty_subtitle">Selecciona una provincia en la lista para ver sus gasolineras en el mapa.</string>
     <!-- Onboarding -->
     <string name="onboarding_welcome_title">Encuentra el combustible más barato cerca de ti</string>
     <string name="onboarding_welcome_subtitle">Fuelio compara los precios de todas las gasolineras de tu provincia, para que siempre sepas dónde repostar más barato.</string>

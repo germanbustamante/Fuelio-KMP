@@ -22,6 +22,11 @@ struct NavigationMappingTests {
         #expect(Route(DestinationFavorites.shared) == .favorites)
     }
 
+    @Test("Maps the map destination to a pushable route")
+    func mapsMapDestination() {
+        #expect(Route(DestinationMap.shared) == .map)
+    }
+
     @Test("Has no route for the stack root")
     func hasNoRouteForRoot() {
         #expect(Route(DestinationGasStations.shared) == nil)
@@ -63,6 +68,11 @@ struct NavigationMappingTests {
     @Test("Builds a synthetic stack for favorites, which is not deep-linkable but is still an interior screen")
     func buildsSyntheticStackForFavorites() {
         #expect(Route.syntheticStack(for: DestinationFavorites.shared) == [.favorites])
+    }
+
+    @Test("Builds a synthetic stack for the map, which is not deep-linkable but is still an interior screen")
+    func buildsSyntheticStackForMap() {
+        #expect(Route.syntheticStack(for: DestinationMap.shared) == [.map])
     }
 
     @Test("Parses a station detail deep link")
