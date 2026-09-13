@@ -42,12 +42,22 @@ class TrackerTest {
         assertNull(sut.trackedScreen)
     }
 
+    @Test
+    fun `identify - WHEN called THEN onIdentify is called with the same arguments`() = runTest {
+        sut.identify("installation-1", mapOf("platform" to "android"))
+
+        assertEquals("installation-1", sut.identifiedDistinctId)
+        assertEquals(mapOf("platform" to "android"), sut.identifiedProperties)
+    }
+
     private class FakeTracker : Tracker() {
         override val type = AnalyticsProviderType.FIREBASE
 
         var trackedEvent: Trace.Event? = null
         var trackedScreen: Trace.Screen? = null
         var trackedError: Trace.Error? = null
+        var identifiedDistinctId: String? = null
+        var identifiedProperties: Map<String, Any>? = null
 
         override fun onTrackEvent(trace: Trace.Event) {
             trackedEvent = trace
@@ -59,6 +69,11 @@ class TrackerTest {
 
         override fun onTrackError(trace: Trace.Error) {
             trackedError = trace
+        }
+
+        override fun onIdentify(distinctId: String, properties: Map<String, Any>) {
+            identifiedDistinctId = distinctId
+            identifiedProperties = properties
         }
     }
 }

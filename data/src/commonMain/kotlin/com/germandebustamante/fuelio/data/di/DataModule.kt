@@ -3,6 +3,7 @@ package com.germandebustamante.fuelio.data.di
 import com.germandebustamante.fuelio.core.domain.error.DomainError
 import com.germandebustamante.fuelio.core.domain.gasstation.repository.FavoriteStationRepository
 import com.germandebustamante.fuelio.core.domain.gasstation.repository.GasStationRepository
+import com.germandebustamante.fuelio.core.domain.installation.repository.InstallationIdRepository
 import com.germandebustamante.fuelio.core.domain.preferences.repository.UserPreferencesRepository
 import com.germandebustamante.fuelio.core.domain.province.repository.ProvinceRepository
 import com.germandebustamante.fuelio.data.engine.httpClientEngine
@@ -14,6 +15,7 @@ import com.germandebustamante.fuelio.data.gasstation.remote.datasource.GasStatio
 import com.germandebustamante.fuelio.data.gasstation.remote.datasource.GasStationRemoteDataSourceImpl
 import com.germandebustamante.fuelio.data.gasstation.repository.FavoriteStationRepositoryImpl
 import com.germandebustamante.fuelio.data.gasstation.repository.GasStationRepositoryImpl
+import com.germandebustamante.fuelio.data.installation.repository.InstallationIdRepositoryImpl
 import com.germandebustamante.fuelio.data.local.database.FuelioDatabase
 import com.germandebustamante.fuelio.data.local.database.getDatabaseBuilder
 import com.germandebustamante.fuelio.data.local.database.getRoomDatabase
@@ -51,6 +53,7 @@ val dataModule = module {
     single { createPreferencesDataStore { preferencesPath(get()) } }
     single { UserPreferencesLocalDataSourceImpl(get()) } bind UserPreferencesLocalDataSource::class
     single { UserPreferencesRepositoryImpl(get()) } bind UserPreferencesRepository::class
+    single { InstallationIdRepositoryImpl(get()) } bind InstallationIdRepository::class
     single { ProvinceRemoteDataSourceImpl(get(), BASE_URL) } bind ProvinceRemoteDataSource::class
     single {
         HttpClient(httpClientEngine()) {

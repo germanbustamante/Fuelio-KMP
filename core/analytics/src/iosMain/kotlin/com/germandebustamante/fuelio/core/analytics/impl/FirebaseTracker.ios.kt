@@ -13,6 +13,7 @@ fun registerNativeFirebaseTracker(tracker: NativeFirebaseTracker) {
 
 interface NativeFirebaseTracker {
     fun logEvent(name: String, params: Map<String, Any>)
+    fun logIdentify(distinctId: String, properties: Map<String, Any>)
 }
 
 class IosFirebaseTracker(private val nativeTracker: NativeFirebaseTracker) : FirebaseTracker() {
@@ -27,5 +28,9 @@ class IosFirebaseTracker(private val nativeTracker: NativeFirebaseTracker) : Fir
 
     override fun onTrackError(trace: Trace.Error) {
         nativeTracker.logEvent(trace.eventName, trace.params.orEmpty())
+    }
+
+    override fun onIdentify(distinctId: String, properties: Map<String, Any>) {
+        nativeTracker.logIdentify(distinctId, properties)
     }
 }

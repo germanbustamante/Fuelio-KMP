@@ -15,6 +15,13 @@ class AnalyticsManagerTest {
     private val firebaseTracker: Trackable = mock {
         every { type } returns AnalyticsProviderType.FIREBASE
         everySuspend { track(any()) } returns Unit
+        everySuspend { identify(any(), any()) } returns Unit
+    }
+
+    private val postHogTracker: Trackable = mock {
+        every { type } returns AnalyticsProviderType.POSTHOG
+        everySuspend { track(any()) } returns Unit
+        everySuspend { identify(any(), any()) } returns Unit
     }
 
     private val sut = AnalyticsManager(listOf(firebaseTracker))
@@ -46,5 +53,15 @@ class AnalyticsManagerTest {
         managerWithoutPostHog.track(trace)
 
         verifySuspend { firebaseTracker.track(trace) }
+    }
+
+    @Test
+    fun `identify - GIVEN several registered trackers THEN every one of them is identified`() = runTest {
+        val managerWithBoth = AnalyticsManager(listOf(firebaseTracker, postHogTracker))
+
+        managerWithBoth.identify("installation-1", mapOf("platform" to "android"))
+
+        verifySuspend { firebaseTracker.identify("installation-1", mapOf("platform" to "android")) }
+        verifySuspend { postHogTracker.identify("installation-1", mapOf("platform" to "android")) }
     }
 }
