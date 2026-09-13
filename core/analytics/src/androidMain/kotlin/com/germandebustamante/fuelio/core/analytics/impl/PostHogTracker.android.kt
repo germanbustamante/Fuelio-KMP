@@ -34,4 +34,11 @@ class AndroidPostHogTracker(context: Context, apiKey: String) : PostHogTracker()
     override fun onTrackError(trace: Trace.Error) {
         PostHog.capture(event = trace.eventName, properties = trace.params)
     }
+
+    override fun onIdentify(distinctId: String, properties: Map<String, Any>) {
+        PostHog.identify(distinctId, userProperties = properties)
+        // register (not identify's userProperties) is what makes these ride along on every future
+        // event as super-properties, not just the identify call itself.
+        properties.forEach { (key, value) -> PostHog.register(key, value) }
+    }
 }

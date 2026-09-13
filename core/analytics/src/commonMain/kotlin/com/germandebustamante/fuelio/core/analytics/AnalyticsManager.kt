@@ -7,4 +7,8 @@ class AnalyticsManager(private val trackers: List<Trackable>) : AnalyticsTrackin
             trackers.firstOrNull { it.type == target }?.track(trace)
         }
     }
+
+    override suspend fun identify(distinctId: String, properties: Map<String, Any>) {
+        trackers.forEach { it.identify(distinctId, properties) }
+    }
 }

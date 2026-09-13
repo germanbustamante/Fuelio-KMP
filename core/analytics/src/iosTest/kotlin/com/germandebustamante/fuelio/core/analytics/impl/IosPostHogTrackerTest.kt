@@ -57,11 +57,21 @@ class IosPostHogTrackerTest {
         assertEquals(mapOf("error_type" to "ServerError"), nativeTracker.loggedEventParams)
     }
 
+    @Test
+    fun `onIdentify - GIVEN a distinct id and properties THEN they are forwarded to the native tracker as-is`() = runTest {
+        sut.identify("installation-1", mapOf("platform" to "ios"))
+
+        assertEquals("installation-1", nativeTracker.identifiedDistinctId)
+        assertEquals(mapOf("platform" to "ios"), nativeTracker.identifiedProperties)
+    }
+
     private class FakeNativePostHogTracker : NativePostHogTracker {
         var loggedEventName: String? = null
         var loggedEventParams: Map<String, Any>? = null
         var loggedScreenName: String? = null
         var loggedScreenParams: Map<String, Any>? = null
+        var identifiedDistinctId: String? = null
+        var identifiedProperties: Map<String, Any>? = null
 
         override fun logEvent(name: String, params: Map<String, Any>) {
             loggedEventName = name
@@ -71,6 +81,11 @@ class IosPostHogTrackerTest {
         override fun logScreen(name: String, params: Map<String, Any>) {
             loggedScreenName = name
             loggedScreenParams = params
+        }
+
+        override fun logIdentify(distinctId: String, properties: Map<String, Any>) {
+            identifiedDistinctId = distinctId
+            identifiedProperties = properties
         }
     }
 }
