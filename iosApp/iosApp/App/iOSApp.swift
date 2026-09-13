@@ -23,6 +23,7 @@ struct iOSApp: App {
                 let config = PostHogConfig(apiKey: postHogApiKey, host: "https://eu.i.posthog.com")
                 PostHogSDK.shared.setup(config)
                 PostHogTracker_iosKt.registerNativePostHogTracker(tracker: PostHogTrackerBridge())
+                FeatureFlagSource_iosKt.registerNativeFeatureFlagSource(source: FeatureFlagSourceBridge())
             }
         }
 
