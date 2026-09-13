@@ -61,6 +61,12 @@
     <string name="favorites_back">Back</string>
     <string name="favorites_empty_title">No favorites yet</string>
     <string name="favorites_empty_subtitle">Tap the star on any gas station to keep it here and compare prices at a glance.</string>
+    <!-- Map -->
+    <string name="open_map">Map</string>
+    <string name="map_title">Stations map</string>
+    <string name="map_back">Back</string>
+    <string name="map_empty_title">No stations to show</string>
+    <string name="map_empty_subtitle">Select a province from the list to see its gas stations on the map.</string>
     <!-- Onboarding -->
     <string name="onboarding_welcome_title">Find the cheapest fuel near you</string>
     <string name="onboarding_welcome_subtitle">Fuelio compares prices at every gas station in your province, so you always know where to fill up for less.</string>

@@ -22,4 +22,7 @@ sealed interface Destination {
 
     @Serializable
     data object Favorites : Destination
+
+    @Serializable
+    data object Map : Destination
 }

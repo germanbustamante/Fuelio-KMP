@@ -59,6 +59,13 @@ object A11yIdentifiers {
     const val FAVORITES_EMPTY = "favorites_empty"
     const val FAVORITES_UNRESOLVED_BANNER = "favorites_unresolved_banner"
 
+    // Map
+    const val MAP_BUTTON = "map_button"
+    const val MAP_SCREEN = "map_screen"
+    const val MAP_BACK_BUTTON = "map_back_button"
+
+    fun mapMarker(stationId: String): String = "map_marker_$stationId"
+
     // Permissions
     const val PERMISSION_ALERT_SETTINGS = "permission_alert_settings"
 

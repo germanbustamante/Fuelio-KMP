@@ -52,6 +52,11 @@ enum A11yID {
 
     static func themeOption(_ rawValue: String) -> String { "theme_option_\(rawValue)" }
 
+    // Map
+    static let mapButton = "map_button"
+    static let mapScreen = "map_screen"
+    static let mapBackButton = "map_back_button"
+
     // Permissions
     static let permissionAlertSettings = "permission_alert_settings"
 
