@@ -38,7 +38,9 @@ class LocationPermissionTest {
 
         // Compose's Snackbar auto-dismisses after its duration; waiting it out exercises the same
         // `onDismissPermissionSnackbar()` state reset the iOS alert's dismiss button exercises.
-        composeRule.waitUntil(timeoutMillis = 10_000) {
+        // `SnackbarDuration.Long` is ~10s, so a 10s timeout races it exactly at the boundary — give
+        // it real margin instead of matching the duration 1:1.
+        composeRule.waitUntil(timeoutMillis = 15_000) {
             composeRule.onAllNodesWithText(SETTINGS_ACTION_LABEL).fetchSemanticsNodes().isEmpty()
         }
 

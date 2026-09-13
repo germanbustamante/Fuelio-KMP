@@ -2,7 +2,9 @@ package com.germandebustamante.fuelio
 
 import android.Manifest
 import android.content.Intent
+import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.core.net.toUri
@@ -22,7 +24,11 @@ import org.junit.Test
  *
  * Uses `createEmptyComposeRule()` plus a manually launched [ActivityScenario] rather than
  * `createAndroidComposeRule<MainActivity>()`, since that rule only supports the activity's default
- * launch intent and these tests need a custom one.
+ * launch intent and these tests need a custom one. The trade-off: `createAndroidComposeRule`
+ * synchronizes on every interaction automatically, but a bare `waitForIdle()` after `launch()` here
+ * does not wait out `App()`'s `hasCompletedOnboarding == null` gate (an async preferences read via
+ * `viewModelScope.launch`, not a recomposition Compose's own idle detection tracks) — so every first
+ * assertion after launch polls for its target tag instead of assuming it is already there.
  */
 class DeepLinkTest {
 
@@ -45,10 +51,14 @@ class DeepLinkTest {
         return Intent(Intent.ACTION_VIEW, uri.toUri(), context, MainActivity::class.java)
     }
 
+    private fun ComposeTestRule.waitUntilTagExists(tag: String, timeoutMillis: Long = 5_000) {
+        waitUntil(timeoutMillis = timeoutMillis) { onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty() }
+    }
+
     @Test
     fun deepLinkOpensTheStationDetail() {
         ActivityScenario.launch<MainActivity>(deepLinkIntent("fuelio://station/$repsolStationId/detail")).use {
-            composeRule.waitForIdle()
+            composeRule.waitUntilTagExists(A11yIdentifiers.DETAIL_STATION_NAME)
             composeRule.onNodeWithTag(A11yIdentifiers.DETAIL_STATION_NAME).assertExists()
         }
     }
@@ -56,7 +66,7 @@ class DeepLinkTest {
     @Test
     fun backFromADeepLinkLandsOnTheStationList() {
         ActivityScenario.launch<MainActivity>(deepLinkIntent("fuelio://station/$repsolStationId/detail")).use {
-            composeRule.waitForIdle()
+            composeRule.waitUntilTagExists(A11yIdentifiers.DETAIL_BACK_BUTTON)
             composeRule.onNodeWithTag(A11yIdentifiers.DETAIL_BACK_BUTTON).performClick()
 
             // The synthetic back stack is what makes this the list rather than exiting the app.
@@ -67,7 +77,7 @@ class DeepLinkTest {
     @Test
     fun deepLinkToAnUncachedStationShowsNotFound() {
         ActivityScenario.launch<MainActivity>(deepLinkIntent("fuelio://station/$uncachedStationId/detail")).use {
-            composeRule.waitForIdle()
+            composeRule.waitUntilTagExists(A11yIdentifiers.DETAIL_NOT_FOUND)
             composeRule.onNodeWithTag(A11yIdentifiers.DETAIL_NOT_FOUND).assertExists()
         }
     }
@@ -75,7 +85,7 @@ class DeepLinkTest {
     @Test
     fun unsupportedDeepLinkStaysOnTheList() {
         ActivityScenario.launch<MainActivity>(deepLinkIntent("fuelio://station/$repsolStationId/map")).use {
-            composeRule.waitForIdle()
+            composeRule.waitUntilTagExists(A11yIdentifiers.STATIONS_LIST)
             composeRule.onNodeWithTag(A11yIdentifiers.STATIONS_LIST).assertExists()
             composeRule.onNodeWithTag(A11yIdentifiers.DETAIL_STATION_NAME).assertDoesNotExist()
         }
@@ -85,14 +95,14 @@ class DeepLinkTest {
     @Test
     fun rotatingAfterADeepLinkDoesNotReapplyIt() {
         ActivityScenario.launch<MainActivity>(deepLinkIntent("fuelio://station/$repsolStationId/detail")).use { scenario ->
-            composeRule.waitForIdle()
+            composeRule.waitUntilTagExists(A11yIdentifiers.DETAIL_BACK_BUTTON)
             composeRule.onNodeWithTag(A11yIdentifiers.DETAIL_BACK_BUTTON).performClick()
             composeRule.onNodeWithTag(A11yIdentifiers.STATIONS_LIST).assertExists()
 
             // `recreate()` re-delivers the same sticky launch Intent to the new Activity instance,
             // the same as an actual configuration change (e.g. a rotation) would.
             scenario.recreate()
-            composeRule.waitForIdle()
+            composeRule.waitUntilTagExists(A11yIdentifiers.STATIONS_LIST)
 
             // Without the `deepLinkConsumed` guard this would reapply the deep link and jump back to
             // the detail screen out from under the user.

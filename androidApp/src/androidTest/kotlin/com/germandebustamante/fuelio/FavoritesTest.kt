@@ -9,17 +9,34 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.test.rule.GrantPermissionRule
 import com.germandebustamante.fuelio.core.testing.A11yIdentifiers
+import com.germandebustamante.fuelio.core.testing.uiTestModule
 import org.junit.Assert.assertNotNull
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.ExternalResource
+import org.koin.core.context.GlobalContext
 
-/** Android mirror of `iosAppUITests/FavoritesUITests.swift`. */
+/**
+ * Android mirror of `iosAppUITests/FavoritesUITests.swift`.
+ *
+ * `InMemoryFavoriteStationRepository` is a Koin `single`, so it survives across every test method
+ * that shares this instrumentation process (unlike XCUITest, which relaunches the app per test) —
+ * without a reset, a station starred by one test stays starred for the next, which flips these
+ * tests' shared "click to star" assumption into "click to unstar" depending on run order.
+ */
 class FavoritesTest {
 
-    @get:Rule
+    @get:Rule(order = 0)
+    val freshFakes = object : ExternalResource() {
+        override fun before() {
+            GlobalContext.get().loadModules(listOf(uiTestModule(simulateStationFailure = false)))
+        }
+    }
+
+    @get:Rule(order = 1)
     val composeRule = createAndroidComposeRule<MainActivity>()
 
-    @get:Rule
+    @get:Rule(order = 1)
     val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(
         Manifest.permission.ACCESS_FINE_LOCATION,
         Manifest.permission.ACCESS_COARSE_LOCATION,
