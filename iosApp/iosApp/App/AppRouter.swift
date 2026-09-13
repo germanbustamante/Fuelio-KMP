@@ -92,10 +92,13 @@ final class AppRouter {
     /// so whatever was on screen before is not part of that story — and "back" must still walk up to
     /// the list instead of dropping the user out of the app.
     ///
-    /// An unsupported or malformed URI is a no-op, never a crash: `parseDeepLink` returns nil and the
-    /// user simply stays where they were.
+    /// An unsupported or malformed URI is a no-op for navigation, never a crash: `parseDeepLink`
+    /// returns nil and the user simply stays where they were — but it's still tracked either way, so
+    /// `IosViewModelFactory.trackDeepLinkOpened` runs before the early return.
     func openDeepLink(_ uri: String) {
-        guard let destination = parseDeepLink(uri: uri) else { return }
+        let destination = parseDeepLink(uri: uri)
+        IosViewModelFactory.shared.trackDeepLinkOpened(uri: uri, resolved: destination != nil)
+        guard let destination else { return }
         path = Route.syntheticStack(for: destination)
     }
 }

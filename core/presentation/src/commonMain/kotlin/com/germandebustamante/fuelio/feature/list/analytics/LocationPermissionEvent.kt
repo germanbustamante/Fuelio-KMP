@@ -3,7 +3,7 @@ package com.germandebustamante.fuelio.feature.list.analytics
 import com.germandebustamante.fuelio.core.analytics.AnalyticsProviderType
 import com.germandebustamante.fuelio.core.analytics.Trace
 
-enum class LocationPermissionOutcome { REQUESTED, GRANTED, DENIED, DENIED_PERMANENTLY }
+enum class LocationPermissionOutcome { REQUESTED, GRANTED, DENIED, DENIED_PERMANENTLY, SETTINGS_OPENED }
 
 data class LocationPermissionEvent(val outcome: LocationPermissionOutcome) :
     Trace.Event(
