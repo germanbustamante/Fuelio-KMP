@@ -43,6 +43,15 @@ object A11yIdentifiers {
     const val DETAIL_FAVORITE_BUTTON = "detail_favorite_button"
     const val DETAIL_PRICE_TREND_CHART = "detail_price_trend_chart"
 
+    /**
+     * Android-only: the detail screen's `LazyColumn` container, so an instrumentation test can
+     * `performScrollToNode` on it. Lazy items outside the initially-composed window are not in the
+     * semantics tree at all, unlike a plain scrollable `Column` — `performScrollTo()` on the item's
+     * own tag only works once it is already composed, so scrolling has to be driven from the
+     * container instead. iOS has no lazy-list scroll-to-node equivalent to mirror this against.
+     */
+    const val DETAIL_CONTENT_LIST = "detail_content_list"
+
     // Settings
     const val SETTINGS_BUTTON = "settings_button"
     const val SETTINGS_SCREEN = "settings_screen"

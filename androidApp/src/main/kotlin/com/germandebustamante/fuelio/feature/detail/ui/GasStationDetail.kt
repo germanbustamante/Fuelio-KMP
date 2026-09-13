@@ -170,7 +170,7 @@ private fun GasStationDetailContent(
     val stationName = gasStation.displayName
 
     LazyColumn(
-        modifier = modifier,
+        modifier = modifier.testTag(A11yIdentifiers.DETAIL_CONTENT_LIST),
         contentPadding = PaddingValues(FuelioSpacing.md),
         verticalArrangement = Arrangement.spacedBy(FuelioSpacing.lg),
     ) {
