@@ -74,7 +74,6 @@ import com.germandebustamante.fuelio.designsystem.divider.FuelioDivider
 import com.germandebustamante.fuelio.designsystem.scaffold.FuelioScaffold
 import com.germandebustamante.fuelio.designsystem.topbar.FuelioTopBar
 import com.germandebustamante.fuelio.designsystem.topbar.FuelioTopBarVariant
-import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import com.germandebustamante.fuelio.feature.list.state.ContentState
 import com.germandebustamante.fuelio.feature.list.state.FuelFilter
 import com.germandebustamante.fuelio.feature.list.state.GasStationsUIState
@@ -88,14 +87,9 @@ import com.germandebustamante.fuelio.feature.list.ui.state.GasStationsErrorState
 import com.germandebustamante.fuelio.feature.list.ui.state.GasStationsLoadingSkeleton
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
-import org.koin.core.parameter.parametersOf
 
 @Composable
-fun GasStationsScreen(
-    locationPermissionController: LocationPermissionController,
-    viewModel: GasStationsViewModel = koinViewModel { parametersOf(locationPermissionController) },
-    modifier: Modifier = Modifier,
-) {
+fun GasStationsScreen(viewModel: GasStationsViewModel = koinViewModel(), modifier: Modifier = Modifier) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     GasStationsScreen(
