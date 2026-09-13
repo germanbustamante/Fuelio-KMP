@@ -61,6 +61,18 @@ class UserPreferencesRepositoryImplTest {
     }
 
     @Test
+    fun `setHasCompletedOnboarding - GIVEN onboarding finished WHEN stored THEN it replaces the false default`() = runTest {
+        val sut = createSut()
+
+        sut.setHasCompletedOnboarding(true)
+
+        sut.observe().test {
+            assertEquals(true, awaitItem().hasCompletedOnboarding)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun `set - GIVEN several preferences WHEN stored THEN each is independent of the others`() = runTest {
         val sut = createSut()
 
@@ -98,6 +110,10 @@ class UserPreferencesRepositoryImplTest {
 
         override suspend fun setThemeMode(themeMode: ThemeMode) {
             preferences.update { it.copy(themeMode = themeMode) }
+        }
+
+        override suspend fun setHasCompletedOnboarding(completed: Boolean) {
+            preferences.update { it.copy(hasCompletedOnboarding = completed) }
         }
     }
 

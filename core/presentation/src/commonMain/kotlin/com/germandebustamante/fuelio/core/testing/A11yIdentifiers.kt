@@ -60,4 +60,12 @@ object A11yIdentifiers {
 
     // Permissions
     const val PERMISSION_ALERT_SETTINGS = "permission_alert_settings"
+
+    // Onboarding
+    const val ONBOARDING_SCREEN = "onboarding_screen"
+    const val ONBOARDING_NEXT_BUTTON = "onboarding_next_button"
+    const val ONBOARDING_SKIP_BUTTON = "onboarding_skip_button"
+    const val ONBOARDING_ALLOW_LOCATION_BUTTON = "onboarding_allow_location_button"
+    const val ONBOARDING_FUEL_PICKER = "onboarding_fuel_picker"
+    const val ONBOARDING_FINISH_BUTTON = "onboarding_finish_button"
 }

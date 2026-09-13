@@ -2,6 +2,7 @@ package com.germandebustamante.fuelio.data.preferences.local
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.germandebustamante.fuelio.core.domain.preferences.model.FuelType
@@ -17,6 +18,7 @@ class UserPreferencesLocalDataSourceImpl(private val dataStore: DataStore<Prefer
             defaultFuelType = preferences[KEY_DEFAULT_FUEL_TYPE].toEnumOrDefault(FuelType.GASOLINE_95),
             savedProvinceId = preferences[KEY_SAVED_PROVINCE_ID],
             themeMode = preferences[KEY_THEME_MODE].toEnumOrDefault(ThemeMode.SYSTEM),
+            hasCompletedOnboarding = preferences[KEY_HAS_COMPLETED_ONBOARDING] ?: false,
         )
     }
 
@@ -32,6 +34,10 @@ class UserPreferencesLocalDataSourceImpl(private val dataStore: DataStore<Prefer
         dataStore.edit { it[KEY_THEME_MODE] = themeMode.name }
     }
 
+    override suspend fun setHasCompletedOnboarding(completed: Boolean) {
+        dataStore.edit { it[KEY_HAS_COMPLETED_ONBOARDING] = completed }
+    }
+
     /**
      * Enums are stored by name, so a constant renamed or removed in a later release would otherwise
      * blow up on read for anyone upgrading. Falling back to the default degrades one preference
@@ -44,5 +50,6 @@ class UserPreferencesLocalDataSourceImpl(private val dataStore: DataStore<Prefer
         val KEY_DEFAULT_FUEL_TYPE = stringPreferencesKey("default_fuel_type")
         val KEY_SAVED_PROVINCE_ID = stringPreferencesKey("saved_province_id")
         val KEY_THEME_MODE = stringPreferencesKey("theme_mode")
+        val KEY_HAS_COMPLETED_ONBOARDING = booleanPreferencesKey("has_completed_onboarding")
     }
 }

@@ -12,4 +12,5 @@ data class UserPreferencesBO(
     val defaultFuelType: FuelType = FuelType.GASOLINE_95,
     val savedProvinceId: String? = null,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val hasCompletedOnboarding: Boolean = false,
 )

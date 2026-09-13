@@ -30,6 +30,11 @@ enum LaunchArguments {
     /// delivery, which is Apple's code, to a manual `xcrun simctl openurl` check.
     static let uiTestDeepLink = "-UITestDeepLink"
 
+    /// Makes the in-memory preferences fake report onboarding as not yet completed, so an XCUITest
+    /// can exercise the onboarding flow — every other test needs the opposite (already completed) to
+    /// reach its screen directly, which is why that is the fake's default instead.
+    static let uiTestShowOnboarding = "-UITestShowOnboarding"
+
     static var usesDeterministicData: Bool {
         #if DEBUG
         let processInfo = ProcessInfo.processInfo
@@ -44,6 +49,14 @@ enum LaunchArguments {
     static var simulatesStationFailure: Bool {
         #if DEBUG
         ProcessInfo.processInfo.arguments.contains(uiTestFailureMode)
+        #else
+        false
+        #endif
+    }
+
+    static var showsOnboarding: Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains(uiTestShowOnboarding)
         #else
         false
         #endif

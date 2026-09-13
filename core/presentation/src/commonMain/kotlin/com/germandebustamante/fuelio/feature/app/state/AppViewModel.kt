@@ -26,12 +26,12 @@ class AppViewModel(private val observeUserPreferencesUseCase: ObserveUserPrefere
     val state: StateFlow<AppUIState> = _state.asStateFlow()
 
     init {
-        launchStartupTasks({ observeThemeMode() })
+        launchStartupTasks({ observePreferences() })
     }
 
-    private suspend fun observeThemeMode() {
+    private suspend fun observePreferences() {
         observeUserPreferencesUseCase().collect { preferences ->
-            _state.update { it.copy(themeMode = preferences.themeMode) }
+            _state.update { it.copy(themeMode = preferences.themeMode, hasCompletedOnboarding = preferences.hasCompletedOnboarding) }
         }
     }
 }

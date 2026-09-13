@@ -26,4 +26,8 @@ class UserPreferencesRepositoryImpl(private val localDataSource: UserPreferences
     override suspend fun setThemeMode(themeMode: ThemeMode) = withContext(Dispatchers.IO) {
         localDataSource.setThemeMode(themeMode)
     }
+
+    override suspend fun setHasCompletedOnboarding(completed: Boolean) = withContext(Dispatchers.IO) {
+        localDataSource.setHasCompletedOnboarding(completed)
+    }
 }

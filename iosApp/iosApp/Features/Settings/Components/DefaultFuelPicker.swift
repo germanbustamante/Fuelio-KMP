@@ -5,6 +5,7 @@ struct DefaultFuelPicker: View {
 
     let selected: DomainFuelType
     let onSelect: (DomainFuelType) -> Void
+    var accessibilityID: String = A11yID.defaultFuelPicker
 
     var body: some View {
         Picker("Default fuel", selection: selectionBinding) {
@@ -15,7 +16,7 @@ struct DefaultFuelPicker: View {
             }
         }
         .pickerStyle(.segmented)
-        .accessibilityIdentifier(A11yID.defaultFuelPicker)
+        .accessibilityIdentifier(accessibilityID)
     }
 
     private var selectionBinding: Binding<DomainFuelType> {
