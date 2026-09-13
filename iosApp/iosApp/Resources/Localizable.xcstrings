@@ -671,6 +671,23 @@
         }
       }
     },
+    "Price trend": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Price trend"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tendencia de precios"
+          }
+        }
+      }
+    },
     "Price unavailable": {
       "extractionState": "manual",
       "localizations": {

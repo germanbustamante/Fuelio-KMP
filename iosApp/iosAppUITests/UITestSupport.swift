@@ -54,6 +54,7 @@ enum UITestSupport {
     static let detailScheduleSection = "detail_schedule_section"
     static let detailPricesSection = "detail_prices_section"
     static let detailFavoriteButton = "detail_favorite_button"
+    static let detailPriceTrendChart = "detail_price_trend_chart"
 
     static let permissionAlertSettings = "permission_alert_settings"
 

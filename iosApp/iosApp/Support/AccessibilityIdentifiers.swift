@@ -34,6 +34,7 @@ enum A11yID {
     static let detailScheduleSection = "detail_schedule_section"
     static let detailPricesSection = "detail_prices_section"
     static let detailFavoriteButton = "detail_favorite_button"
+    static let detailPriceTrendChart = "detail_price_trend_chart"
 
     // Favorites
     static let favoritesButton = "favorites_button"

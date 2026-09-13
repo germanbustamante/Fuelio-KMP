@@ -41,6 +41,7 @@ object A11yIdentifiers {
     const val DETAIL_SCHEDULE_SECTION = "detail_schedule_section"
     const val DETAIL_PRICES_SECTION = "detail_prices_section"
     const val DETAIL_FAVORITE_BUTTON = "detail_favorite_button"
+    const val DETAIL_PRICE_TREND_CHART = "detail_price_trend_chart"
 
     // Settings
     const val SETTINGS_BUTTON = "settings_button"

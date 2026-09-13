@@ -56,6 +56,7 @@ import com.germandebustamante.fuelio.designsystem.topbar.FuelioTopBarVariant
 import com.germandebustamante.fuelio.feature.detail.state.ContentState
 import com.germandebustamante.fuelio.feature.detail.state.GasStationDetailUIState
 import com.germandebustamante.fuelio.feature.detail.state.GasStationDetailViewModel
+import com.germandebustamante.fuelio.feature.detail.state.PriceTrendVO
 import com.germandebustamante.fuelio.feature.detail.state.ScheduleDayStatus
 import com.germandebustamante.fuelio.feature.detail.state.ScheduleDayVO
 import com.germandebustamante.fuelio.feature.detail.state.toScheduleDays
@@ -136,6 +137,7 @@ private fun GasStationDetail(
                 is ContentState.Success -> GasStationDetailContent(
                     gasStation = contentState.gasStation,
                     scheduleDays = contentState.scheduleDays,
+                    priceTrend = state.priceTrend,
                     onDirectionsTapped = onDirectionsTapped,
                     modifier = Modifier.fillMaxSize(),
                 )
@@ -161,6 +163,7 @@ private fun GasStationDetail(
 private fun GasStationDetailContent(
     gasStation: GasStationBO,
     scheduleDays: List<ScheduleDayVO>,
+    priceTrend: PriceTrendVO?,
     onDirectionsTapped: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -197,6 +200,10 @@ private fun GasStationDetailContent(
         }
 
         item { PricesSection(gasStation, modifier = Modifier.testTag(A11yIdentifiers.DETAIL_PRICES_SECTION)) }
+
+        if (priceTrend != null) {
+            item { PriceTrendChart(priceTrend, modifier = Modifier.testTag(A11yIdentifiers.DETAIL_PRICE_TREND_CHART)) }
+        }
 
         item { ScheduleSection(scheduleDays, modifier = Modifier.testTag(A11yIdentifiers.DETAIL_SCHEDULE_SECTION)) }
     }
@@ -333,6 +340,7 @@ private fun GasStationDetailContentPreview() {
         GasStationDetailContent(
             gasStation = gasStation,
             scheduleDays = gasStation.schedule.toScheduleDays(DayOfWeek.MONDAY),
+            priceTrend = null,
             onDirectionsTapped = {},
         )
     }
