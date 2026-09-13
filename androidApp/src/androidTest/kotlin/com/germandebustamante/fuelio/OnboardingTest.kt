@@ -51,6 +51,10 @@ class OnboardingTest {
         composeRule.onNodeWithTag(A11yIdentifiers.ONBOARDING_ALLOW_LOCATION_BUTTON).performClick()
         composeRule.onNodeWithTag(A11yIdentifiers.ONBOARDING_FINISH_BUTTON).performClick()
 
+        // Finishing writes `hasCompletedOnboarding` through the preferences repository and
+        // `AppViewModel` observes that write asynchronously before swapping `OnboardingScreen()` for
+        // `FuelioNavHost()` — a round trip Compose's own idle detection does not track.
+        composeRule.waitUntilTagExists(A11yIdentifiers.STATIONS_LIST)
         composeRule.onNodeWithTag(A11yIdentifiers.STATIONS_LIST).assertExists()
         composeRule.onNodeWithTag(A11yIdentifiers.ONBOARDING_SCREEN).assertDoesNotExist()
     }
@@ -59,6 +63,7 @@ class OnboardingTest {
     fun skippingFromTheWelcomeStepRevealsTheStationList() {
         composeRule.onNodeWithTag(A11yIdentifiers.ONBOARDING_SKIP_BUTTON).performClick()
 
+        composeRule.waitUntilTagExists(A11yIdentifiers.STATIONS_LIST)
         composeRule.onNodeWithTag(A11yIdentifiers.STATIONS_LIST).assertExists()
     }
 

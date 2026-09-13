@@ -66,18 +66,25 @@ class GasStationsListTest {
     @Test
     fun changingFuelFilterUpdatesThePrice() {
         // The price `Text` sits inside the row's `mergeDescendants = true` subtree, so it is only
-        // individually addressable in the unmerged semantics tree.
+        // individually addressable in the unmerged semantics tree. Reads via `onAllNodesWithTag`
+        // rather than `onNodeWithTag(...).fetchSemanticsNode()`, which throws instead of returning
+        // null while the row is transiently absent from the tree during recomposition.
         fun priceText(): String? = composeRule
-            .onNodeWithTag(A11yIdentifiers.stationPrice(repsolStationId), useUnmergedTree = true)
-            .fetchSemanticsNode()
-            .config
-            .getOrNull(SemanticsProperties.Text)
+            .onAllNodesWithTag(A11yIdentifiers.stationPrice(repsolStationId), useUnmergedTree = true)
+            .fetchSemanticsNodes()
+            .firstOrNull()
+            ?.config
+            ?.getOrNull(SemanticsProperties.Text)
             ?.joinToString { it.text }
 
         val gasolinePrice = priceText()
 
         composeRule.onNodeWithTag(A11yIdentifiers.fuelOption("diesel")).performClick()
 
+        // Switching fuel type re-derives the row's price through the ViewModel/preferences round
+        // trip, not a purely local recomposition, so poll for the new value instead of assuming a
+        // single click already synchronized it.
+        composeRule.waitUntil(timeoutMillis = 3_000) { priceText() != gasolinePrice }
         assertNotEquals(gasolinePrice, priceText())
     }
 }
