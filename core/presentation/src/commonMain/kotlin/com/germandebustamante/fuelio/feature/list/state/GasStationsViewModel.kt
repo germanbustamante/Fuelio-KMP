@@ -15,9 +15,9 @@ import com.germandebustamante.fuelio.core.domain.preferences.usecase.SetSavedPro
 import com.germandebustamante.fuelio.core.domain.province.model.ProvinceBO
 import com.germandebustamante.fuelio.core.domain.province.usecase.GetProvincesUseCase
 import com.germandebustamante.fuelio.core.domain.province.usecase.ResolveProvinceByLocationUseCase
+import com.germandebustamante.fuelio.core.domain.util.SPAIN_TIMEZONE
 import com.germandebustamante.fuelio.core.navigation.action.Navigator
 import com.germandebustamante.fuelio.core.navigation.destination.Destination
-import com.germandebustamante.fuelio.core.util.SPAIN_TIMEZONE
 import com.germandebustamante.fuelio.feature.common.analytics.ApiCallFailed
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionState

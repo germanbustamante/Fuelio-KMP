@@ -4,9 +4,9 @@ import com.germandebustamante.fuelio.core.analytics.AnalyticsTracking
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.ObserveFavoriteStationsUseCase
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.ToggleFavoriteStationUseCase
 import com.germandebustamante.fuelio.core.domain.preferences.usecase.ObserveUserPreferencesUseCase
+import com.germandebustamante.fuelio.core.domain.util.SPAIN_TIMEZONE
 import com.germandebustamante.fuelio.core.navigation.action.Navigator
 import com.germandebustamante.fuelio.core.navigation.destination.Destination
-import com.germandebustamante.fuelio.core.util.SPAIN_TIMEZONE
 import com.germandebustamante.fuelio.feature.common.viewmodel.launchStartupTasks
 import com.germandebustamante.fuelio.feature.favorites.analytics.FavoritesScreenViewed
 import com.germandebustamante.fuelio.feature.list.analytics.FavoriteToggled
