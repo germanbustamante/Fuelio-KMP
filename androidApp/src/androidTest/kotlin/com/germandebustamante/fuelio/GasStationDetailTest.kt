@@ -48,4 +48,17 @@ class GasStationDetailTest {
     // The detail "not found" state cannot be reached by tapping through the list — it only offers
     // stations that are already cached — but a deep link to an uncached station id reaches exactly
     // that state; see `DeepLinkTest.deepLinkToAnUncachedStationShowsNotFound`.
+
+    @Test
+    fun starringFromTheDetailScreenShowsUpInFavorites() {
+        // Same source of truth as the list's star — the favourites table, not screen-local state —
+        // so a toggle from the detail screen must be visible from the Favorites screen too.
+        composeRule.onNodeWithTag(A11yIdentifiers.stationRow(repsolStationId)).performClick()
+        composeRule.onNodeWithTag(A11yIdentifiers.DETAIL_FAVORITE_BUTTON).performClick()
+        composeRule.onNodeWithTag(A11yIdentifiers.DETAIL_BACK_BUTTON).performClick()
+
+        composeRule.onNodeWithTag(A11yIdentifiers.FAVORITES_BUTTON).performClick()
+
+        composeRule.onNodeWithTag(A11yIdentifiers.stationRow(repsolStationId)).assertExists()
+    }
 }

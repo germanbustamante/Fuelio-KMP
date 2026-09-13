@@ -3,10 +3,13 @@ package com.germandebustamante.fuelio.feature.detail.state
 import com.germandebustamante.fuelio.core.analytics.AnalyticsTracking
 import com.germandebustamante.fuelio.core.domain.gasstation.testing.GasStationBOMother
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationUseCase
+import com.germandebustamante.fuelio.core.domain.gasstation.usecase.ObserveFavoriteStationIdsUseCase
+import com.germandebustamante.fuelio.core.domain.gasstation.usecase.ToggleFavoriteStationUseCase
 import com.germandebustamante.fuelio.core.navigation.action.Navigator
 import com.germandebustamante.fuelio.core.navigation.destination.Destination
 import com.germandebustamante.fuelio.feature.detail.analytics.DirectionsRequested
 import com.germandebustamante.fuelio.feature.detail.analytics.GasStationDetailScreenViewed
+import com.germandebustamante.fuelio.feature.list.analytics.FavoriteToggled
 import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.everySuspend
@@ -15,8 +18,10 @@ import dev.mokkery.matcher.capture.Capture
 import dev.mokkery.matcher.capture.capture
 import dev.mokkery.matcher.capture.get
 import dev.mokkery.mock
+import dev.mokkery.verifySuspend
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -27,6 +32,8 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class GasStationDetailViewModelTest {
@@ -43,6 +50,14 @@ class GasStationDetailViewModelTest {
 
     private val analyticsManager: AnalyticsTracking = mock {
         everySuspend { track(any()) } returns Unit
+    }
+
+    private val observeFavoriteStationIdsUseCase: ObserveFavoriteStationIdsUseCase = mock {
+        every { invoke() } returns flowOf(emptySet())
+    }
+
+    private val toggleFavoriteStationUseCase: ToggleFavoriteStationUseCase = mock {
+        everySuspend { invoke(any()) } returns Unit
     }
 
     private lateinit var sut: GasStationDetailViewModel
@@ -64,7 +79,7 @@ class GasStationDetailViewModelTest {
         everySuspend { analyticsManager.track(capture(screenViewedTraceSlot)) } returns Unit
 
         // WHEN
-        sut = GasStationDetailViewModel(route, getGasStation, navigator, analyticsManager)
+        createSut()
         advanceUntilIdle()
 
         // THEN
@@ -80,7 +95,7 @@ class GasStationDetailViewModelTest {
         // GIVEN
         val directionsTraceSlot = Capture.slot<DirectionsRequested>()
         everySuspend { analyticsManager.track(capture(directionsTraceSlot)) } returns Unit
-        sut = GasStationDetailViewModel(route, getGasStation, navigator, analyticsManager)
+        createSut()
         advanceUntilIdle()
 
         // WHEN
@@ -89,6 +104,68 @@ class GasStationDetailViewModelTest {
 
         // THEN
         assertEquals(GAS_STATION_ID, directionsTraceSlot.get().gasStationId)
+    }
+
+    @Test
+    fun `init - GIVEN the station is already a favorite THEN isFavorite is true on a cold start`() = runTest {
+        every { observeFavoriteStationIdsUseCase() } returns flowOf(setOf(GAS_STATION_ID))
+
+        createSut()
+        advanceUntilIdle()
+
+        assertTrue(sut.state.value.isFavorite)
+    }
+
+    @Test
+    fun `onToggleFavorite - GIVEN the station is not a favorite WHEN toggled THEN it is delegated to the repository and tracked as added`() = runTest {
+        createSut()
+        advanceUntilIdle()
+
+        sut.onToggleFavorite()
+        advanceUntilIdle()
+
+        verifySuspend { toggleFavoriteStationUseCase(GAS_STATION_ID) }
+        verifySuspend { analyticsManager.track(FavoriteToggled(GAS_STATION_ID, isFavorite = true)) }
+    }
+
+    @Test
+    fun `onToggleFavorite - GIVEN the station is already a favorite WHEN toggled THEN it is tracked as removed`() = runTest {
+        every { observeFavoriteStationIdsUseCase() } returns flowOf(setOf(GAS_STATION_ID))
+        createSut()
+        advanceUntilIdle()
+
+        sut.onToggleFavorite()
+        advanceUntilIdle()
+
+        verifySuspend { analyticsManager.track(FavoriteToggled(GAS_STATION_ID, isFavorite = false)) }
+    }
+
+    @Test
+    fun `onToggleFavorite - WHEN toggled THEN the state does not change until the repository emits`() = runTest {
+        val favorites = MutableStateFlow(emptySet<String>())
+        every { observeFavoriteStationIdsUseCase() } returns favorites
+        createSut()
+        advanceUntilIdle()
+
+        sut.onToggleFavorite()
+        advanceUntilIdle()
+
+        assertFalse(sut.state.value.isFavorite)
+
+        favorites.value = setOf(GAS_STATION_ID)
+        advanceUntilIdle()
+        assertTrue(sut.state.value.isFavorite)
+    }
+
+    private fun createSut() {
+        sut = GasStationDetailViewModel(
+            route = route,
+            getGasStation = getGasStation,
+            navigator = navigator,
+            analyticsManager = analyticsManager,
+            observeFavoriteStationIdsUseCase = observeFavoriteStationIdsUseCase,
+            toggleFavoriteStationUseCase = toggleFavoriteStationUseCase,
+        )
     }
 
     companion object {

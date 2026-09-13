@@ -40,4 +40,21 @@ final class GasStationDetailUITests: XCTestCase {
     // The detail "not found" state cannot be reached by tapping through the list — it only offers
     // stations that are already cached — but a deep link to an uncached station id reaches exactly
     // that state, and `DeepLinkUITests.testDeepLinkToAnUncachedStationShowsNotFound` covers it.
+
+    func testStarringFromTheDetailScreenShowsUpInFavorites() {
+        // Same source of truth as the list's star — the favourites table, not screen-local state —
+        // so a toggle from the detail screen must be visible from the Favorites screen too.
+        let app = XCUIApplication().launchForUITests()
+        app.waitForStationList()
+
+        app.element(id: UITestSupport.stationRow(UITestSupport.repsolStationID)).tap()
+        let favoriteButton = app.element(id: UITestSupport.detailFavoriteButton)
+        XCTAssertTrue(favoriteButton.waitForExistence(timeout: 10))
+        favoriteButton.tap()
+        app.element(id: UITestSupport.detailBackButton).tap()
+
+        app.element(id: UITestSupport.favoritesButton).tap()
+
+        XCTAssertTrue(app.element(id: UITestSupport.stationRow(UITestSupport.repsolStationID)).waitForExistence(timeout: 10))
+    }
 }
