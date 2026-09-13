@@ -28,7 +28,10 @@ struct iOSApp: App {
         }
 
         if LaunchArguments.usesDeterministicData {
-            KoinInitIosKt.doInitKoinIosForUiTests(simulateStationFailure: LaunchArguments.simulatesStationFailure)
+            KoinInitIosKt.doInitKoinIosForUiTests(
+                simulateStationFailure: LaunchArguments.simulatesStationFailure,
+                hasCompletedOnboarding: !LaunchArguments.showsOnboarding
+            )
         } else {
             KoinInitIosKt.doInitKoinIos()
         }

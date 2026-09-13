@@ -30,15 +30,16 @@ class UserPreferencesLocalDataSourceImplTest {
     }
 
     @Test
-    fun `set - GIVEN every preference written WHEN read back THEN all three round-trip`() = runTest {
+    fun `set - GIVEN every preference written WHEN read back THEN all four round-trip`() = runTest {
         val sut = UserPreferencesLocalDataSourceImpl(temporaryDataStore())
 
         sut.setDefaultFuelType(FuelType.DIESEL_PREMIUM)
         sut.setSavedProvinceId(PROVINCE_ID)
         sut.setThemeMode(ThemeMode.DARK)
+        sut.setHasCompletedOnboarding(true)
 
         assertEquals(
-            UserPreferencesBO(FuelType.DIESEL_PREMIUM, PROVINCE_ID, ThemeMode.DARK),
+            UserPreferencesBO(FuelType.DIESEL_PREMIUM, PROVINCE_ID, ThemeMode.DARK, hasCompletedOnboarding = true),
             sut.observe().first(),
         )
     }

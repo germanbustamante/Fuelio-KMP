@@ -41,6 +41,12 @@ struct AccessibilityIdentifierContractTests {
         #expect(A11yID.settingsBackButton == "settings_back_button")
         #expect(A11yID.themePicker == "theme_picker")
         #expect(A11yID.defaultFuelPicker == "default_fuel_picker")
+        #expect(A11yID.onboardingScreen == "onboarding_screen")
+        #expect(A11yID.onboardingNextButton == "onboarding_next_button")
+        #expect(A11yID.onboardingSkipButton == "onboarding_skip_button")
+        #expect(A11yID.onboardingAllowLocationButton == "onboarding_allow_location_button")
+        #expect(A11yID.onboardingFuelPicker == "onboarding_fuel_picker")
+        #expect(A11yID.onboardingFinishButton == "onboarding_finish_button")
     }
 
     @Test("Parameterised identifiers match the values the UI tests build")

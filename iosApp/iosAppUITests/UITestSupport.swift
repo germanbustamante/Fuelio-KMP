@@ -11,6 +11,7 @@ enum UITestSupport {
     static let uiTestMode = "-UITestMode"
     static let uiTestFailureMode = "-UITestFailure"
     static let uiTestDeepLink = "-UITestDeepLink"
+    static let uiTestShowOnboarding = "-UITestShowOnboarding"
 
     /// First entries of `core/fake/FakeGasStations.kt` and `feature/list/state/GasStationsFakes.kt`,
     /// which the UI-test Koin overrides serve.
@@ -55,6 +56,14 @@ enum UITestSupport {
     static let detailFavoriteButton = "detail_favorite_button"
 
     static let permissionAlertSettings = "permission_alert_settings"
+
+    // Onboarding
+    static let onboardingScreen = "onboarding_screen"
+    static let onboardingNextButton = "onboarding_next_button"
+    static let onboardingSkipButton = "onboarding_skip_button"
+    static let onboardingAllowLocationButton = "onboarding_allow_location_button"
+    static let onboardingFuelPicker = "onboarding_fuel_picker"
+    static let onboardingFinishButton = "onboarding_finish_button"
 
     // Favorites
     static let favoritesButton = "favorites_button"
@@ -108,13 +117,14 @@ extension XCUIApplication {
     /// when the UI tests start; SpringBoard then rejects the launch with "Application failed
     /// preflight checks". Terminating first makes the launch deterministic.
     @discardableResult
-    func launchForUITests(simulateFailure: Bool = false, deepLink: String? = nil) -> XCUIApplication {
+    func launchForUITests(simulateFailure: Bool = false, deepLink: String? = nil, showOnboarding: Bool = false) -> XCUIApplication {
         if state != .notRunning {
             terminate()
         }
         var arguments = [UITestSupport.uiTestMode]
         if simulateFailure { arguments.append(UITestSupport.uiTestFailureMode) }
         if let deepLink { arguments += [UITestSupport.uiTestDeepLink, deepLink] }
+        if showOnboarding { arguments.append(UITestSupport.uiTestShowOnboarding) }
         launchArguments = arguments
         launch()
         return self

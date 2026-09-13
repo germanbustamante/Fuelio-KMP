@@ -14,4 +14,6 @@ interface UserPreferencesLocalDataSource {
     suspend fun setSavedProvinceId(provinceId: String)
 
     suspend fun setThemeMode(themeMode: ThemeMode)
+
+    suspend fun setHasCompletedOnboarding(completed: Boolean)
 }

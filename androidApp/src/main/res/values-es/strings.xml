@@ -58,4 +58,15 @@
     <string name="favorites_back">Atrás</string>
     <string name="favorites_empty_title">Todavía no hay favoritos</string>
     <string name="favorites_empty_subtitle">Toca la estrella de cualquier gasolinera para guardarla aquí y comparar precios de un vistazo.</string>
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_title">Encuentra el combustible más barato cerca de ti</string>
+    <string name="onboarding_welcome_subtitle">Fuelio compara los precios de todas las gasolineras de tu provincia, para que siempre sepas dónde repostar más barato.</string>
+    <string name="onboarding_next">Siguiente</string>
+    <string name="onboarding_skip">Saltar</string>
+    <string name="onboarding_location_title">Encuentra gasolineras cerca de ti</string>
+    <string name="onboarding_location_subtitle">Permite el acceso a tu ubicación para ordenar las gasolineras por distancia. Puedes cambiarlo más tarde en Ajustes.</string>
+    <string name="onboarding_location_allow">Permitir ubicación</string>
+    <string name="onboarding_fuel_title">¿Con qué combustible sueles repostar?</string>
+    <string name="onboarding_fuel_subtitle">La lista se ordenará y mostrará el precio con este combustible. Puedes cambiarlo cuando quieras en Ajustes.</string>
+    <string name="onboarding_finish">Empezar</string>
 </resources>

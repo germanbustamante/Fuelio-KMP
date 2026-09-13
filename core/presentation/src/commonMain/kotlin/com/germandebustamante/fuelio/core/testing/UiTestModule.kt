@@ -36,12 +36,12 @@ import org.koin.dsl.module
  * plugged into `initKoin(overrides = ...)` from Android's `FuelioTestApplication` the same way iOS's
  * `initKoinIosForUiTests` already does, instead of duplicating a second copy of these fakes.
  */
-fun uiTestModule(simulateStationFailure: Boolean): Module = module {
+fun uiTestModule(simulateStationFailure: Boolean, hasCompletedOnboarding: Boolean = true): Module = module {
     single<GasStationRepository> {
         if (simulateStationFailure) FailingGasStationRepository() else InMemoryGasStationRepository()
     }
     single<ProvinceRepository> { InMemoryProvinceRepository() }
-    single<UserPreferencesRepository> { InMemoryUserPreferencesRepository() }
+    single<UserPreferencesRepository> { InMemoryUserPreferencesRepository(hasCompletedOnboarding) }
     single<FavoriteStationRepository> { InMemoryFavoriteStationRepository() }
     single<LocationPermissionController> { DeniedLocationPermissionController() }
 }
@@ -97,8 +97,11 @@ private class InMemoryFavoriteStationRepository : FavoriteStationRepository {
  * That file would otherwise survive between runs and across tests, so whichever test happened to
  * change the province or the theme would decide what the next one saw.
  */
-private class InMemoryUserPreferencesRepository : UserPreferencesRepository {
-    private val preferences = MutableStateFlow(UserPreferencesBO())
+private class InMemoryUserPreferencesRepository(hasCompletedOnboarding: Boolean) : UserPreferencesRepository {
+    // Defaults to already-completed: every existing UI test drives the list/detail/favorites/
+    // settings screens directly and would otherwise be blocked behind the onboarding flow.
+    // `OnboardingTest`/`OnboardingUITests` pass `hasCompletedOnboarding = false` instead.
+    private val preferences = MutableStateFlow(UserPreferencesBO(hasCompletedOnboarding = hasCompletedOnboarding))
 
     override fun observe(): Flow<UserPreferencesBO> = preferences
 
@@ -112,6 +115,10 @@ private class InMemoryUserPreferencesRepository : UserPreferencesRepository {
 
     override suspend fun setThemeMode(themeMode: ThemeMode) {
         preferences.update { it.copy(themeMode = themeMode) }
+    }
+
+    override suspend fun setHasCompletedOnboarding(completed: Boolean) {
+        preferences.update { it.copy(hasCompletedOnboarding = completed) }
     }
 }
 
