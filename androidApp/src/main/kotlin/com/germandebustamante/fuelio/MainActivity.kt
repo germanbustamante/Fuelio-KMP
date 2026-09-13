@@ -8,7 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import com.germandebustamante.fuelio.core.navigation.deeplink.ExternalUriHandler
 import com.germandebustamante.fuelio.feature.common.permission.location.AndroidLocationPermissionController
-import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
+import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionControllerHolder
 import com.germandebustamante.fuelio.feature.common.permission.location.PermissionResultBridge
 
 class MainActivity : ComponentActivity() {
@@ -16,10 +16,6 @@ class MainActivity : ComponentActivity() {
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { isGranted -> PermissionResultBridge.deliverResult(isGranted) }
-
-    private val locationPermissionController: LocationPermissionController by lazy {
-        AndroidLocationPermissionController(this, locationPermissionLauncher)
-    }
 
     /**
      * The launch `Intent` is "sticky": Android redelivers it to every new Activity instance,
@@ -39,8 +35,13 @@ class MainActivity : ComponentActivity() {
         deepLinkConsumed = savedInstanceState?.getBoolean(KEY_DEEP_LINK_CONSUMED) == true
         consumeDeepLinkIfNeeded(intent)
 
+        // Set before setContent, since the Koin single (PresentationPlatformModule.android.kt)
+        // reads it lazily on the first GasStationsViewModel resolution, which happens during
+        // composition — after this line runs, never before it.
+        LocationPermissionControllerHolder.controller = AndroidLocationPermissionController(this, locationPermissionLauncher)
+
         setContent {
-            App(locationPermissionController)
+            App()
         }
     }
 

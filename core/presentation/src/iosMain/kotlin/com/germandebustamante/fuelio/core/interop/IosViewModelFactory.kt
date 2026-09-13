@@ -4,7 +4,6 @@ import com.germandebustamante.fuelio.core.navigation.action.DefaultNavigator
 import com.germandebustamante.fuelio.core.navigation.action.Navigator
 import com.germandebustamante.fuelio.core.navigation.destination.Destination
 import com.germandebustamante.fuelio.feature.app.state.AppViewModel
-import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import com.germandebustamante.fuelio.feature.detail.state.GasStationDetailViewModel
 import com.germandebustamante.fuelio.feature.favorites.state.FavoritesViewModel
 import com.germandebustamante.fuelio.feature.list.state.GasStationsViewModel
@@ -30,12 +29,7 @@ import org.koin.core.parameter.parametersOf
  */
 object IosViewModelFactory : KoinComponent {
 
-    /**
-     * `LocationPermissionController` is a Koin `single` on iOS only (see `presentationPlatformModule`);
-     * Android injects its own Activity-bound implementation instead, which is why the definition takes
-     * it as a parameter rather than resolving it internally.
-     */
-    fun gasStations(): GasStationsViewModel = get<GasStationsViewModel> { parametersOf(get<LocationPermissionController>()) }
+    fun gasStations(): GasStationsViewModel = get()
 
     /**
      * Neither of these takes resolution parameters, so they would work through a plain Koin lookup

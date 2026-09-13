@@ -19,10 +19,10 @@ class LaunchTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
 
-    // Location permission is granted up front so `GasStationsViewModel.initLocationPermission()`
-    // (which runs automatically on launch) never blocks the test behind a real system dialog —
-    // there is no Koin-resolvable fake for `LocationPermissionController` on Android the way there
-    // is on iOS, since MainActivity constructs `AndroidLocationPermissionController` directly.
+    // Belt and braces: `uiTestModule`'s `LocationPermissionController` fake never touches the real
+    // Android permission APIs, so no system dialog can appear regardless of this rule — but granting
+    // it up front keeps this suite correct even if a test is ever pointed at the production Koin
+    // graph by mistake.
     @get:Rule
     val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(
         Manifest.permission.ACCESS_FINE_LOCATION,
