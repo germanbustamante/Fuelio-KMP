@@ -40,6 +40,7 @@ object A11yIdentifiers {
     const val DETAIL_DIRECTIONS_BUTTON = "detail_directions_button"
     const val DETAIL_SCHEDULE_SECTION = "detail_schedule_section"
     const val DETAIL_PRICES_SECTION = "detail_prices_section"
+    const val DETAIL_FAVORITE_BUTTON = "detail_favorite_button"
 
     // Settings
     const val SETTINGS_BUTTON = "settings_button"

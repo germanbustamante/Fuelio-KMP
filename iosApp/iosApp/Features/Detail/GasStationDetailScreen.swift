@@ -20,7 +20,8 @@ struct GasStationDetailScreen: View {
         GasStationDetailScreenBody(
             state: viewModel.state,
             onBackClick: { viewModel.onBackClick() },
-            onDirectionsTapped: { viewModel.onDirectionsTapped() }
+            onDirectionsTapped: { viewModel.onDirectionsTapped() },
+            onToggleFavorite: { viewModel.onToggleFavorite() }
         )
     }
 }
@@ -32,6 +33,7 @@ struct GasStationDetailScreenBody: View {
     let state: GasStationDetailUIState
     let onBackClick: () -> Void
     var onDirectionsTapped: () -> Void = {}
+    var onToggleFavorite: () -> Void = {}
 
     var body: some View {
         content
@@ -49,6 +51,18 @@ struct GasStationDetailScreenBody: View {
                         Label("Back", systemImage: "chevron.backward")
                     }
                     .accessibilityIdentifier(A11yID.detailBackButton)
+                }
+                if case .success = state.content {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            onToggleFavorite()
+                        } label: {
+                            Image(systemName: state.isFavorite ? "star.fill" : "star")
+                                .foregroundStyle(state.isFavorite ? FuelioColors.accent : Color.secondary)
+                        }
+                        .accessibilityIdentifier(A11yID.detailFavoriteButton)
+                        .accessibilityLabel(state.isFavorite ? "Remove from favorites" : "Add to favorites")
+                    }
                 }
             }
     }

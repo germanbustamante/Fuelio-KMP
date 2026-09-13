@@ -19,10 +19,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -72,6 +75,7 @@ fun GasStationDetail(
         state = state,
         onBackClick = viewModel::onBackClick,
         onDirectionsTapped = viewModel::onDirectionsTapped,
+        onToggleFavorite = viewModel::onToggleFavorite,
         modifier = modifier,
     )
 }
@@ -81,6 +85,7 @@ private fun GasStationDetail(
     state: GasStationDetailUIState,
     onBackClick: () -> Unit,
     onDirectionsTapped: () -> Unit,
+    onToggleFavorite: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     FuelioScaffold(
@@ -97,6 +102,21 @@ private fun GasStationDetail(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.navigate_back),
+                        )
+                    }
+                },
+                actions = {
+                    IconToggleButton(
+                        checked = state.isFavorite,
+                        onCheckedChange = { onToggleFavorite() },
+                        modifier = Modifier.testTag(A11yIdentifiers.DETAIL_FAVORITE_BUTTON),
+                    ) {
+                        Icon(
+                            imageVector = if (state.isFavorite) Icons.Filled.Star else Icons.Outlined.StarBorder,
+                            contentDescription = stringResource(
+                                if (state.isFavorite) R.string.favorite_remove else R.string.favorite_add,
+                            ),
+                            tint = if (state.isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 },

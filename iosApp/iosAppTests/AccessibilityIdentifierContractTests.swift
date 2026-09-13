@@ -29,6 +29,7 @@ struct AccessibilityIdentifierContractTests {
         #expect(A11yID.detailDirectionsButton == "detail_directions_button")
         #expect(A11yID.detailScheduleSection == "detail_schedule_section")
         #expect(A11yID.detailPricesSection == "detail_prices_section")
+        #expect(A11yID.detailFavoriteButton == "detail_favorite_button")
         #expect(A11yID.permissionAlertSettings == "permission_alert_settings")
         #expect(A11yID.favoritesButton == "favorites_button")
         #expect(A11yID.favoritesScreen == "favorites_screen")
