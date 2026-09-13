@@ -563,3 +563,53 @@ private fun GasStationsScreenPermissionSnackbarPreview() {
         )
     }
 }
+
+@Preview(name = "Error (Accessibility XXXL)", showBackground = true, fontScale = 2f)
+@Composable
+private fun GasStationsScreenErrorAccessibilityPreview() {
+    FuelioTheme {
+        GasStationsScreen(
+            state = fakeGasStationsUIStateError,
+            onFilterProvinceToggle = {},
+            onProvinceSelected = {},
+            onFuelFilterSelected = {},
+            onSearchQueryChanged = {},
+            onDismissError = {},
+            onDetectLocationTapped = {},
+            onSettingsTapped = {},
+            onFavoritesTapped = {},
+            onOpenAppSettings = {},
+            onDismissPermissionSnackbar = {},
+            onDismissStaleDataError = {},
+            onRefresh = {},
+            onRetry = {},
+            onItemClick = {},
+            onToggleFavorite = {},
+        )
+    }
+}
+
+@Preview(name = "Empty (Accessibility XXXL)", showBackground = true, fontScale = 2f)
+@Composable
+private fun GasStationsScreenEmptyAccessibilityPreview() {
+    FuelioTheme {
+        GasStationsScreen(
+            state = fakeGasStationsUIState.copy(gasStations = emptyList()),
+            onFilterProvinceToggle = {},
+            onProvinceSelected = {},
+            onFuelFilterSelected = {},
+            onSearchQueryChanged = {},
+            onDismissError = {},
+            onDetectLocationTapped = {},
+            onSettingsTapped = {},
+            onFavoritesTapped = {},
+            onOpenAppSettings = {},
+            onDismissPermissionSnackbar = {},
+            onDismissStaleDataError = {},
+            onRefresh = {},
+            onRetry = {},
+            onItemClick = {},
+            onToggleFavorite = {},
+        )
+    }
+}

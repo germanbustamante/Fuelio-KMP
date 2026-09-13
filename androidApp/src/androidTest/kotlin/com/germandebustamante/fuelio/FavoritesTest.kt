@@ -1,12 +1,15 @@
 package com.germandebustamante.fuelio
 
 import android.Manifest
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.test.rule.GrantPermissionRule
 import com.germandebustamante.fuelio.core.testing.A11yIdentifiers
+import org.junit.Assert.assertNotNull
 import org.junit.Rule
 import org.junit.Test
 
@@ -50,6 +53,24 @@ class FavoritesTest {
         composeRule.onNodeWithTag(A11yIdentifiers.stationRow(repsolStationId)).assertExists()
 
         composeRule.onNodeWithTag(A11yIdentifiers.favoriteButton(repsolStationId)).performClick()
+
+        composeRule.onNodeWithTag(A11yIdentifiers.FAVORITES_EMPTY).assertIsDisplayed()
+    }
+
+    @Test
+    fun customAccessibilityActionRemovesAFavorite() {
+        // TalkBack drives a row through its custom actions, not a nested testTag click — mirrors
+        // `iosAppUITests/FavoritesUITests.swift` exercising the `.accessibilityAction(named:)`.
+        composeRule.onNodeWithTag(A11yIdentifiers.favoriteButton(repsolStationId)).performClick()
+        composeRule.onNodeWithTag(A11yIdentifiers.FAVORITES_BUTTON).performClick()
+        composeRule.onNodeWithTag(A11yIdentifiers.stationRow(repsolStationId)).assertExists()
+
+        val node = composeRule.onNodeWithTag(A11yIdentifiers.stationRow(repsolStationId)).fetchSemanticsNode()
+        val customActions = node.config.getOrNull(SemanticsActions.CustomActions).orEmpty()
+        val removeAction = customActions.firstOrNull { it.label == "Remove from favorites" }
+        assertNotNull("expected a 'Remove from favorites' custom accessibility action", removeAction)
+
+        composeRule.runOnUiThread { removeAction?.action?.invoke() }
 
         composeRule.onNodeWithTag(A11yIdentifiers.FAVORITES_EMPTY).assertIsDisplayed()
     }
