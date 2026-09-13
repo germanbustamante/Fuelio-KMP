@@ -1,10 +1,11 @@
 package com.germandebustamante.fuelio
 
 import android.Manifest
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.test.rule.GrantPermissionRule
 import com.germandebustamante.fuelio.core.testing.A11yIdentifiers
 import com.germandebustamante.fuelio.core.testing.uiTestModule
@@ -46,9 +47,15 @@ class GasStationDetailTest {
 
         composeRule.onNodeWithTag(A11yIdentifiers.DETAIL_STATION_NAME).assertExists()
         composeRule.onNodeWithTag(A11yIdentifiers.DETAIL_PRICES_SECTION).assertExists()
-        // The schedule section is the last item in the detail's LazyColumn — off-screen (and so
-        // uncomposed) on shorter devices/emulators until scrolled into view.
-        composeRule.onNodeWithTag(A11yIdentifiers.DETAIL_SCHEDULE_SECTION).performScrollTo().assertExists()
+        // The schedule section is the last item in the detail's LazyColumn. On a short enough
+        // device/emulator it falls outside the initially-composed window entirely, so it is not a
+        // "hidden but present" node `performScrollTo()` (on the item's own tag) can find — a lazy
+        // item that hasn't been composed yet isn't in the semantics tree at all. Scrolling has to be
+        // driven from the container via `performScrollToNode`, which knows how to walk a lazy list by
+        // index until the target appears.
+        composeRule.onNodeWithTag(A11yIdentifiers.DETAIL_CONTENT_LIST)
+            .performScrollToNode(hasTestTag(A11yIdentifiers.DETAIL_SCHEDULE_SECTION))
+        composeRule.onNodeWithTag(A11yIdentifiers.DETAIL_SCHEDULE_SECTION).assertExists()
         composeRule.onNodeWithTag(A11yIdentifiers.DETAIL_DIRECTIONS_BUTTON).assertExists()
     }
 
