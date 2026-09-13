@@ -19,7 +19,8 @@ struct GasStationDetailScreen: View {
     var body: some View {
         GasStationDetailScreenBody(
             state: viewModel.state,
-            onBackClick: { viewModel.onBackClick() }
+            onBackClick: { viewModel.onBackClick() },
+            onDirectionsTapped: { viewModel.onDirectionsTapped() }
         )
     }
 }
@@ -30,6 +31,7 @@ struct GasStationDetailScreenBody: View {
 
     let state: GasStationDetailUIState
     let onBackClick: () -> Void
+    var onDirectionsTapped: () -> Void = {}
 
     var body: some View {
         content
@@ -86,7 +88,7 @@ struct GasStationDetailScreenBody: View {
         ScrollView {
             VStack(alignment: .leading, spacing: FuelioSpacing.lg) {
                 header(station)
-                StationMapSection(station: station)
+                StationMapSection(station: station, onDirectionsTapped: onDirectionsTapped)
                 StationPricesSection(station: station)
                 StationScheduleSection(days: scheduleDays)
             }

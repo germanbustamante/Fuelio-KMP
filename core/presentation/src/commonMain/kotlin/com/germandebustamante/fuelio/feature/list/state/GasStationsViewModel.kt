@@ -22,12 +22,17 @@ import com.germandebustamante.fuelio.feature.common.analytics.ApiCallFailed
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionState
 import com.germandebustamante.fuelio.feature.common.viewmodel.launchStartupTasks
+import com.germandebustamante.fuelio.feature.list.analytics.FavoriteToggled
 import com.germandebustamante.fuelio.feature.list.analytics.FavoritesOpened
+import com.germandebustamante.fuelio.feature.list.analytics.FuelFilterChanged
 import com.germandebustamante.fuelio.feature.list.analytics.GasStationSelected
 import com.germandebustamante.fuelio.feature.list.analytics.GasStationsScreenViewed
 import com.germandebustamante.fuelio.feature.list.analytics.LocationPermissionEvent
 import com.germandebustamante.fuelio.feature.list.analytics.LocationPermissionOutcome
 import com.germandebustamante.fuelio.feature.list.analytics.ProvinceChanged
+import com.germandebustamante.fuelio.feature.list.analytics.RefreshRequested
+import com.germandebustamante.fuelio.feature.list.analytics.RetryTapped
+import com.germandebustamante.fuelio.feature.list.analytics.SearchPerformed
 import com.germandebustamante.fuelio.feature.list.analytics.SettingsOpened
 import com.rickclephas.kmp.nativecoroutines.NativeCoroutinesState
 import com.rickclephas.kmp.observableviewmodel.MutableStateFlow
@@ -170,6 +175,7 @@ class GasStationsViewModel(
                         .markCheapest()
                 }
                 updateState { it.withSearchQuery(query, stations) }
+                if (query.isNotBlank()) analyticsManager.track(SearchPerformed(query.length))
             }
     }
 
@@ -215,6 +221,7 @@ class GasStationsViewModel(
     fun onOpenAppSettings() {
         locationPermissionController.openAppSettings()
         updateState { it.withPermissionSnackbarDismissed() }
+        viewModelScope.launch { analyticsManager.track(LocationPermissionEvent(LocationPermissionOutcome.SETTINGS_OPENED)) }
     }
 
     private suspend fun updateLocationAndProvince() {
@@ -268,6 +275,7 @@ class GasStationsViewModel(
         viewModelScope.launch {
             applyFuelFilter(filter)
             setDefaultFuelTypeUseCase(filter.toFuelType())
+            analyticsManager.track(FuelFilterChanged(filter.toFuelType().name))
         }
     }
 
@@ -394,12 +402,18 @@ class GasStationsViewModel(
     }
 
     fun onRefresh() {
-        viewModelScope.launch { _refreshTrigger.emit(Unit) }
+        viewModelScope.launch {
+            analyticsManager.track(RefreshRequested)
+            _refreshTrigger.emit(Unit)
+        }
     }
 
     fun onRetry() {
         updateState { it.withErrorCleared() }
-        viewModelScope.launch { _refreshTrigger.emit(Unit) }
+        viewModelScope.launch {
+            analyticsManager.track(RetryTapped)
+            _refreshTrigger.emit(Unit)
+        }
     }
 
     fun onItemClick(stationId: String) {
@@ -424,7 +438,11 @@ class GasStationsViewModel(
     }
 
     fun onToggleFavorite(stationId: String) {
-        viewModelScope.launch { toggleFavoriteStationUseCase(stationId) }
+        val willBeFavorite = stationId !in _state.value.favorites
+        viewModelScope.launch {
+            toggleFavoriteStationUseCase(stationId)
+            analyticsManager.track(FavoriteToggled(stationId, willBeFavorite))
+        }
     }
 
     private fun notifyError(operation: String, error: Throwable) {

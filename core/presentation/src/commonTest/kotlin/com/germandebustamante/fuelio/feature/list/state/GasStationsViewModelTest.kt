@@ -23,11 +23,16 @@ import com.germandebustamante.fuelio.core.navigation.destination.Destination
 import com.germandebustamante.fuelio.feature.common.analytics.ApiCallFailed
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionController
 import com.germandebustamante.fuelio.feature.common.permission.location.LocationPermissionState
+import com.germandebustamante.fuelio.feature.list.analytics.FavoriteToggled
+import com.germandebustamante.fuelio.feature.list.analytics.FuelFilterChanged
 import com.germandebustamante.fuelio.feature.list.analytics.GasStationSelected
 import com.germandebustamante.fuelio.feature.list.analytics.GasStationsScreenViewed
 import com.germandebustamante.fuelio.feature.list.analytics.LocationPermissionEvent
 import com.germandebustamante.fuelio.feature.list.analytics.LocationPermissionOutcome
 import com.germandebustamante.fuelio.feature.list.analytics.ProvinceChanged
+import com.germandebustamante.fuelio.feature.list.analytics.RefreshRequested
+import com.germandebustamante.fuelio.feature.list.analytics.RetryTapped
+import com.germandebustamante.fuelio.feature.list.analytics.SearchPerformed
 import dev.mokkery.answering.returns
 import dev.mokkery.every
 import dev.mokkery.everySuspend
@@ -495,6 +500,23 @@ class GasStationsViewModelTest {
         }
     }
 
+    @Test
+    fun `onOpenAppSettings - WHEN called THEN a settings_opened outcome is tracked`() = runTest {
+        // GIVEN
+        stubPermissionRequestResult(LocationPermissionState.DeniedAlways)
+        createSut()
+        advanceUntilIdle()
+        sut.onDetectLocationTapped()
+        advanceUntilIdle()
+
+        // WHEN
+        sut.onOpenAppSettings()
+        advanceUntilIdle()
+
+        // THEN
+        verifySuspend { analyticsManager.track(LocationPermissionEvent(LocationPermissionOutcome.SETTINGS_OPENED)) }
+    }
+
     //endregion
 
     //region onFuelFilterSelected
@@ -568,6 +590,20 @@ class GasStationsViewModelTest {
             assertTrue(stations.all { it.fuelFilter == FuelFilter.DieselPremium })
             cancelAndIgnoreRemainingEvents()
         }
+    }
+
+    @Test
+    fun `onFuelFilterSelected - GIVEN Gasoline95 selected WHEN Diesel selected THEN it is tracked`() = runTest {
+        // GIVEN
+        createSut()
+        advanceUntilIdle()
+
+        // WHEN
+        sut.onFuelFilterSelected(FuelFilter.Diesel)
+        advanceUntilIdle()
+
+        // THEN
+        verifySuspend { analyticsManager.track(FuelFilterChanged(FuelType.DIESEL.name)) }
     }
 
     //endregion
@@ -719,6 +755,35 @@ class GasStationsViewModelTest {
         }
     }
 
+    @Test
+    fun `onSearchQueryChanged - GIVEN a non-blank query WHEN applied THEN the query length is tracked`() = runTest {
+        // GIVEN
+        createSut()
+        advanceUntilIdle()
+
+        // WHEN
+        sut.onSearchQueryChanged(MATCHING_NAME_QUERY)
+        advanceUntilIdle()
+
+        // THEN
+        verifySuspend { analyticsManager.track(SearchPerformed(MATCHING_NAME_QUERY.length)) }
+    }
+
+    @Test
+    fun `onSearchQueryChanged - GIVEN a blank query WHEN applied THEN nothing is tracked`() = runTest {
+        // GIVEN
+        val trackedTraces = captureAllTrackedTraces()
+        createSut()
+        advanceUntilIdle()
+
+        // WHEN
+        sut.onSearchQueryChanged("")
+        advanceUntilIdle()
+
+        // THEN
+        assertTrue(trackedTraces.values.none { it is SearchPerformed })
+    }
+
     //endregion
 
     //region isContentReady
@@ -837,6 +902,21 @@ class GasStationsViewModelTest {
         }
     }
 
+    @Test
+    fun `onRetry - GIVEN error in state WHEN called THEN it is tracked`() = runTest {
+        // GIVEN
+        stubGasStationsFailure(DomainErrorMother.serverError())
+        createSut()
+        advanceUntilIdle()
+
+        // WHEN
+        sut.onRetry()
+        advanceUntilIdle()
+
+        // THEN
+        verifySuspend { analyticsManager.track(RetryTapped) }
+    }
+
     //endregion
 
     //region onRefresh
@@ -921,6 +1001,20 @@ class GasStationsViewModelTest {
         }
     }
 
+    @Test
+    fun `onRefresh - WHEN called THEN it is tracked`() = runTest {
+        // GIVEN
+        createSut()
+        advanceUntilIdle()
+
+        // WHEN
+        sut.onRefresh()
+        advanceUntilIdle()
+
+        // THEN
+        verifySuspend { analyticsManager.track(RefreshRequested) }
+    }
+
     //endregion
 
     //region onToggleFavorite
@@ -937,6 +1031,35 @@ class GasStationsViewModelTest {
 
         // THEN — the ViewModel no longer owns the toggle; the favorites table does
         verifySuspend { toggleFavoriteStationUseCase(STATION_ID_1) }
+    }
+
+    @Test
+    fun `onToggleFavorite - GIVEN a station not yet favorite WHEN toggled THEN it is tracked as becoming a favorite`() = runTest {
+        // GIVEN
+        createSut()
+        advanceUntilIdle()
+
+        // WHEN
+        sut.onToggleFavorite(STATION_ID_1)
+        advanceUntilIdle()
+
+        // THEN
+        verifySuspend { analyticsManager.track(FavoriteToggled(STATION_ID_1, isFavorite = true)) }
+    }
+
+    @Test
+    fun `onToggleFavorite - GIVEN a station already favorite WHEN toggled THEN it is tracked as removed`() = runTest {
+        // GIVEN
+        every { observeFavoriteStationIdsUseCase() } returns flowOf(setOf(STATION_ID_1))
+        createSut()
+        advanceUntilIdle()
+
+        // WHEN
+        sut.onToggleFavorite(STATION_ID_1)
+        advanceUntilIdle()
+
+        // THEN
+        verifySuspend { analyticsManager.track(FavoriteToggled(STATION_ID_1, isFavorite = false)) }
     }
 
     @Test

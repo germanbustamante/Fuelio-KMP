@@ -25,12 +25,15 @@ import com.germandebustamante.fuelio.designsystem.button.config.text.TextButtonS
 private const val GOOGLE_MAPS_PACKAGE = "com.google.android.apps.maps"
 
 @Composable
-fun GasStationDirectionsButton(gasStation: GasStationBO, modifier: Modifier = Modifier) {
+fun GasStationDirectionsButton(gasStation: GasStationBO, modifier: Modifier = Modifier, onDirectionsTapped: () -> Unit = {}) {
     val context = LocalContext.current
 
     FuelioTextButton(
         text = stringResource(R.string.detail_directions_button),
-        onClick = { launchNavigation(context, gasStation.latitude, gasStation.longitude) },
+        onClick = {
+            onDirectionsTapped()
+            launchNavigation(context, gasStation.latitude, gasStation.longitude)
+        },
         drawable = TextButtonDrawable(R.drawable.directions_ic, TextButtonDrawableAlignment.START),
         config = TextButtonConfig(size = TextButtonSize.LARGE),
         modifier = modifier.fillMaxWidth(),

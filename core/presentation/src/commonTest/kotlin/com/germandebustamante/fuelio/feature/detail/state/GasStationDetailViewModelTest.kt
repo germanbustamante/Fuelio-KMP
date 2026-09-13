@@ -5,6 +5,7 @@ import com.germandebustamante.fuelio.core.domain.gasstation.testing.GasStationBO
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationUseCase
 import com.germandebustamante.fuelio.core.navigation.action.Navigator
 import com.germandebustamante.fuelio.core.navigation.destination.Destination
+import com.germandebustamante.fuelio.feature.detail.analytics.DirectionsRequested
 import com.germandebustamante.fuelio.feature.detail.analytics.GasStationDetailScreenViewed
 import dev.mokkery.answering.returns
 import dev.mokkery.every
@@ -72,6 +73,22 @@ class GasStationDetailViewModelTest {
             GAS_STATION_ID,
             screenViewedTraceSlot.get().params?.get(GasStationDetailScreenViewed.PARAM_GAS_STATION_ID),
         )
+    }
+
+    @Test
+    fun `onDirectionsTapped - WHEN called THEN a directions_requested trace is tracked with the station id`() = runTest {
+        // GIVEN
+        val directionsTraceSlot = Capture.slot<DirectionsRequested>()
+        everySuspend { analyticsManager.track(capture(directionsTraceSlot)) } returns Unit
+        sut = GasStationDetailViewModel(route, getGasStation, navigator, analyticsManager)
+        advanceUntilIdle()
+
+        // WHEN
+        sut.onDirectionsTapped()
+        advanceUntilIdle()
+
+        // THEN
+        assertEquals(GAS_STATION_ID, directionsTraceSlot.get().gasStationId)
     }
 
     companion object {
