@@ -2,12 +2,14 @@ package com.germandebustamante.fuelio.core.startup.di
 
 import com.germandebustamante.fuelio.core.startup.AnalyticsIdentityStartupTask
 import com.germandebustamante.fuelio.core.startup.CrashReporterStartupTask
+import com.germandebustamante.fuelio.core.startup.FeatureFlagsStartupTask
 import com.germandebustamante.fuelio.core.startup.StartupTask
 import org.koin.dsl.module
 
 val startupModule = module {
     single { CrashReporterStartupTask(get(), get()) }
     single { AnalyticsIdentityStartupTask(get(), get(), get(), get()) }
+    single { FeatureFlagsStartupTask(get()) }
 
     // Koin has no Hilt-style @IntoSet multibinding, so this set is assembled by hand. Add new
     // StartupTask implementations here — but only for work with no natural screen owner; anything a
@@ -16,6 +18,7 @@ val startupModule = module {
         setOf(
             get<CrashReporterStartupTask>(),
             get<AnalyticsIdentityStartupTask>(),
+            get<FeatureFlagsStartupTask>(),
         )
     }
 }

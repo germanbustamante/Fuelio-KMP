@@ -5,6 +5,8 @@ import com.germandebustamante.fuelio.core.analytics.AnalyticsSecrets
 import com.germandebustamante.fuelio.core.analytics.AnalyticsTracking
 import com.germandebustamante.fuelio.core.analytics.crash.CrashReporter
 import com.germandebustamante.fuelio.core.analytics.crash.getCrashReporter
+import com.germandebustamante.fuelio.core.analytics.featureflag.FeatureFlagSource
+import com.germandebustamante.fuelio.core.analytics.featureflag.getFeatureFlagSource
 import com.germandebustamante.fuelio.core.analytics.impl.getFirebaseTracker
 import com.germandebustamante.fuelio.core.analytics.impl.getPostHogTracker
 import org.koin.dsl.module
@@ -20,4 +22,7 @@ val analyticsModule = module {
         )
     }
     single<CrashReporter> { getCrashReporter() }
+    single<FeatureFlagSource> {
+        getFeatureFlagSource(apiKey = AnalyticsSecrets.POSTHOG_API_KEY.ifBlank { null }, contextProvider = get())
+    }
 }
