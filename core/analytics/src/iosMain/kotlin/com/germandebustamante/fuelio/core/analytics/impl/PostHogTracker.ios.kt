@@ -29,4 +29,8 @@ class IosPostHogTracker(private val nativeTracker: NativePostHogTracker) : PostH
     override fun onTrackScreen(trace: Trace.Screen) {
         nativeTracker.logScreen(trace.eventName, trace.params.orEmpty())
     }
+
+    override fun onTrackError(trace: Trace.Error) {
+        nativeTracker.logEvent(trace.eventName, trace.params.orEmpty())
+    }
 }

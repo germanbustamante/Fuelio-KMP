@@ -39,6 +39,24 @@ class IosPostHogTrackerTest {
         assertEquals(mapOf("gas_station_id" to "station-1"), nativeTracker.loggedScreenParams)
     }
 
+    /**
+     * Regression guard: `IosPostHogTracker` did not override `onTrackError` at all, so a
+     * `Trace.Error` silently vanished on PostHog even though every `Trace` targets both providers.
+     */
+    @Test
+    fun `onTrackError - GIVEN an Error trace THEN it is forwarded via logEvent with the error name`() = runTest {
+        val trace = Trace.Error(
+            eventName = "gas_stations_list_fetch_stations_failed",
+            targets = listOf(AnalyticsProviderType.POSTHOG),
+            params = mapOf("error_type" to "ServerError"),
+        )
+
+        sut.track(trace)
+
+        assertEquals("gas_stations_list_fetch_stations_failed", nativeTracker.loggedEventName)
+        assertEquals(mapOf("error_type" to "ServerError"), nativeTracker.loggedEventParams)
+    }
+
     private class FakeNativePostHogTracker : NativePostHogTracker {
         var loggedEventName: String? = null
         var loggedEventParams: Map<String, Any>? = null
