@@ -15,6 +15,23 @@ struct RootView: View {
     @StateViewModel private var appViewModel = IosViewModelFactory.shared.app()
 
     var body: some View {
+        Group {
+            switch appViewModel.state.onboardingCompletionState {
+            case .none:
+                // First preferences read hasn't resolved yet — render nothing rather than flash the
+                // station list before onboarding covers it. Same reasoning as Android's `App.kt`.
+                Color.clear
+            case .some(false):
+                OnboardingScreen()
+            case .some(true):
+                navigationStack
+            }
+        }
+        .fuelioTheme()
+        .preferredColorScheme(appViewModel.state.themeMode.colorScheme)
+    }
+
+    private var navigationStack: some View {
         @Bindable var router = router
         return NavigationStack(path: $router.path) {
             GasStationsScreen()
@@ -29,8 +46,6 @@ struct RootView: View {
                     }
                 }
         }
-        .fuelioTheme()
-        .preferredColorScheme(appViewModel.state.themeMode.colorScheme)
         .task { router.start() }
     }
 }

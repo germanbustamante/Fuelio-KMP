@@ -14,7 +14,9 @@ fun initKoinIos() {
  *
  * @param simulateStationFailure makes the gas station repository fail while provinces still load,
  * which is what the blocking error state needs in order to appear.
+ * @param hasCompletedOnboarding defaults to `true` so every existing test reaches its screen
+ * directly; `-UITestShowOnboarding` flips it for the onboarding suite specifically.
  */
-fun initKoinIosForUiTests(simulateStationFailure: Boolean) {
-    initKoin(overrides = listOf(uiTestModule(simulateStationFailure)))
+fun initKoinIosForUiTests(simulateStationFailure: Boolean, hasCompletedOnboarding: Boolean = true) {
+    initKoin(overrides = listOf(uiTestModule(simulateStationFailure, hasCompletedOnboarding)))
 }

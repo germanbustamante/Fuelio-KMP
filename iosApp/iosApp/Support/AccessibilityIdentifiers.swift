@@ -53,4 +53,12 @@ enum A11yID {
 
     // Permissions
     static let permissionAlertSettings = "permission_alert_settings"
+
+    // Onboarding
+    static let onboardingScreen = "onboarding_screen"
+    static let onboardingNextButton = "onboarding_next_button"
+    static let onboardingSkipButton = "onboarding_skip_button"
+    static let onboardingAllowLocationButton = "onboarding_allow_location_button"
+    static let onboardingFuelPicker = "onboarding_fuel_picker"
+    static let onboardingFinishButton = "onboarding_finish_button"
 }

@@ -27,11 +27,15 @@ class FuelioTestApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        val simulateFailure = InstrumentationRegistry.getArguments()
-            .getString("simulateFailure")
-            .toBoolean()
+        val arguments = InstrumentationRegistry.getArguments()
+        val simulateFailure = arguments.getString("simulateFailure").toBoolean()
+        val showOnboarding = arguments.getString("showOnboarding").toBoolean()
 
-        initKoin(overrides = listOf(uiTestModule(simulateStationFailure = simulateFailure))) {
+        initKoin(
+            overrides = listOf(
+                uiTestModule(simulateStationFailure = simulateFailure, hasCompletedOnboarding = !showOnboarding),
+            ),
+        ) {
             androidContext(this@FuelioTestApplication)
             androidLogger()
         }
