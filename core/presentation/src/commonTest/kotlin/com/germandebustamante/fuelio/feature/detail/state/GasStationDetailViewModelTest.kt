@@ -1,10 +1,14 @@
 package com.germandebustamante.fuelio.feature.detail.state
 
 import com.germandebustamante.fuelio.core.analytics.AnalyticsTracking
+import com.germandebustamante.fuelio.core.domain.gasstation.model.PriceHistoryBO
 import com.germandebustamante.fuelio.core.domain.gasstation.testing.GasStationBOMother
+import com.germandebustamante.fuelio.core.domain.gasstation.testing.PriceSnapshotBOMother
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.GetGasStationUseCase
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.ObserveFavoriteStationIdsUseCase
+import com.germandebustamante.fuelio.core.domain.gasstation.usecase.ObservePriceHistoryUseCase
 import com.germandebustamante.fuelio.core.domain.gasstation.usecase.ToggleFavoriteStationUseCase
+import com.germandebustamante.fuelio.core.featureflag.FeatureFlags
 import com.germandebustamante.fuelio.core.navigation.action.Navigator
 import com.germandebustamante.fuelio.core.navigation.destination.Destination
 import com.germandebustamante.fuelio.feature.detail.analytics.DirectionsRequested
@@ -28,6 +32,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.datetime.LocalDate
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -58,6 +63,14 @@ class GasStationDetailViewModelTest {
 
     private val toggleFavoriteStationUseCase: ToggleFavoriteStationUseCase = mock {
         everySuspend { invoke(any()) } returns Unit
+    }
+
+    private val observePriceHistoryUseCase: ObservePriceHistoryUseCase = mock {
+        every { invoke(any()) } returns flowOf(PriceHistoryBO(GAS_STATION_ID, emptyList()))
+    }
+
+    private val featureFlags: FeatureFlags = mock {
+        every { observe(any(), any()) } returns flowOf(false)
     }
 
     private lateinit var sut: GasStationDetailViewModel
@@ -157,6 +170,46 @@ class GasStationDetailViewModelTest {
         assertTrue(sut.state.value.isFavorite)
     }
 
+    @Test
+    fun `init - GIVEN the price_trend_chart flag is off THEN priceTrend stays null and not loading`() = runTest {
+        createSut()
+        advanceUntilIdle()
+
+        assertEquals(null, sut.state.value.priceTrend)
+        assertFalse(sut.state.value.isTrendLoading)
+    }
+
+    @Test
+    fun `init - GIVEN the flag is on AND at least two snapshots exist THEN priceTrend is populated`() = runTest {
+        every { featureFlags.observe(any(), any()) } returns flowOf(true)
+        val history = PriceHistoryBO(
+            GAS_STATION_ID,
+            listOf(
+                PriceSnapshotBOMother.priceSnapshotBO(recordedOn = LocalDate(2026, 1, 1), gasolinePrice95 = 1.60),
+                PriceSnapshotBOMother.priceSnapshotBO(recordedOn = LocalDate(2026, 1, 2), gasolinePrice95 = 1.65),
+            ),
+        )
+        every { observePriceHistoryUseCase(GAS_STATION_ID) } returns flowOf(history)
+
+        createSut()
+        advanceUntilIdle()
+
+        assertEquals(2, sut.state.value.priceTrend?.points?.size)
+        assertFalse(sut.state.value.isTrendLoading)
+    }
+
+    @Test
+    fun `init - GIVEN the flag is on AND only one snapshot exists THEN priceTrend stays null`() = runTest {
+        every { featureFlags.observe(any(), any()) } returns flowOf(true)
+        val history = PriceHistoryBO(GAS_STATION_ID, listOf(PriceSnapshotBOMother.priceSnapshotBO()))
+        every { observePriceHistoryUseCase(GAS_STATION_ID) } returns flowOf(history)
+
+        createSut()
+        advanceUntilIdle()
+
+        assertEquals(null, sut.state.value.priceTrend)
+    }
+
     private fun createSut() {
         sut = GasStationDetailViewModel(
             route = route,
@@ -165,6 +218,8 @@ class GasStationDetailViewModelTest {
             analyticsManager = analyticsManager,
             observeFavoriteStationIdsUseCase = observeFavoriteStationIdsUseCase,
             toggleFavoriteStationUseCase = toggleFavoriteStationUseCase,
+            observePriceHistoryUseCase = observePriceHistoryUseCase,
+            featureFlags = featureFlags,
         )
     }
 

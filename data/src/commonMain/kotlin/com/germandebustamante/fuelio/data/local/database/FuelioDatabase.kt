@@ -9,22 +9,27 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.germandebustamante.fuelio.data.di.ContextProvider
 import com.germandebustamante.fuelio.data.gasstation.local.datasource.FavoriteStationDAO
 import com.germandebustamante.fuelio.data.gasstation.local.datasource.GasStationDAO
+import com.germandebustamante.fuelio.data.gasstation.local.datasource.PriceSnapshotDAO
 import com.germandebustamante.fuelio.data.gasstation.local.model.FavoriteStationEntity
 import com.germandebustamante.fuelio.data.gasstation.local.model.GasStationEntity
+import com.germandebustamante.fuelio.data.gasstation.local.model.PriceSnapshotEntity
 import com.germandebustamante.fuelio.data.local.database.migration.MIGRATION_1_2
+import com.germandebustamante.fuelio.data.local.database.migration.MIGRATION_2_3
 import com.germandebustamante.fuelio.data.local.typeconverter.DayOfWeekConverter
 import com.germandebustamante.fuelio.data.local.typeconverter.LocalTimeConverter
 import com.germandebustamante.fuelio.data.local.typeconverter.ScheduleSegmentListConverter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 
-@Database(entities = [GasStationEntity::class, FavoriteStationEntity::class], version = 2)
+@Database(entities = [GasStationEntity::class, FavoriteStationEntity::class, PriceSnapshotEntity::class], version = 3)
 @TypeConverters(DayOfWeekConverter::class, LocalTimeConverter::class, ScheduleSegmentListConverter::class)
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class FuelioDatabase : RoomDatabase() {
     abstract fun gasStationDao(): GasStationDAO
 
     abstract fun favoriteStationDao(): FavoriteStationDAO
+
+    abstract fun priceSnapshotDao(): PriceSnapshotDAO
 }
 
 @Suppress("KotlinNoActualForExpect")
@@ -33,7 +38,7 @@ expect object AppDatabaseConstructor : RoomDatabaseConstructor<FuelioDatabase> {
 }
 
 fun getRoomDatabase(builder: RoomDatabase.Builder<FuelioDatabase>): FuelioDatabase = builder
-    .addMigrations(MIGRATION_1_2)
+    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
     .setDriver(BundledSQLiteDriver())
     .setQueryCoroutineContext(Dispatchers.IO)
     .build()
