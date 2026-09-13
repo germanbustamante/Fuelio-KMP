@@ -21,6 +21,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.AndroidUiModes
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -109,6 +112,8 @@ private fun FavoritesList(
     onToggleFavorite: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val removeFromFavoritesLabel = stringResource(R.string.favorite_remove)
+
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(FuelioSpacing.md),
@@ -135,6 +140,17 @@ private fun FavoritesList(
                 isFavorite = true,
                 onItemClick = { onItemClick(station.station.id) },
                 onToggleFavorite = { onToggleFavorite(station.station.id) },
+                // Every row here is already a favourite, so TalkBack users get a direct remove
+                // action instead of having to locate the small star toggle — mirrors iOS's
+                // `.accessibilityAction(named:)` on `FavoritesScreen`'s row.
+                modifier = Modifier.semantics {
+                    customActions = listOf(
+                        CustomAccessibilityAction(removeFromFavoritesLabel) {
+                            onToggleFavorite(station.station.id)
+                            true
+                        },
+                    )
+                },
             )
         }
     }
@@ -144,6 +160,19 @@ private fun FavoritesList(
 @Preview(name = "DarkMode", showBackground = true, uiMode = AndroidUiModes.UI_MODE_NIGHT_YES)
 @Composable
 private fun FavoritesScreenEmptyPreview() {
+    FuelioTheme {
+        FavoritesScreen(
+            state = FavoritesUIState(isLoading = false),
+            onItemClick = {},
+            onToggleFavorite = {},
+            onBackTapped = {},
+        )
+    }
+}
+
+@Preview(name = "Accessibility XXXL", showBackground = true, fontScale = 2f)
+@Composable
+private fun FavoritesScreenEmptyAccessibilityPreview() {
     FuelioTheme {
         FavoritesScreen(
             state = FavoritesUIState(isLoading = false),

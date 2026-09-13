@@ -252,3 +252,17 @@ private fun GasStationItemPreview() {
         }
     }
 }
+
+@Composable
+@Preview(name = "Accessibility XXXL", showBackground = true, fontScale = 2f)
+private fun GasStationItemAccessibilityPreview() {
+    FuelioTheme {
+        GasStationItem(
+            gasStation = GasStationItemVO(fakeGasStations.first(), isCheapest = true, isOpen = true),
+            isFavorite = false,
+            onItemClick = {},
+            onToggleFavorite = {},
+            modifier = Modifier.padding(FuelioSpacing.md),
+        )
+    }
+}

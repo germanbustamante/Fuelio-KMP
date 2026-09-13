@@ -134,3 +134,16 @@ private fun SettingsScreenPreview() {
         )
     }
 }
+
+@Preview(name = "Accessibility XXXL", showBackground = true, fontScale = 2f)
+@Composable
+private fun SettingsScreenAccessibilityPreview() {
+    FuelioTheme {
+        SettingsScreen(
+            state = SettingsUIState(themeMode = ThemeMode.DARK, defaultFuelType = FuelType.DIESEL, isLoading = false),
+            onThemeModeSelected = {},
+            onDefaultFuelSelected = {},
+            onBackTapped = {},
+        )
+    }
+}
