@@ -20,13 +20,41 @@ release is `v1.0.0`, not a `1.1.0` bump off a prior public release.
 
 ### Branch model
 
-`feature/*` branches (this project's convention, `FE-X.Y.Z` per branch) merge into `development` —
-gated by `ci.yml`, which now also gates the `development → master` pull request itself (extended to
-target `master` alongside `development`). `development` merges into `master` only for a release, via
-that PR, merged as a real merge commit rather than squashed — `master` never takes a direct commit.
-Pushing to `master` (i.e. merging that PR) triggers `release.yml` directly; there is no separate git
-tag to push by hand. The README's CI badge points at `master`, not `development`, since that is the
-branch whose green state actually matters to someone evaluating the project.
+`feature/*` branches (this project's convention, `FE-X.Y.Z` per branch) merge into `development` as
+before — that part is unchanged and stays linear (squash or rebase, whichever the PR already uses).
+
+A release goes through a dedicated `release/X.Y.Z` branch cut from `development`'s tip, not a direct
+`development → master` PR:
+
+1. Cut `release/X.Y.Z` from `development` once it's ready to ship. Bump `fuelio.versionName`/
+   `versionCode` and run `generateIosVersionXcconfig` on this branch (see "Version" below).
+2. Open `release/X.Y.Z → master`, gated by `ci.yml` (extended to target `master` alongside
+   `development`) plus smoke testing. If something fails, the fix is a commit **pushed directly onto
+   `release/X.Y.Z`**, then CI/smoke tests re-run — never a fix committed straight to `master` or to
+   `development`.
+3. Merge that PR with **"Create a merge commit"** (never squash, never rebase) — `master` never takes
+   a direct commit, only this merge. Pushing to `master` (i.e. completing that merge) triggers
+   `release.yml` directly; there is no separate git tag to push by hand.
+4. Open a second PR, `release/X.Y.Z → development`, and merge it the same way (**"Create a merge
+   commit"**). This backports anything committed to `release/X.Y.Z` in step 2 (version bump, fixups)
+   into `development`, which has likely kept moving with new feature work while the release stabilized
+   — that's exactly why this can't be a fast-forward: `development` has diverged.
+
+That's two merge commits per release (one on `master`, one on `development`) and nothing else — the
+`release/X.Y.Z` branch itself is deleted once both land. Squash or rebase would each recreate every
+commit with a new hash, which is what actually broke `v1.0.0`'s release (see "Consequences"): the
+`development → master` PR was merged with "Rebase and merge", so `master`'s commits and
+`development`'s commits ended up byte-identical in content but distinct objects with no shared
+ancestry — every subsequent `development → master` diff would keep re-listing the same commits as new.
+A real merge commit avoids that: the underlying feature/fixup commits keep their original hash as
+ancestors on **both** branches (git can always compute the correct merge-base), even though the two
+branches' tips themselves never become identical (each has its own merge commit on top). This is also
+exactly what `release.yml`'s `validate` stage already assumes — its comment about re-running the full
+gate because "a push to master isn't guaranteed to be the exact commit that gate last ran against
+(e.g. a merge commit)" describes this case precisely, so no pipeline change was needed to tolerate it.
+
+The README's CI badge points at `master`, not `development`, since that is the branch whose green
+state actually matters to someone evaluating the project.
 
 ### Version: one property pair, two consumers
 
@@ -100,20 +128,39 @@ a usable app (absent, the map renders empty and PostHog stays off — a supporte
   gives — that the app packages cleanly for App Store submission once real credentials exist.
 - **Keeping `master` unused and tagging directly on `development`.** Rejected: `development` takes a
   merge on every PR, so a tag on it can move out from under a release the moment the next PR lands.
-  `master` only ever moving via an explicit `development → master` merge is what makes "this
+  `master` only ever moving via an explicit `release/X.Y.Z → master` merge is what makes "this
   release's commit is what shipped" a stable claim.
 - **Triggering `release.yml` on a manually pushed `v*` tag** (the original design) instead of on the
   push to `master` itself. Rejected on the repo owner's own call: the `development → master` PR is
   already the one deliberate "ship this" action, so a second manual step afterward (compute the right
   tag, push it) is one more thing to forget, not an extra safety check — nothing about a hand-pushed
   tag would have caught a mistake the PR review didn't already.
+- **Fast-forward merge** (what a previous GitLab-based project of the author's used, where the merge
+  method itself is a first-class "Fast-forward merge" option and the two branches' tips end up
+  byte-identical). Rejected for GitHub: there is no native fast-forward button in GitHub's PR merge UI
+  (only Merge commit / Squash / Rebase, all three of which create new commit objects), so replicating
+  it would mean either merging by hand from the CLI and pushing directly to `master`/`development`
+  (loses the "merged via approved PR" look in the GitHub UI) or standing up a bot/Action (e.g.
+  `sequoia-pgp/fast-forward`, triggered by a PR comment) purely to get hash-identical tips. Not worth
+  the extra infra for a portfolio project — a real merge commit already gives what actually matters
+  (traceable ancestry, a `release.yml` that already tolerates the tip not matching exactly), even
+  though `master` and `development` never converge to the same commit.
 
 ## Consequences
 
-- A version bump is now: edit `fuelio.versionName`/`versionCode` in `gradle.properties`, run
-  `./gradlew generateIosVersionXcconfig`, commit both, and get that PR merged to `development` like
-  any other change. There is no automated check that the `Version.xcconfig` regeneration step wasn't
-  skipped — forgetting it just means iOS's About row shows a stale version until the next bump.
+- A version bump is: edit `fuelio.versionName`/`versionCode` in `gradle.properties`, run
+  `./gradlew generateIosVersionXcconfig`, and commit both on the `release/X.Y.Z` branch (see "Branch
+  model" above) — it then reaches `development` via that release's backport PR, not as its own PR.
+  There is no automated check that the `Version.xcconfig` regeneration step wasn't skipped —
+  forgetting it just means iOS's About row shows a stale version until the next bump.
+- `v1.0.0` shipped before this ADR's branch-model section was corrected: its
+  `development → master` PR was merged with GitHub's "Rebase and merge" instead of "Create a merge
+  commit", so every commit on `master` is a distinct object from its `development` counterpart despite
+  identical content, and the two branches share no common ancestor at their tips. `master` still needs
+  a one-time realignment to `development` (a force-push, since neither is an ancestor of the other) to
+  clear this up — pending a separate `android-release` signing fix (a `KeytoolException: Tag number
+  over 30 is not supported` reading `release.keystore.jks`). Every release from `v1.1.0` on follows the
+  `release/X.Y.Z` + two-merge-commit flow described above instead.
 - `androidApp/build.gradle.kts` and `Config.xcconfig` no longer contain a version literal at all —
   the only place a version number is typed by hand is `gradle.properties`.
 - Pushing to `master` without bumping `fuelio.versionName` re-publishes the same tag and Release,
