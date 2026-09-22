@@ -10,7 +10,6 @@ plugins {
     alias(libs.plugins.googleServices)
     alias(libs.plugins.firebaseCrashlytics)
     alias(libs.plugins.roborazzi)
-    alias(libs.plugins.testRetry)
 }
 
 //region Constants
@@ -175,19 +174,6 @@ android {
     }
     composeOptions {
         kotlinCompilerExtensionVersion = libs.versions.kotlin.get()
-    }
-}
-
-// Retries a failing instrumentation test in-process before failing the build — the emulator on a
-// shared CI runner is this project's biggest source of false reds (window-focus/animation timing,
-// not app bugs), and CI going red for that trains people to ignore it (see the `instrumentation` job
-// comment in ci.yml). A test that fails on every retry still fails the build; this only absorbs
-// transient flakiness, it doesn't hide a real regression. JVM unit tests are deterministic and are
-// deliberately left out of this — only `connectedDebugAndroidTest` needs it.
-tasks.withType<com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask>().configureEach {
-    extensions.configure<org.gradle.testretry.TestRetryTaskExtension> {
-        maxRetries.set(2)
-        failOnPassedAfterRetry.set(false)
     }
 }
 

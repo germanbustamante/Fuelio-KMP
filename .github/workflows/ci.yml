@@ -173,13 +173,28 @@ jobs:
 
       # API 35, not 37: there is no stable emulator system image for 37 yet. minSdk is 26, so an
       # API 35 device still exercises everything these suites assert on.
+      # Retries the whole suite up to twice more on failure before actually failing the job — the
+      # emulator on a shared CI runner is this project's biggest source of false reds (window-focus/
+      # animation timing, not app bugs), and CI going red for that trains people to ignore it. A
+      # Gradle-level retry plugin (org.gradle.test-retry) was tried first, but its `retry` extension
+      # only attaches to org.gradle.api.tasks.testing.Test tasks, not AGP's
+      # DeviceProviderInstrumentTestTask — it broke task configuration outright
+      # ("Extension of type 'TestRetryTaskExtension' does not exist") rather than retrying anything.
+      # A shell-level retry re-runs the full Gradle invocation instead, which works regardless of task
+      # type. A suite that fails on every attempt still fails the job — this only absorbs transient
+      # flakiness, it doesn't hide a real regression.
       - uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
           target: google_apis
           arch: x86_64
           disable-animations: true
-          script: ./gradlew :androidApp:connectedDebugAndroidTest
+          script: |
+            for attempt in 1 2 3; do
+              ./gradlew :androidApp:connectedDebugAndroidTest && break
+              if [ "$attempt" = 3 ]; then exit 1; fi
+              echo "connectedDebugAndroidTest failed (attempt $attempt/3), retrying..."
+            done
 
       - uses: actions/upload-artifact@v4
         if: failure()

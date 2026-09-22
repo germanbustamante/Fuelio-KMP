@@ -33,9 +33,6 @@ jetbrainsKotlinJvm = "2.4.0"
 ktlintPlugin = "14.2.0"
 ktlint = "1.7.1"
 
-#Test infra
-testRetryPlugin = "1.6.2"
-
 #Screenshot testing
 roborazzi = "1.74.0"
 # 4.17 is the first Robolectric line that ships an SDK 37 sandbox, and compileSdk/targetSdk are 37
@@ -200,4 +197,3 @@ kmpNativeCoroutines = { id = "com.rickclephas.kmp.nativecoroutines", version.ref
 skie = { id = "co.touchlab.skie", version.ref = "skie" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlintPlugin" }
 roborazzi = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }
-testRetry = { id = "org.gradle.test-retry", version.ref = "testRetryPlugin" }
