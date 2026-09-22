@@ -43,6 +43,7 @@ class GasStationDetailTest {
 
     @Test
     fun detailShowsPricesScheduleAndDirections() {
+        composeRule.waitUntilTagExists(A11yIdentifiers.stationRow(repsolStationId))
         composeRule.onNodeWithTag(A11yIdentifiers.stationRow(repsolStationId)).performClick()
 
         composeRule.onNodeWithTag(A11yIdentifiers.DETAIL_STATION_NAME).assertExists()
@@ -61,6 +62,7 @@ class GasStationDetailTest {
 
     @Test
     fun backReturnsToTheList() {
+        composeRule.waitUntilTagExists(A11yIdentifiers.stationRow(repsolStationId))
         composeRule.onNodeWithTag(A11yIdentifiers.stationRow(repsolStationId)).performClick()
         composeRule.onNodeWithTag(A11yIdentifiers.DETAIL_STATION_NAME).assertExists()
 
@@ -79,6 +81,7 @@ class GasStationDetailTest {
     fun starringFromTheDetailScreenShowsUpInFavorites() {
         // Same source of truth as the list's star — the favourites table, not screen-local state —
         // so a toggle from the detail screen must be visible from the Favorites screen too.
+        composeRule.waitUntilTagExists(A11yIdentifiers.stationRow(repsolStationId))
         composeRule.onNodeWithTag(A11yIdentifiers.stationRow(repsolStationId)).performClick()
         composeRule.onNodeWithTag(A11yIdentifiers.DETAIL_FAVORITE_BUTTON).performClick()
         composeRule.onNodeWithTag(A11yIdentifiers.DETAIL_BACK_BUTTON).performClick()

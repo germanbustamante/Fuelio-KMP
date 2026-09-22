@@ -11,6 +11,15 @@ on:
     branches: [master]
   workflow_dispatch:
 
+# Without this, two pushes to master close together (e.g. a hotfix landing right after another) run
+# two Release pipelines at once, both racing to create/update the same `v$versionName` tag and
+# Release — wasteful (double signing, double Firebase upload) and a real race on the publish step.
+# A newer push always supersedes the older one's code, so cancelling the stale run is safe, same as
+# ci.yml's own concurrency group.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -175,6 +184,10 @@ jobs:
     needs: [validate, ios, android-release]
     runs-on: ubuntu-latest
     steps:
+      # wzieba/Firebase-Distribution-Github-Action runs as a Docker container that expects
+      # GITHUB_WORKSPACE to be a real git checkout; without this the artifact still downloads fine
+      # but the action fails with "File release-artifacts/androidApp-release.apk does not exist".
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: fuelio-release-apk

@@ -39,7 +39,7 @@ class GasStationsListTest {
 
     @Test
     fun searchFiltersTheList() {
-        composeRule.onNodeWithTag(A11yIdentifiers.stationRow(repsolStationId)).assertExists()
+        composeRule.waitUntilTagExists(A11yIdentifiers.stationRow(repsolStationId))
 
         composeRule.onNodeWithTag(A11yIdentifiers.SEARCH_FIELD).performTextInput("MOEVE")
 
