@@ -4,6 +4,6 @@
 // xcconfig files before running any build phase, so a script phase cannot regenerate this file in
 // time for the same build to see it. Run `./gradlew generateIosVersionXcconfig` after bumping the
 // version in gradle.properties, before building iosApp.
-CURRENT_PROJECT_VERSION=1
-MARKETING_VERSION=1.0.0
+CURRENT_PROJECT_VERSION=2
+MARKETING_VERSION=1.0.1
 
