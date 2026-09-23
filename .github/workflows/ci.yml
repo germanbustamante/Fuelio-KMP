@@ -189,12 +189,10 @@ jobs:
           target: google_apis
           arch: x86_64
           disable-animations: true
-          script: |
-            for attempt in 1 2 3; do
-              ./gradlew :androidApp:connectedDebugAndroidTest && break
-              if [ "$attempt" = 3 ]; then exit 1; fi
-              echo "connectedDebugAndroidTest failed (attempt $attempt/3), retrying..."
-            done
+          # One physical line, semicolon-separated: this action flattens a multi-line `script` by
+          # joining lines with spaces rather than semicolons, which silently turns a `for ... do / done`
+          # written across lines into a syntax error at execution time.
+          script: for attempt in 1 2 3; do ./gradlew :androidApp:connectedDebugAndroidTest && break; if [ "$attempt" = 3 ]; then exit 1; fi; echo "connectedDebugAndroidTest failed (attempt $attempt/3), retrying..."; done
 
       - uses: actions/upload-artifact@v4
         if: failure()
