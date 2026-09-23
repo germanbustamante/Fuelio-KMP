@@ -13,7 +13,7 @@ on:
 
 # Without this, two pushes to master close together (e.g. a hotfix landing right after another) run
 # two Release pipelines at once, both racing to create/update the same `v$versionName` tag and
-# Release — wasteful (double signing, double Firebase upload) and a real race on the publish step.
+# Release — wasteful (double signing) and a real race on the publish step.
 # A newer push always supersedes the older one's code, so cancelling the stale run is safe, same as
 # ci.yml's own concurrency group.
 concurrency:
@@ -184,10 +184,6 @@ jobs:
     needs: [validate, ios, android-release]
     runs-on: ubuntu-latest
     steps:
-      # wzieba/Firebase-Distribution-Github-Action runs as a Docker container that expects
-      # GITHUB_WORKSPACE to be a real git checkout; without this the artifact still downloads fine
-      # but the action fails with "File release-artifacts/androidApp-release.apk does not exist".
-      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: fuelio-release-apk
@@ -198,9 +194,8 @@ jobs:
           path: release-artifacts
 
       # Creates the tag on this push's commit (there is none yet — the version lives only in
-      # gradle.properties) and either creates or updates the Release matching it, so re-pushing
-      # master without bumping the version overwrites the previous build instead of failing on a
-      # tag that already exists.
+      # gradle.properties). GitHub's immutable releases lock a tag name forever once a Release is
+      # published under it, so every release needs a new fuelio.versionName.
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.validate.outputs.tag }}
@@ -208,13 +203,3 @@ jobs:
           name: ${{ needs.validate.outputs.tag }}
           generate_release_notes: true
           files: release-artifacts/**
-
-      # Firebase App Distribution keeps beta builds reachable without going through Google Play's
-      # review, which is what testers on this project use before anything is public.
-      - name: Upload to Firebase App Distribution
-        uses: wzieba/Firebase-Distribution-Github-Action@v1
-        with:
-          appId: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
-          serviceCredentialsFileContent: ${{ secrets.FIREBASE_APP_DISTRIBUTION_SERVICE_ACCOUNT }}
-          groups: testers
-          file: release-artifacts/*.apk
